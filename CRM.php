@@ -55,11 +55,6 @@ if (isset($_GET['delete'])) {
 
 /* Fetch Customers */
 $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
-
-/* Search Customer */
-
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>

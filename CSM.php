@@ -1,3 +1,43 @@
+<?php
+include 'connection.php';
+
+/*total contracts*/ 
+$sql = "SELECT COUNT(*) AS client_name FROM csm";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$totalcontract = $row['client_name'];
+/*Active contract*/
+$sql = "SELECT COUNT(*) as total_active
+        FROM csm
+        WHERE status = 'Active'";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$totalActive = $row['total_active'];
+
+if (isset($_POST['add_contract'])) {
+    $contract_id    = $conn->real_escape_string($_POST['contract_id']);
+    $client_name    = $conn->real_escape_string($_POST['client_name']);
+    $start_date     = $conn->real_escape_string($_POST['start_date']);
+    $end_date       = $conn->real_escape_string($_POST['end_date']);
+    $status         = $conn->real_escape_string($_POST['status']);
+    $sla_compliance = $conn->real_escape_string($_POST['sla_compliance']);
+
+    // Insert into database
+    $sql = "INSERT INTO csm (contract_id, client_name, start_date, end_date, status, sla_compliance) 
+            VALUES ('$contract_id', '$client_name', '$start_date', '$end_date', '$status', '$sla_compliance')";
+
+    if ($conn->query($sql)) {
+        echo "<script>alert('Contract added successfully');</script>";
+    } else {
+        echo "Error: " . $conn->error;
+    }
+}
+
+// Fetch all contracts
+$result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -176,10 +216,54 @@
             margin-bottom: 1.5rem;
         }
 
-        .Select-section1 {
-            display: flex;
+        .Contract-content {
             text-align: center;
-            justify-content: space-between;
+        }
+
+        .contract-form {
+            text-align: start;
+        }
+
+        .C-form {
+             display: flex;
+             margin-top: 1rem;
+        }
+
+        .contract-form input,
+        .contract-form select {
+            width: 590px;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+            margin: 0.5rem 1rem 0 0;
+        }
+
+        .dark-mode .contract-form input,
+        .dark-mode .contract-form select {
+            background-color: #2a3a5a;
+            border-color: #3a4b6e;
+            color: var(--text-light);
+        }
+
+        .btn {
+            width: 260px;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .addcontract {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .addcontract:hover {
+            background-color: #3a5bc7;
         }
 
         .form input,
@@ -191,8 +275,9 @@
             font-size: 0.9rem;
             background-color: white;
         }
+
         .dark-mode .form input,
-        .dark-mode .form select{
+        .dark-mode .form select {
             background-color: #2a3a5a;
             border-color: #3a4b6e;
             color: var(--text-light);
@@ -342,14 +427,12 @@
         <div class="dashboard-cards">
             <div class="card">
                 <h3>Total Contracts</h3>
-                <div class="stat-value" id="Total Users">0</div>
-                <div class="stat-label">Loading data...</div>
+                <div class="stat-value" id="Total Users"><?php echo $totalcontract; ?></div>
             </div>
 
             <div class="card">
                 <h3>Active Contracts</h3>
-                <div class="stat-value" id="Active Contracts">0</div>
-                <div class="stat-label">Loading data...</div>
+                <div class="stat-value" id="Active Contracts"><?php echo $totalActive; ?></div>
             </div>
 
             <div class="card">
@@ -366,36 +449,59 @@
         </div>
 
         <div class="Select-section">
-            <div class="Select-section1">
-                <div class="form">
-                    <h4>From</h4>
-                    <input type="date" id="From" name="From">
+            <h3>Add New Contract</h3>
+            <div class="Contract-content">
+                <form method="POST">
+                    <div class="C-form">
+                    <div class="contract-form">
+                        <h5>Contract ID</h5>
+                        <input type="text" class="form-control" id="contract_id" name="contract_id" placeholder="Contract ID" required>
+                    </div>
+                    <div class="contract-form">
+                        <h5>Client Name</h5>
+                        <input type="text" class="form-control" id="client_name" name="client_name" placeholder="Client Name" required>
+                    </div>
+            </div>
+            <div class="C-form">
+                <div class="contract-form">
+                    <h5>Start Date</h5>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required>
                 </div>
-                <div class="form">
-                    <h4>To</h4>
-                    <input type="date" id="To" name="To">
+                <div class="contract-form">
+                    <h5>End Date</h5>
+                    <input type="date" class="form-control" id="end_date" name="end_date" required>
                 </div>
-                <div class="form">
-                    <h4>Client</h4>
-                    <input type="text" id="Client" name="Client" placeholder="Enter client name">
-                </div>
-                <div class="form">
-                    <h4>Status</h4>
-                    <select class="status" id="Status">
-                        <option value="">All</option>
+            </div>
+            <div class="C-form">
+                <div class="contract-form">
+                    <h5>Status</h5>
+                    <select class="form-select" id="status" name="status" required>
+                        <option value="">Select Status</option>
                         <option value="Active">Active</option>
                         <option value="Expired">Expired</option>
-                        <option value="Pending Renewal">Pending Renewal</option>
+                        <option value="Pending">Pending</option>
                     </select>
                 </div>
-
+                <div class="contract-form">
+                    <h5>SLA Compliance</h5>
+                    <select class="form-select" id="sla_compliance" name="sla_compliance" required>
+                        <option value="">SLA Compliance</option>
+                        <option value="Compliant">Compliant</option>
+                        <option value="Non-Compliant">Non-Compliant</option>
+                    </select>
+                </div>
+    </div>
+                    <button type="submit" name="add_contract" class="btn addcontract">
+                        Add Contract
+                    </button>
+                </form>
             </div>
         </div>
 
 
         <div class="table-section">
             <h3>Contracts List</h3>
-            <table id="employeesTable">
+            <table id="contractsTable" class="table-selection">
                 <thead>
                     <tr>
                         <th>Contract ID</th>
@@ -406,8 +512,17 @@
                         <th>SLA Compliance</th>
                     </tr>
                 </thead>
-                <tbody id="employeesTableBody">
-
+                <tbody>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= htmlspecialchars($row['contract_id']); ?></td>
+                    <td><?= htmlspecialchars($row['client_name']); ?></td>
+                    <td><?= htmlspecialchars($row['start_date']); ?></td>
+                    <td><?= htmlspecialchars($row['end_date']); ?></td>
+                    <td><?= htmlspecialchars($row['status']); ?></td>
+                    <td><?= htmlspecialchars($row['sla_compliance']); ?></td>
+                </tr>
+            <?php endwhile; ?>
                 </tbody>
             </table>
         </div>
@@ -416,20 +531,20 @@
     <script>
         const checkbox = document.getElementById("themeToggle");
 
-  if (localStorage.getItem("darkMode") === "enabled") {
-    document.body.classList.add("dark-mode");
-    checkbox.checked = true; 
-  }
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.body.classList.add("dark-mode");
+            checkbox.checked = true;
+        }
 
-  checkbox.addEventListener("change", () => {
-    if (checkbox.checked) {
-      document.body.classList.add("dark-mode");
-      localStorage.setItem("darkMode", "enabled");
-    } else {
-      document.body.classList.remove("dark-mode");
-      localStorage.setItem("darkMode", "disabled");
-    }
-  });
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("darkMode", "enabled");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("darkMode", "disabled");
+            }
+        });
 
         document.getElementById('hamburger').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');

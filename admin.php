@@ -418,7 +418,7 @@ while ($row = $result->fetch_assoc()) {
 
     <div class="table-section">
       <h3>Recent Activity</h3>
-      <table id="employeesTable">
+      <table id="recentActivityTable">
         <thead>
           <tr>
             <th>Date</th>
@@ -426,7 +426,7 @@ while ($row = $result->fetch_assoc()) {
             <th>Status</th>
           </tr>
         </thead>
-        <tbody id="employeesTableBody">
+        <tbody id="recentActivityBody">
           <!-- Employee data will be loaded here -->
         </tbody>
       </table>
