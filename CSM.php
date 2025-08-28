@@ -22,7 +22,7 @@ if (isset($_POST['add_contract'])) {
     $status         = $conn->real_escape_string($_POST['status']);
     $sla_compliance = $conn->real_escape_string($_POST['sla_compliance']);
 
-    // Insert into database
+    /* Insert into database */
     $sql = "INSERT INTO csm (contract_id, client_name, start_date, end_date, status, sla_compliance) 
             VALUES ('$contract_id', '$client_name', '$start_date', '$end_date', '$status', '$sla_compliance')";
 
@@ -33,7 +33,7 @@ if (isset($_POST['add_contract'])) {
     }
 }
 
-// Fetch all contracts
+/* Fetch all contracts */
 $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
 ?>
 
