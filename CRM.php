@@ -538,7 +538,7 @@ $conn->close();
             <table id="CustomersTable">
                 <thead>
                     <tr>
-                        <th>Customer</th>
+                        <th>Customer Name</th>
                         <th>Company</th>
                         <th>Email</th>
                         <th>Phone</th>
