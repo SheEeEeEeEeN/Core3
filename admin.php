@@ -418,7 +418,7 @@ while ($row = $result->fetch_assoc()) {
 
     <div class="table-section">
       <h3>Recent Activity</h3>
-      <table id="employeesTable">
+      <table id="recentActivityTable">
         <thead>
           <tr>
             <th>Date</th>
@@ -426,8 +426,8 @@ while ($row = $result->fetch_assoc()) {
             <th>Status</th>
           </tr>
         </thead>
-        <tbody id="employeesTableBody">
-          <!-- Employee data will be loaded here -->
+        <tbody id="recentActivityBody">
+          
         </tbody>
       </table>
     </div>
@@ -462,10 +462,10 @@ while ($row = $result->fetch_assoc()) {
         const userChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: <?php echo json_encode($date); ?>, // Dates from PHP
+                labels: <?php echo json_encode($date); ?>, 
                 datasets: [{
                     label: 'Total Users',
-                    data: <?php echo json_encode($totals); ?>, // User counts
+                    data: <?php echo json_encode($totals); ?>, 
                     borderColor: 'blue',
                     backgroundColor: 'lightblue',
                     fill: true,
