@@ -1,19 +1,48 @@
 <?php
 include 'connection.php';
 
-/*total contracts*/ 
-$sql = "SELECT COUNT(*) AS client_name FROM csm";
-$result = $conn->query($sql);
-$row = $result->fetch_assoc();
-$totalcontract = $row['client_name'];
-/*Active contract*/
-$sql = "SELECT COUNT(*) as total_active
-        FROM csm
-        WHERE status = 'Active'";
-$result = $conn->query($sql);
-$row = $result->fetch_assoc();
-$totalActive = $row['total_active'];
+if (isset($_GET['action']) && $_GET['action'] === 'stats') {
+    /* Total contracts */
+    $sql = "SELECT COUNT(*) AS total FROM csm";
+    $result = $conn->query($sql);
+    $row = $result->fetch_assoc();
+    $totalContracts = $row['total']; // fix variable name
 
+    /* Active contract */
+    $sql = "SELECT COUNT(*) AS total_active FROM csm WHERE status = 'Active'";
+    $result = $conn->query($sql);
+    $row = $result->fetch_assoc();
+    $totalActive = $row['total_active']; // fix alias and variable
+
+    /* Expiring soon */
+    $sql = "SELECT COUNT(*) AS expiring_soon 
+            FROM csm 
+            WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)";
+    $result = $conn->query($sql);
+    $row = $result->fetch_assoc();
+    $expiringSoon = $row['expiring_soon'];
+
+    /* Total compliant */
+    $sql = "SELECT COUNT(*) AS total_compliant 
+            FROM csm 
+            WHERE sla_compliance = 'Compliant'";
+    $result = $conn->query($sql);
+    $row = $result->fetch_assoc();
+    $totalCompliant = $row['total_compliant'];
+
+    /* Return JSON */
+    header('Content-Type: application/json');
+    echo json_encode([
+        'totalContracts' => $totalContracts,
+        'totalActive' => $totalActive,
+        'totalCompliant' => $totalCompliant,
+        'expiringSoon' => $expiringSoon
+    ]);
+    exit;
+}
+
+/*add contract*/
+$contract_limit = 100;
 if (isset($_POST['add_contract'])) {
     $contract_id    = $conn->real_escape_string($_POST['contract_id']);
     $client_name    = $conn->real_escape_string($_POST['client_name']);
@@ -22,11 +51,22 @@ if (isset($_POST['add_contract'])) {
     $status         = $conn->real_escape_string($_POST['status']);
     $sla_compliance = $conn->real_escape_string($_POST['sla_compliance']);
 
-    /* Insert into database */
-    $sql = "INSERT INTO csm (contract_id, client_name, start_date, end_date, status, sla_compliance) 
-            VALUES ('$contract_id', '$client_name', '$start_date', '$end_date', '$status', '$sla_compliance')";
+    $check_sql = "SELECT COUNT(*) AS total FROM csm";
+    $result = $conn->query($check_sql);
+    $row = $result->fetch_assoc();
+    $total_contracts = $row['total'];
 
-    if ($conn->query($sql)) {
+    if ($total_contracts >= $contract_limit) {
+        $delete_sql = "DELETE FROM csm 
+                       ORDER BY start_date ASC 
+                       LIMIT 1";
+        $conn->query($delete_sql);
+    }
+
+    $insert_sql = "INSERT INTO csm (contract_id, client_name, start_date, end_date, status, sla_compliance) 
+                   VALUES ('$contract_id', '$client_name', '$start_date', '$end_date', '$status', '$sla_compliance')";
+
+    if ($conn->query($insert_sql)) {
         echo "<script>alert('Contract added successfully');</script>";
     } else {
         echo "Error: " . $conn->error;
@@ -225,8 +265,8 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
         }
 
         .C-form {
-             display: flex;
-             margin-top: 1rem;
+            display: flex;
+            margin-top: 1rem;
         }
 
         .contract-form input,
@@ -427,70 +467,69 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
         <div class="dashboard-cards">
             <div class="card">
                 <h3>Total Contracts</h3>
-                <div class="stat-value" id="Total Users"><?php echo $totalcontract; ?></div>
+                <div class="stat-value" id="totalContracts">0</div>
             </div>
 
             <div class="card">
                 <h3>Active Contracts</h3>
-                <div class="stat-value" id="Active Contracts"><?php echo $totalActive; ?></div>
+                <div class="stat-value" id="totalActive"><?php echo $totalActive; ?></div>
             </div>
 
             <div class="card">
                 <h3>Expiring Soon</h3>
-                <div class="stat-value" id="Pending Request">0</div>
-                <div class="stat-label">Loading data...</div>
+                <div class="stat-value" id="expiringSoon"><?php echo $expiringSoon; ?></div>
             </div>
 
             <div class="card">
                 <h3>SLA Compliance</h3>
-                <div class="stat-value" id="System Alert">0</div>
-                <div class="stat-label">Loading data...</div>
+                <div class="stat-value" id="totalCompliant"><?php echo $totalCompliant; ?></div>
             </div>
         </div>
+
 
         <div class="Select-section">
             <h3>Add New Contract</h3>
             <div class="Contract-content">
                 <form method="POST">
                     <div class="C-form">
-                    <div class="contract-form">
-                        <h5>Contract ID</h5>
-                        <input type="text" class="form-control" id="contract_id" name="contract_id" placeholder="Contract ID" required>
+                        <div class="contract-form">
+                            <h5>Contract ID</h5>
+                            <input type="text" class="form-control" id="contract_id" name="contract_id" placeholder="Contract ID" required>
+                        </div>
+                        <div class="contract-form">
+                            <h5>Client Name</h5>
+                            <input type="text" class="form-control" id="client_name" name="client_name" placeholder="Client Name" required>
+                        </div>
                     </div>
-                    <div class="contract-form">
-                        <h5>Client Name</h5>
-                        <input type="text" class="form-control" id="client_name" name="client_name" placeholder="Client Name" required>
+                    <div class="C-form">
+                        <div class="contract-form">
+                            <h5>Start Date</h5>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                        <div class="contract-form">
+                            <h5>End Date</h5>
+                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                        </div>
                     </div>
-            </div>
-            <div class="C-form">
-                <div class="contract-form">
-                    <h5>Start Date</h5>
-                    <input type="date" class="form-control" id="start_date" name="start_date" required>
-                </div>
-                <div class="contract-form">
-                    <h5>End Date</h5>
-                    <input type="date" class="form-control" id="end_date" name="end_date" required>
-                </div>
-            </div>
-            <div class="C-form">
-                <div class="contract-form">
-                    <h5>Status</h5>
-                    <select class="form-select" id="status" name="status" required>
-                        <option value="">Select Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Expired">Expired</option>
-                        <option value="Pending">Pending</option>
-                    </select>
-                </div>
-                <div class="contract-form">
-                    <h5>SLA Compliance</h5>
-                    <select class="form-select" id="sla_compliance" name="sla_compliance" required>
-                        <option value="">SLA Compliance</option>
-                        <option value="Compliant">Compliant</option>
-                        <option value="Non-Compliant">Non-Compliant</option>
-                    </select>
-                </div>
-    </div>
+                    <div class="C-form">
+                        <div class="contract-form">
+                            <h5>Status</h5>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="">Select Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="contract-form">
+                            <h5>SLA Compliance</h5>
+                            <select class="form-select" id="sla_compliance" name="sla_compliance" required>
+                                <option value="">SLA Compliance</option>
+                                <option value="Compliant">Compliant</option>
+                                <option value="Non-Compliant">Non-Compliant</option>
+                            </select>
+                        </div>
+                    </div>
                     <button type="submit" name="add_contract" class="btn addcontract">
                         Add Contract
                     </button>
@@ -514,15 +553,15 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
                 </thead>
                 <tbody>
                     <?php while ($row = $result->fetch_assoc()): ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['contract_id']); ?></td>
-                    <td><?= htmlspecialchars($row['client_name']); ?></td>
-                    <td><?= htmlspecialchars($row['start_date']); ?></td>
-                    <td><?= htmlspecialchars($row['end_date']); ?></td>
-                    <td><?= htmlspecialchars($row['status']); ?></td>
-                    <td><?= htmlspecialchars($row['sla_compliance']); ?></td>
-                </tr>
-            <?php endwhile; ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['contract_id']); ?></td>
+                            <td><?= htmlspecialchars($row['client_name']); ?></td>
+                            <td><?= htmlspecialchars($row['start_date']); ?></td>
+                            <td><?= htmlspecialchars($row['end_date']); ?></td>
+                            <td><?= htmlspecialchars($row['status']); ?></td>
+                            <td><?= htmlspecialchars($row['sla_compliance']); ?></td>
+                        </tr>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
         </div>
@@ -550,6 +589,22 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
             document.getElementById('sidebar').classList.toggle('collapsed');
             document.getElementById('mainContent').classList.toggle('expanded');
         });
+
+function updateDashboard() {
+    fetch('?action=stats') // same file, query param triggers JSON
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalContracts').textContent = data.totalContracts;
+            document.getElementById('totalActive').textContent = data.totalActive;
+            document.getElementById('totalCompliant').textContent = data.totalCompliant;
+            document.getElementById('expiringSoon').textContent = data.expiringSoon;
+        })
+        .catch(error => console.error('Error fetching stats:', error));
+}
+
+// Update immediately and every 5 seconds
+updateDashboard();
+setInterval(updateDashboard, 5000);
     </script>
 </body>
 

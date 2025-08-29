@@ -22,7 +22,7 @@ if (isset($_POST['add'])) {
 
 /* Update Customer */
 if (isset($_POST['update'])) {
-     $id            = (int) $_POST['id'];
+    $id            = (int) $_POST['id'];
     $customer_name = $conn->real_escape_string($_POST['customer_name']);
     $company       = $conn->real_escape_string($_POST['company']);
     $email         = $conn->real_escape_string($_POST['email']);
@@ -55,8 +55,12 @@ if (isset($_GET['delete'])) {
 
 /* Fetch Customers */
 $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
-?>
 
+$sql = "SELECT * FROM crm"; // adjust table name
+$result = $conn->query($sql);
+
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -353,9 +357,12 @@ $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
         .btn-cancel:hover {
             background-color: #e50d0dff;
         }
-
-        .Ccompany, .Cemail,
-        .Cphone, .form-select{
+        
+        .Cname,
+        .Ccompany,
+        .Cemail,
+        .Cphone,
+        .Sstatus {
             width: 150px;
             padding: 0.2rem;
             border: 1px solid #ddd;
@@ -363,7 +370,7 @@ $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
             font-size: 0.9rem;
             background-color: white;
         }
-        
+
 
         .dark-mode td input,
         .dark-mode td select {
@@ -377,28 +384,33 @@ $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
             padding: 0.5rem;
             border: none;
             border-radius: 4px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             background-color: #4fcbdeff;
             color: white;
         }
+
         .Eupdate:hover {
             background-color: #15c8e3ff;
         }
 
-        .Ecancel ,.delete {
+        .Ecancel,
+        .delete {
             padding: 0.5rem;
             border: none;
             border-radius: 4px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             background-color: var(--tertiary-color);
             color: white;
             text-decoration-line: none;
         }
-        .Ecancel,.delete:hover {
+
+        .Ecancel,
+        .delete:hover {
             background-color: #e50d0dff;
         }
+
         .edit {
             padding: 0.5rem;
             border: none;
@@ -409,11 +421,12 @@ $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
             color: white;
             text-decoration-line: none;
         }
+
         .edit:hover {
             background-color: #0476d3ff;
         }
 
-        
+
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -524,61 +537,76 @@ $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
                     <select class="select" id="filterStatus">
                         <option value="">Filter by Status</option>
                         <option value="Active">Active</option>
+                        <option value="Prospect">Prospect</option>
                         <option value="Inactive">Inactive</option>
                     </select>
                 </div>
                 <display class="table-button">
                     <button id="addM" class="btn toggle-table-btn">Add New Employee</button>
             </div>
-            <table id="CustomersTable">
-                <thead>
-                    <tr>
-                        <th>Customer Name</th>
-                        <th>Company</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        <th>Last Contact</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                    <?php if (isset($_GET['edit']) && $_GET['edit'] == $row['id']): ?>
-                        <tr>
-                            <form method="POST">
-                                <td><input type="hidden" name="customer_name" value="<?= $row['customer_name']; ?>"><?= $row['customer_name']; ?></td>
-                                <td><input type="text" class="Ccompany" name="company" value="<?= $row['company']; ?>" required></td>
-                                <td><input type="email"class="Cemail" name="email" value="<?= $row['email']; ?>" required></td>
-                                <td><input type="text" class="Cphone" name="phone" value="<?= $row['phone']; ?>"></td>
-                                <td><select class="form-select" name="status">
-                                        <option value="Active">Active</option>
-                                        <option value="Prospect">Prospect</option>
-                                        <option value="Inactive">Inactive</option>
-                                        <?= $row['status']; ?></td>
-                                <td><?= $row['last_contract']; ?></td>
-                                <td>
-                                    <input type="hidden" name="id" value="<?= $row['id']; ?>">
-                                    <button type="submit" class="Eupdate"name="update">Update</button>
-                                    <a href="CRM.php" class="Ecancel">Cancel</a>
-                                </td>
-                            </form>
-                        </tr>
-                    <?php else: ?>
-                        <tbody id="customerData">
-                            <td><?= $row['customer_name']; ?></td>
-                            <td><?= $row['company']; ?></td>
-                            <td><?= $row['email']; ?></td>
-                            <td><?= $row['phone']; ?></td>
-                            <td><?= $row['status']; ?></td>
-                            <td><?= $row['last_contract']; ?></td>
-                            <td class="actions">
-                                <a href="CRM.php?edit=<?= $row['id']; ?>" class="edit">Edit</a> 
-                                <a href="CRM.php?delete=<?= $row['id']; ?>" onclick="return confirm('Delete this record?')"class="delete">Delete</a>
-                            </td>
-                        </tbody>
-                    <?php endif; ?>
-                <?php endwhile; ?>
-            </table>
+
+
+           <table id="CustomersTable">
+    <thead>
+        <tr>
+            <th>Customer Name</th>
+            <th>Company</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Last Contact</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="customerData">
+        <?php
+        // Fetch customers newest first
+        $sql = "SELECT * FROM crm ORDER BY id DESC";
+        $result = $conn->query($sql);
+        while ($row = $result->fetch_assoc()):
+        ?>
+            <?php if (isset($_GET['edit']) && $_GET['edit'] == $row['id']): ?>
+            <tr>
+                <form method="POST">
+                    <td><input type="text" class="Cname" name="customer_name" value="<?= htmlspecialchars($row['customer_name']); ?>" required></td>
+                    <td><input type="text" class="Ccompany" name="company" value="<?= htmlspecialchars($row['company']); ?>" required></td>
+                    <td><input type="email"class="Cemail" name="email" value="<?= htmlspecialchars($row['email']); ?>" required></td>
+                    <td><input type="text" class="Cphone" name="phone" value="<?= htmlspecialchars($row['phone']); ?>"></td>
+                    <td>
+                        <select class="Sstatus" name="status" required>
+                            <option value="Active" <?= $row['status']=='Active'?'selected':''; ?>>Active</option>
+                            <option value="Prospect" <?= $row['status']=='Prospect'?'selected':''; ?>>Prospect</option>
+                            <option value="Inactive" <?= $row['status']=='Inactive'?'selected':''; ?>>Inactive</option>
+                        </select>
+                    </td>
+                    <td><?= htmlspecialchars($row['last_contract']); ?></td>
+                    <td>
+                        <input type="hidden" name="id" value="<?= $row['id']; ?>">
+                        <button type="submit" class="Eupdate" name="update">Save</button>
+                        <a href="CRM.php" class="Ecancel">Cancel</a>
+                    </td>
+                </form>
+            </tr>
+            <?php else: ?>
+            <tr>
+                <td><?= htmlspecialchars($row['customer_name']); ?></td>
+                <td><?= htmlspecialchars($row['company']); ?></td>
+                <td><?= htmlspecialchars($row['email']); ?></td>
+                <td><?= htmlspecialchars($row['phone']); ?></td>
+                <td><?= htmlspecialchars($row['status']); ?></td>
+                <td><?= htmlspecialchars($row['last_contract']); ?></td>
+                <td>
+                    <a href="CRM.php?edit=<?= $row['id']; ?>" class="edit">Edit</a>
+                    <a href="CRM.php?delete=<?= $row['id']; ?>" onclick="return confirm('Delete this record?')" class="delete">Delete</a>
+                </td>
+            </tr>
+            <?php endif; ?>
+        <?php endwhile; ?>
+    </tbody>
+</table>
+
+
+
 
             <div class="modal-section" id="addmodal">
                 <div class="modal-content">
@@ -662,10 +690,37 @@ $result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
                 modal.style.display = "none";
             }
         }
-        /* search */
+        /* search/filter */
 
-       
-    
+        const searchInput = document.getElementById('searchInput');
+const filterStatus = document.getElementById('filterStatus');
+const tbody = document.getElementById('customerData');
+
+// Helper: get text from td or input
+function getCellText(td) {
+    const input = td.querySelector('input, select');
+    return input ? input.value.toLowerCase() : td.textContent.toLowerCase();
+}
+
+// Filter table function
+function filterTable() {
+    const searchValue = searchInput.value.toLowerCase();
+    const statusValue = filterStatus.value.toLowerCase();
+
+    Array.from(tbody.rows).forEach(row => {
+        const nameText = getCellText(row.cells[0]); // Customer Name
+        const statusText = getCellText(row.cells[4]); // Status column
+
+        const matchesSearch = nameText.includes(searchValue);
+        const matchesStatus = statusValue === "" || statusText === statusValue;
+
+        row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+    });
+}
+
+// Event listeners
+searchInput.addEventListener('input', filterTable);
+filterStatus.addEventListener('change', filterTable);
     </script>
 </body>
 

@@ -28,6 +28,8 @@ while ($row = $result->fetch_assoc()) {
     $date[] = $row['date'];
     $totals[] = $row['total'];
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -422,12 +424,22 @@ while ($row = $result->fetch_assoc()) {
         <thead>
           <tr>
             <th>Date</th>
+            <th>Module</th>
             <th>Activity</th>
-            <th>Status</th>
           </tr>
         </thead>
         <tbody id="recentActivityBody">
-          
+          <?php if ($result->num_rows > 0): ?>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $row['date']; ?></td>
+                        <td><?= $row['activity']; ?></td>
+                        <td><?= $row['status']; ?></td>
+                    </tr>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <tr><td colspan="3">No recent activity found</td></tr>
+            <?php endif; ?>
         </tbody>
       </table>
     </div>
