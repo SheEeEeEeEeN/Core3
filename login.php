@@ -4,93 +4,121 @@ include("connection.php");
 
 $error = "";
 $success = "";
+$showRegister = false; // for staying in register form
 
+// Handle AJAX requests for live check
+if (isset($_GET['check'])) {
+  $field = $_GET['check'];
+  $value = trim($_GET['value']);
+  $response = '';
+
+  if ($field === 'username') {
+    $stmt = $conn->prepare("SELECT id FROM accounts WHERE username=?");
+    $stmt->bind_param("s", $value);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) $response = 'Username already taken!';
+    $stmt->close();
+  }
+
+  if ($field === 'email') {
+    $stmt = $conn->prepare("SELECT id FROM accounts WHERE email=?");
+    $stmt->bind_param("s", $value);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) $response = 'Email already registered!';
+    $stmt->close();
+  }
+
+  echo $response;
+  exit();
+}
+
+// Handle login
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (isset($_POST['login'])) {
-        $username = trim($_POST['username']);
-        $password = $_POST['password'];
+  if (isset($_POST['login'])) {
+    $username = trim($_POST['username']);
+    $password = $_POST['password'];
 
-        $stmt = $conn->prepare("SELECT id, username, password, role FROM accounts WHERE username = ?");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $stmt->store_result();
+    $stmt = $conn->prepare("SELECT id, username, password, role FROM accounts WHERE username=?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->store_result();
 
-        if ($stmt->num_rows == 1) {
-            $stmt->bind_result($id, $db_username, $db_password, $role);
-            $stmt->fetch();
+    if ($stmt->num_rows == 1) {
+      $stmt->bind_result($id, $db_username, $db_password, $role);
+      $stmt->fetch();
 
-            if (password_verify($password, $db_password)) {
-                // Set session
-                session_regenerate_id(true);
-                $_SESSION['user_id'] = $id;
-                $_SESSION['username'] = $db_username;
-                $_SESSION['role'] = $role;
+      if (password_verify($password, $db_password)) {
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $id;
+        $_SESSION['username'] = $db_username;
+        $_SESSION['role'] = $role;
 
-                // Redirect based on role
-                if ($role === 'admin') {
-                    header("Location: admin.php");
-                } else {
-                    header("Location: user.php");
-                }
-                exit();
-            } else {
-                $error = "Invalid password!";
-            }
-        } else {
-            $error = "No account found with that username.";
-        }
-
-        $stmt->close();
-
-    } elseif (isset($_POST['register'])) {
-        $username = trim($_POST['username']);
-        $email = trim($_POST['email']);
-        $password = $_POST['password'];
-        $confirm = $_POST['confirm_password'];
-
-        if ($password !== $confirm) {
-            $error = "Passwords do not match!";
-        } else {
-            $check = $conn->prepare("SELECT id FROM accounts WHERE username = ? OR email = ?");
-            $check->bind_param("ss", $username, $email);
-            $check->execute();
-            $check->store_result();
-
-            if ($check->num_rows > 0) {
-                $error = "Username or Email already exists!";
-            } else {
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-                $stmt = $conn->prepare("INSERT INTO accounts (username, email, password, role) VALUES (?, ?, ?, 'user')");
-                $stmt->bind_param("sss", $username, $email, $hashedPassword);
-
-                if ($stmt->execute()) {
-                    $success = "Account created successfully! You can now login.";
-                } else {
-                    $error = "Error: " . $stmt->error;
-                }
-
-                $stmt->close();
-            }
-
-            $check->close();
-        }
+        echo "<script>
+                        alert('Login successful! Welcome, $db_username');
+                        window.location.href = '" . ($role === 'admin' ? 'admin.php' : 'user.php') . "';
+                      </script>";
+        exit();
+      } else {
+        $error = "Invalid password!";
+      }
+    } else {
+      $error = "No account found with that username.";
     }
+    $stmt->close();
+  } elseif (isset($_POST['register'])) {
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    $confirm = $_POST['confirm_password'];
+
+    // Password validation
+    if (!preg_match("/^(?=.*[a-z])(?=.*\d).{8,}$/", $password)) {
+      $error = "Password must be at least 8 characters, include a lowercase letter and a number.";
+    } elseif ($password !== $confirm) {
+      $error = "Passwords do not match!";
+    } else {
+      // Check existing username/email
+      $check = $conn->prepare("SELECT id FROM accounts WHERE username=? OR email=?");
+      $check->bind_param("ss", $username, $email);
+      $check->execute();
+      $check->store_result();
+
+      if ($check->num_rows > 0) {
+        $error = "Username or Email already exists!";
+      } else {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("INSERT INTO accounts (username, email, password, role) VALUES (?, ?, ?, 'user')");
+        $stmt->bind_param("sss", $username, $email, $hashedPassword);
+
+        if ($stmt->execute()) {
+          $success = "Account created successfully! You can now login.";
+          echo "<script>alert('Registration successful! Please login.');</script>";
+        } else {
+          $error = "Error: " . $stmt->error;
+        }
+        $stmt->close();
+      }
+      $check->close();
+    }
+
+    if (!empty($error)) $showRegister = true; // stay on register if error
+  }
 }
 
 $conn->close();
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SLATE System</title>
   <style>
-    /* Base Styles */
+    /* Base and layout styles */
     * {
       margin: 0;
       padding: 0;
@@ -107,7 +135,6 @@ $conn->close();
       line-height: 1.6;
     }
 
-    /* Layout */
     .main-container {
       flex: 1;
       display: flex;
@@ -121,110 +148,109 @@ $conn->close();
       max-width: 75rem;
       display: flex;
       background: rgba(31, 42, 56, 0.8);
-      border-radius: 0.75rem;
+      border-radius: .75rem;
       overflow: hidden;
-      box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.3);
+      box-shadow: 0 .625rem 1.875rem rgba(0, 0, 0, .3);
     }
 
-    /* Welcome Panel */
     .welcome-panel {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 2.5rem;
-      background: linear-gradient(135deg, rgba(0, 114, 255, 0.2), rgba(0, 198, 255, 0.2));
+      background: linear-gradient(135deg, rgba(0, 114, 255, .2), rgba(0, 198, 255, .2));
     }
 
     .welcome-panel h1 {
       font-size: 2.25rem;
       font-weight: 700;
-      color: #ffffff;
-      text-shadow: 0.125rem 0.125rem 0.5rem rgba(0, 0, 0, 0.6);
+      color: #fff;
+      text-shadow: .125rem .125rem .5rem rgba(0, 0, 0, .6);
       text-align: center;
     }
 
-    /* Form Panel */
     .form-panel {
       width: 25rem;
       padding: 3.75rem 2.5rem;
-      background: rgba(22, 33, 49, 0.95);
+      background: rgba(22, 33, 49, .95);
     }
 
     .form-box {
-      width: 100%;
       text-align: center;
+      width: 100%;
     }
 
     .form-box img {
       width: 6.25rem;
-      height: auto;
       margin-bottom: 1.25rem;
     }
 
     .form-box h2 {
       margin-bottom: 1.5625rem;
-      color: #ffffff;
+      color: #fff;
       font-size: 1.75rem;
     }
 
-    /* Form Elements */
-    .form-box form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .form-box input {
+    .login-form input,
+    .register-form input {
       width: 100%;
-      padding: 0.75rem;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 0.375rem;
-      color: white;
+      padding: .75rem;
+      margin-bottom: .5rem;
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: .375rem;
+      background: rgba(255, 255, 255, .1);
+      color: #fff;
       font-size: 1rem;
-      transition: all 0.3s ease;
+      transition: .3s;
     }
 
-    .form-box input:focus {
+    .login-form input:focus,
+    .register-form input:focus {
       outline: none;
       border-color: #00c6ff;
-      box-shadow: 0 0 0 0.125rem rgba(0, 198, 255, 0.2);
+      box-shadow: 0 0 0 .125rem rgba(0, 198, 255, .2);
     }
 
-    .form-box input::placeholder {
-      color: rgba(160, 160, 160, 0.8);
-    }
-
-    .form-box button {
-      padding: 0.75rem;
+    .login-form button,
+    .register-form button {
+      width: 100%;
+      padding: .75rem;
       background: linear-gradient(to right, #0072ff, #00c6ff);
       border: none;
-      border-radius: 0.375rem;
+      border-radius: .375rem;
       font-weight: 600;
       font-size: 1rem;
-      color: white;
+      color: #fff;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: .3s;
+      margin-top: .5rem;
     }
 
-    .form-box button:hover {
+    .login-form button:hover,
+    .register-form button:hover {
       background: linear-gradient(to right, #0052cc, #009ee3);
-      transform: translateY(-0.125rem);
-      box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.2);
+      transform: translateY(-.125rem);
+      box-shadow: 0 .3125rem .9375rem rgba(0, 0, 0, .2);
     }
 
-    /* Error Message */
-    .error {
-      margin-top: 1rem;
+    .inline-message {
+      font-size: .9rem;
+      margin-top: -.25rem;
+      margin-bottom: .5rem;
+    }
+
+    .inline-message.error {
       color: #ff6b6b;
-      font-size: 0.9rem;
     }
 
-    /* Switch Link */
+    .inline-message.success {
+      color: #4caf50;
+    }
+
     .switch-link {
       margin-top: 1rem;
-      font-size: 0.9rem;
+      font-size: .9rem;
     }
 
     .switch-link a {
@@ -237,22 +263,20 @@ $conn->close();
       text-decoration: underline;
     }
 
-    /* Footer */
     footer {
       text-align: center;
       padding: 1.25rem;
-      background: rgba(0, 0, 0, 0.2);
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 0.875rem;
+      background: rgba(0, 0, 0, .2);
+      color: rgba(255, 255, 255, .7);
+      font-size: .875rem;
     }
 
-    /* Responsive */
-    @media (max-width: 48rem) {
+    @media (max-width:48rem) {
       .login-container {
         flex-direction: column;
       }
 
-      .welcome-panel, 
+      .welcome-panel,
       .form-panel {
         width: 100%;
       }
@@ -268,9 +292,13 @@ $conn->close();
       .form-panel {
         padding: 2.5rem 1.25rem;
       }
+
+      .form-box h2 {
+        font-size: 1.5rem;
+      }
     }
 
-    @media (max-width: 30rem) {
+    @media (max-width:30rem) {
       .main-container {
         padding: 1rem;
       }
@@ -285,73 +313,115 @@ $conn->close();
     }
   </style>
 </head>
+
 <body>
   <div class="main-container">
     <div class="login-container">
       <div class="welcome-panel">
         <h1>FREIGHT MANAGEMENT SYSTEM</h1>
       </div>
-
       <div class="form-panel">
         <div class="form-box">
           <img src="rem.png" alt="SLATE Logo">
           <h2 id="formTitle">SLATE Login</h2>
 
           <!-- Login Form -->
-<form id="loginForm" action="login.php" method="POST">
-  <input type="text" name="username" placeholder="Username" required>
-  <input type="password" name="password" placeholder="Password" required>
-  <button type="submit" name="login">Log In</button>
-</form>
+          <form id="loginForm" class="login-form" method="POST" action="login.php">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit" name="login">Log In</button>
+            <?php if (!empty($error) && isset($_POST['login'])): ?>
+              <div class="inline-message error"><?= $error; ?></div>
+            <?php endif; ?>
+          </form>
 
-<!-- Register Form -->
-<form id="registerForm" action="login.php" method="POST" style="display:none;">
-  <input type="text" name="username" placeholder="Username" required>
-  <input type="email" name="email" placeholder="Email" required>
-  <input type="password" name="password" placeholder="Password" required>
-  <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-  <button type="submit" name="register">Register</button>
-</form>
+          <!-- Register Form -->
+          <form id="registerForm" class="register-form" method="POST" action="login.php" style="display:none;">
+            <input type="text" name="username" placeholder="Username" required oninput="checkAvailability('username', this.value)">
+            <div id="usernameMessage" class="inline-message error"></div>
 
-          <!-- Error Message -->
-          <?php if (!empty($error)): ?>
-            <div class="error"><?= $error; ?></div>
-          <?php endif; ?>
+            <input type="email" name="email" placeholder="Email" required oninput="checkAvailability('email', this.value)">
+            <div id="emailMessage" class="inline-message error"></div>
 
-          <!-- Switch Links -->
-          <div class="switch-link" id="switchToRegister">
-            Don’t have an account? <a onclick="showRegister()">Register</a>
-          </div>
-          <div class="switch-link" id="switchToLogin" style="display:none;">
-            Already have an account? <a onclick="showLogin()">Login</a>
-          </div>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+            <div id="matchMessage" class="inline-message"></div>
+
+            <button type="submit" name="register">Register</button>
+
+            <?php if (!empty($error) && isset($_POST['register'])): ?>
+              <div class="inline-message error"><?= $error; ?></div>
+            <?php endif; ?>
+            <?php if (!empty($success) && isset($_POST['register'])): ?>
+              <div class="inline-message success"><?= $success; ?></div>
+            <?php endif; ?>
+          </form>
+
+          <div class="switch-link" id="switchToRegister">Don’t have an account? <a onclick="showRegister()">Register</a></div>
+          <div class="switch-link" id="switchToLogin" style="display:none;">Already have an account? <a onclick="showLogin()">Login</a></div>
+
         </div>
       </div>
     </div>
   </div>
 
-  <footer>
-    &copy; <span id="currentYear"></span> SLATE Freight Management System. All rights reserved.
-  </footer>
+  <footer>&copy; <span id="currentYear"></span> SLATE Freight Management System. All rights reserved.</footer>
 
   <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
     function showRegister() {
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('registerForm').style.display = 'block';
-  document.getElementById('formTitle').textContent = 'SLATE Register';
-  document.getElementById('switchToRegister').style.display = 'none';
-  document.getElementById('switchToLogin').style.display = 'block';
-}
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerForm').style.display = 'block';
+      document.getElementById('formTitle').textContent = 'SLATE Register';
+      document.getElementById('switchToRegister').style.display = 'none';
+      document.getElementById('switchToLogin').style.display = 'block';
+    }
 
-function showLogin() {
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('registerForm').style.display = 'none';
-  document.getElementById('formTitle').textContent = 'SLATE Login';
-  document.getElementById('switchToRegister').style.display = 'block';
-  document.getElementById('switchToLogin').style.display = 'none';
-}
+    function showLogin() {
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('formTitle').textContent = 'SLATE Login';
+      document.getElementById('switchToRegister').style.display = 'block';
+      document.getElementById('switchToLogin').style.display = 'none';
+    }
+
+    // Password match check
+    const passwordInput = document.querySelector('#registerForm input[name="password"]');
+    const confirmInput = document.querySelector('#registerForm input[name="confirm_password"]');
+    confirmInput.addEventListener('input', () => {
+      let messageBox = document.getElementById('matchMessage');
+      if (confirmInput.value === "") {
+        messageBox.textContent = "";
+        return;
+      }
+      if (passwordInput.value !== confirmInput.value) {
+        messageBox.textContent = "Passwords do not match!";
+        messageBox.style.color = "#ff6b6b";
+      } else {
+        messageBox.textContent = "Passwords match!";
+        messageBox.style.color = "#4caf50";
+      }
+    });
+
+    // Live check for username/email
+    function checkAvailability(field, value) {
+      if (value === "") {
+        document.getElementById(field + 'Message').textContent = "";
+        return;
+      }
+      fetch(`login.php?check=${field}&value=${encodeURIComponent(value)}`)
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById(field + 'Message').textContent = data;
+        });
+    }
+
+    // Stay sa register form kung may error sa registration
+    <?php if ($showRegister): ?>
+      showRegister();
+    <?php endif; ?>
   </script>
 </body>
+
 </html>
