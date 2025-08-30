@@ -1,5 +1,7 @@
 <?php
 include 'connection.php';
+include('session.php');
+requireRole('admin');
 
 if (isset($_GET['action']) && $_GET['action'] === 'stats') {
     /* Total contracts */

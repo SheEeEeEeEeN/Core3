@@ -1,5 +1,8 @@
 <?php
 include 'connection.php';
+include('session.php');
+requireRole('admin');
+
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["uploadfile"])) {
     $title    = $conn->real_escape_string($_POST['docstitle']);

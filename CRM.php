@@ -1,5 +1,7 @@
 <?php
 include 'connection.php';
+include('session.php');
+requireRole('admin');
 
 /* Add New Customer */
 if (isset($_POST['add'])) {
