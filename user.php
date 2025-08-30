@@ -1,3 +1,9 @@
+<?php
+include("connection.php");
+include('session.php');
+requireRole('user')
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

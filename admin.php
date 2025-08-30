@@ -1,5 +1,7 @@
 <?php
 include 'connection.php';
+include('session.php');
+requireRole('admin');
 
 /*total user*/ 
 $sql = "SELECT COUNT(*) AS customer_name FROM crm";
