@@ -31,6 +31,8 @@ while ($row = $result->fetch_assoc()) {
     $totals[] = $row['total'];
 }
 
+ /*All activities*/
+$activityResult = $conn->query("SELECT * FROM admin_activity ORDER BY date DESC LIMIT 100");
 
 ?>
 
@@ -421,31 +423,32 @@ while ($row = $result->fetch_assoc()) {
     </div>
 
     <div class="table-section">
-      <h3>Recent Activity</h3>
-      <table id="recentActivityTable">
-        <thead>
+  <h3>Recent Activity</h3>
+  <table id="recentActivityTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Module</th>
+        <th>Activity</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="recentActivityBody">
+      <?php if ($activityResult && $activityResult->num_rows > 0): ?>
+        <?php while ($row = $activityResult->fetch_assoc()): ?>
           <tr>
-            <th>Date</th>
-            <th>Module</th>
-            <th>Activity</th>
+            <td><?= htmlspecialchars($row['date']); ?></td>
+            <td><?= htmlspecialchars($row['module']); ?></td>
+            <td><?= htmlspecialchars($row['activity']); ?></td>
+            <td><?= htmlspecialchars($row['status']); ?></td>
           </tr>
-        </thead>
-        <tbody id="recentActivityBody">
-          <?php if ($result->num_rows > 0): ?>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= $row['date']; ?></td>
-                        <td><?= $row['activity']; ?></td>
-                        <td><?= $row['status']; ?></td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr><td colspan="3">No recent activity found</td></tr>
-            <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <tr><td colspan="4">No recent activity found</td></tr>
+      <?php endif; ?>
+    </tbody>
+  </table>
+</div>
 
   <script>
     const checkbox = document.getElementById("themeToggle");

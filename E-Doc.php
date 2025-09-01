@@ -3,65 +3,79 @@ include 'connection.php';
 include('session.php');
 requireRole('admin');
 
-
+// Upload Document
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["uploadfile"])) {
     $title    = $conn->real_escape_string($_POST['docstitle']);
     $doc_type = $conn->real_escape_string($_POST['doc_type']);
 
-    // Folder for uploads
     $targetDir = "uploads/";
-    if (!is_dir($targetDir)) {
-        mkdir($targetDir, 0777, true);
-    }
+    if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
     $fileName = basename($_FILES["uploadfile"]["name"]);
     $targetFilePath = $targetDir . $fileName;
 
     if (move_uploaded_file($_FILES["uploadfile"]["tmp_name"], $targetFilePath)) {
-        $sql = "INSERT INTO e_doc (title, doc_type, filename, status) 
-                VALUES ('$title', '$doc_type', '$fileName', 'Pending Review')";
-        $conn->query($sql);
+        $conn->query("INSERT INTO e_doc (title, doc_type, filename, status) 
+                      VALUES ('$title', '$doc_type', '$fileName', 'Pending Review')");
+
+        // Record activity
+        $module = "E-Documentation";
+        $activity = "Uploaded document: $title";
+        $status = "Pending Review";
+        $conn->query("INSERT INTO admin_activity (`module`, `activity`, `status`, `date`) 
+                      VALUES ('$module', '$activity', '$status', NOW())");
     }
 }
-/*Edit*/
+
+// Edit Document
 if (isset($_POST['save'])) {
     $editId = intval($_POST['edit_id']);
     $title = $_POST['docstitle'];
     $docType = $_POST['doc_type'];
     $status = $_POST['status'];
 
-    // make sure your table name is correct here!
     $stmt = $conn->prepare("UPDATE e_doc SET title=?, doc_type=?, status=? WHERE id=?");
-    if (!$stmt) {
-        die("SQL error: " . $conn->error); // 👈 shows exact MySQL error
-    }
+    if (!$stmt) die("SQL error: " . $conn->error);
 
     $stmt->bind_param("sssi", $title, $docType, $status, $editId);
 
     if ($stmt->execute()) {
-        header("Location: E-Doc.php"); 
+        // Record activity
+        $module = "E-Documentation";
+        $activity = "Edited document: $title";
+        $conn->query("INSERT INTO admin_activity (`module`, `activity`, `status`, `date`) 
+                      VALUES ('$module', '$activity', '$status', NOW())");
+
+        header("Location: E-Doc.php");
         exit;
     } else {
-        die("Execute failed: " . $stmt->error); // 👈 shows exact problem
+        die("Execute failed: " . $stmt->error);
     }
 }
 
-
-/*Delete*/
+// Delete Document
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
-    $res = $conn->query("SELECT filename FROM e_doc WHERE id=$id");
+    $res = $conn->query("SELECT filename, title FROM e_doc WHERE id=$id");
     if ($res && $res->num_rows > 0) {
         $row = $res->fetch_assoc();
         $filePath = "uploads/" . $row['filename'];
         if (file_exists($filePath)) unlink($filePath); // remove file
+
+        $conn->query("DELETE FROM e_doc WHERE id=$id");
+
+        // Record activity
+        $module = "E-Documentation";
+        $activity = "Deleted document: " . $row['title'];
+        $status = "Deleted";
+        $conn->query("INSERT INTO admin_activity (`module`, `activity`, `status`, `date`) 
+                      VALUES ('$module', '$activity', '$status', NOW())");
     }
-    $conn->query("DELETE FROM e_doc WHERE id=$id");
     header("Location: E-Doc.php");
     exit;
 }
 
-// ✅ Fetch all documents
+// Fetch all documents
 $sql = "SELECT * FROM e_doc ORDER BY uploaded_on DESC";
 $result = $conn->query($sql);
 
@@ -74,7 +88,7 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
+    <title>E-Documentation & Compliance Manager</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
     <style>
         :root {
@@ -537,7 +551,7 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>E-Documentation & Compiance Manager</h1>
+                <h1>E-Documentation & Compliance Manager</h1>
             </div>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
@@ -548,16 +562,14 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
             </div>
         </div>
 
+        <!-- Upload Section -->
         <div class="upload-section">
             <h3>Upload New Documents</h3>
             <form action="E-Doc.php" method="POST" enctype="multipart/form-data">
                 <div class="uploadform">
-                    <!-- Document Title -->
                     <div class="upload">
                         <input type="text" id="docstitle" name="docstitle" placeholder="Document Title" required>
                     </div>
-
-                    <!-- Document Type -->
                     <div class="upload">
                         <select id="doc_type" name="doc_type" required>
                             <option value="">Select Document Type</option>
@@ -567,8 +579,6 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
                             <option value="Compliance Certificate">Compliance Certificate</option>
                         </select>
                     </div>
-
-                    <!-- Custom Choose File -->
                     <div class="upload">
                         <label for="uploadfile" class="choose-file">
                             Choose File: <span id="file-name">No file chosen</span>
@@ -576,11 +586,11 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
                         <input type="file" id="uploadfile" name="uploadfile" required hidden>
                     </div>
                 </div>
-
                 <button type="submit" class="btn btn-upload">Upload Document</button>
             </form>
         </div>
 
+        <!-- Search & Filter -->
         <div class="searchfilter">
             <h3>Search & Filter Documents</h3>
             <div class="searchform">
@@ -601,88 +611,82 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
             </div>
         </div>
 
+        <!-- Documents Table -->
         <div class="table-section">
-    <h3>Document Records</h3>
-    <table id="employeesTable">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Filename</th>
-                <th>Uploaded On</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="DocumentsRecord">
-            <?php
-$editId = isset($_GET['edit']) ? intval($_GET['edit']) : null;
-
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        if ($editId === intval($row['id'])) {
-            // Edit mode
-            echo "<tr>
+            <h3>Document Records</h3>
+            <table id="employeesTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Filename</th>
+                        <th>Uploaded On</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="DocumentsRecord">
+                    <?php
+                    if ($result && $result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            if ($editId === intval($row['id'])) {
+                                echo "<tr>
                 <form method='POST' action='E-Doc.php'>
-                    <td><input type='text' class='title' name='docstitle' value='" . htmlspecialchars($row['title']) . "' required></td>
-                    <td>
-                        <select class='doc_type' name='doc_type' required>
-                            <option value='Bill of Lading' " . ($row['doc_type'] == 'Bill of Lading' ? 'selected' : '') . ">Bill of Lading</option>
-                            <option value='Invoice' " . ($row['doc_type'] == 'Invoice' ? 'selected' : '') . ">Invoice</option>
-                            <option value='Customs Clearance' " . ($row['doc_type'] == 'Customs Clearance' ? 'selected' : '') . ">Customs Clearance</option>
-                            <option value='Compliance Certificate' " . ($row['doc_type'] == 'Compliance Certificate' ? 'selected' : '') . ">Compliance Certificate</option>
-                        </select>
-                    </td>
-                    <td>{$row['filename']}</td>
-                    <td>{$row['uploaded_on']}</td>
-                    <td>
-                        <select class='doc_status' name='status'>
-                            <option value='Pending Review' " . ($row['status'] == 'Pending Review' ? 'selected' : '') . ">Pending Review</option>
-                            <option value='Compliant' " . ($row['status'] == 'Compliant' ? 'selected' : '') . ">Compliant</option>
-                            <option value='Expired' " . ($row['status'] == 'Expired' ? 'selected' : '') . ">Expired</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type='hidden' name='edit_id' value='{$row['id']}'>
-                        <button type='submit' name='save' class='save'>Save</button>
-                        <a href='E-Doc.php' class='cancel'>Cancel</a>
-                    </td>
+                  <td><input type='text' class='title' name='docstitle' value='" . htmlspecialchars($row['title']) . "' required></td>
+                  <td>
+                    <select class='doc_type' name='doc_type' required>
+                      <option value='Bill of Lading' " . ($row['doc_type'] == 'Bill of Lading' ? 'selected' : '') . ">Bill of Lading</option>
+                      <option value='Invoice' " . ($row['doc_type'] == 'Invoice' ? 'selected' : '') . ">Invoice</option>
+                      <option value='Customs Clearance' " . ($row['doc_type'] == 'Customs Clearance' ? 'selected' : '') . ">Customs Clearance</option>
+                      <option value='Compliance Certificate' " . ($row['doc_type'] == 'Compliance Certificate' ? 'selected' : '') . ">Compliance Certificate</option>
+                    </select>
+                  </td>
+                  <td>{$row['filename']}</td>
+                  <td>{$row['uploaded_on']}</td>
+                  <td>
+                    <select class='doc_status' name='status'>
+                      <option value='Pending Review' " . ($row['status'] == 'Pending Review' ? 'selected' : '') . ">Pending Review</option>
+                      <option value='Compliant' " . ($row['status'] == 'Compliant' ? 'selected' : '') . ">Compliant</option>
+                      <option value='Expired' " . ($row['status'] == 'Expired' ? 'selected' : '') . ">Expired</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type='hidden' name='edit_id' value='{$row['id']}'>
+                    <button type='submit' name='save' class='save'>Save</button>
+                    <a href='E-Doc.php' class='cancel'>Cancel</a>
+                  </td>
                 </form>
-            </tr>";
-        } else {
-            // Normal row
-            echo "<tr>
+              </tr>";
+                            } else {
+                                echo "<tr>
                 <td>{$row['title']}</td>
                 <td>{$row['doc_type']}</td>
                 <td>{$row['filename']}</td>
                 <td>{$row['uploaded_on']}</td>
                 <td>{$row['status']}</td>
                 <td>
-                    <a class='download' href='uploads/{$row['filename']}' download>Download</a>  
-                    <a class='edit' href='?edit={$row['id']}'>Edit</a>  
-                    <a class='delete' href='?delete={$row['id']}' onclick=\"return confirm('Delete this document?')\">Delete</a>
+                  <a class='download' href='uploads/{$row['filename']}' download>Download</a>  
+                  <a class='edit' href='?edit={$row['id']}'>Edit</a>  
+                  <a class='delete' href='?delete={$row['id']}' onclick=\"return confirm('Delete this document?')\">Delete</a>
                 </td>
-            </tr>";
-        }
-    }
-} else {
-    echo "<tr><td colspan='6'>No documents found</td></tr>";
-}
-?>
-        </tbody>
-    </table>
-</div>
-
-           
+              </tr>";
+                            }
+                        }
+                    } else {
+                        echo "<tr><td colspan='6'>No documents found</td></tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
 
         <script>
+            // Theme Toggle
             const checkbox = document.getElementById("themeToggle");
-
             if (localStorage.getItem("darkMode") === "enabled") {
                 document.body.classList.add("dark-mode");
                 checkbox.checked = true;
             }
-
             checkbox.addEventListener("change", () => {
                 if (checkbox.checked) {
                     document.body.classList.add("dark-mode");
@@ -693,47 +697,35 @@ if ($result && $result->num_rows > 0) {
                 }
             });
 
+            // Sidebar Toggle
             document.getElementById('hamburger').addEventListener('click', function() {
                 document.getElementById('sidebar').classList.toggle('collapsed');
                 document.getElementById('mainContent').classList.toggle('expanded');
             });
 
+            // File chooser
             const fileInput = document.getElementById("uploadfile");
             const fileName = document.getElementById("file-name");
-
             fileInput.addEventListener("change", function() {
-                if (this.files.length > 0) {
-                    fileName.textContent = this.files[0].name;
-                } else {
-                    fileName.textContent = "No file chosen";
-                }
+                fileName.textContent = this.files.length > 0 ? this.files[0].name : "No file chosen";
             });
 
-            // Search + Filter
-            document.getElementById("searchBtn").addEventListener("click", filterTable);
-
-            function filterTable() {
-                let searchValue = document.getElementById("search").value.toLowerCase();
-                let statusFilter = document.getElementById("doc-status").value;
-                let rows = document.querySelectorAll("#DocumentsRecord tr");
+            // Search & Filter
+            document.getElementById("searchBtn").addEventListener("click", function() {
+                const searchValue = document.getElementById("search").value.toLowerCase();
+                const statusFilter = document.getElementById("doc-status").value;
+                const rows = document.querySelectorAll("#DocumentsRecord tr");
 
                 rows.forEach(row => {
-                    let title = row.cells[0]?.innerText.toLowerCase() || "";
-                    let type = row.cells[1]?.innerText.toLowerCase() || "";
-                    let status = row.cells[4]?.innerText || "";
-
-                    let matchesSearch = title.includes(searchValue) || type.includes(searchValue);
-                    let matchesStatus = !statusFilter || status === statusFilter;
-
-                    if (matchesSearch && matchesStatus) {
-                        row.style.display = "";
-                    } else {
-                        row.style.display = "none";
-                    }
+                    const title = row.cells[0]?.innerText.toLowerCase() || "";
+                    const type = row.cells[1]?.innerText.toLowerCase() || "";
+                    const status = row.cells[4]?.innerText || "";
+                    row.style.display = (title.includes(searchValue) || type.includes(searchValue)) && (!statusFilter || status === statusFilter) ? "" : "none";
                 });
-            }
+            });
         </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    </div>
 </body>
 
 </html>

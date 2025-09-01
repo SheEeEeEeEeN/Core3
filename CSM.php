@@ -43,7 +43,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
     exit;
 }
 
-/*add contract*/
+/* Add contract */
 $contract_limit = 100;
 if (isset($_POST['add_contract'])) {
     $contract_id    = $conn->real_escape_string($_POST['contract_id']);
@@ -53,27 +53,43 @@ if (isset($_POST['add_contract'])) {
     $status         = $conn->real_escape_string($_POST['status']);
     $sla_compliance = $conn->real_escape_string($_POST['sla_compliance']);
 
+    // Check total contracts
     $check_sql = "SELECT COUNT(*) AS total FROM csm";
     $result = $conn->query($check_sql);
     $row = $result->fetch_assoc();
     $total_contracts = $row['total'];
 
+    // Delete oldest if limit reached
     if ($total_contracts >= $contract_limit) {
-        $delete_sql = "DELETE FROM csm 
-                       ORDER BY start_date ASC 
-                       LIMIT 1";
+        $oldest_sql = "SELECT contract_id, client_name FROM csm ORDER BY start_date ASC LIMIT 1";
+        $res_old = $conn->query($oldest_sql);
+        $oldest = $res_old->fetch_assoc();
+
+        $delete_sql = "DELETE FROM csm ORDER BY start_date ASC LIMIT 1";
         $conn->query($delete_sql);
+
+        // Log delete due to limit
+        $activity = "Deleted oldest contract (limit $contract_limit reached): {$oldest['contract_id']} - {$oldest['client_name']}";
+        $conn->query("INSERT INTO admin_activity (module, activity, status) VALUES ('CSM', '$activity', 'Success')");
     }
 
+    // Insert new contract
     $insert_sql = "INSERT INTO csm (contract_id, client_name, start_date, end_date, status, sla_compliance) 
                    VALUES ('$contract_id', '$client_name', '$start_date', '$end_date', '$status', '$sla_compliance')";
 
     if ($conn->query($insert_sql)) {
+        // Log add
+        $activity = "Added new contract: $contract_id - $client_name";
+        $conn->query("INSERT INTO admin_activity (module, activity, status) VALUES ('CSM', '$activity', 'Success')");
+
         echo "<script>alert('Contract added successfully');</script>";
     } else {
-        echo "Error: " . $conn->error;
+        $errorMsg = $conn->error;
+        $conn->query("INSERT INTO admin_activity (module, activity, status) VALUES ('CSM', 'Failed to add contract: $contract_id', 'Failed')");
+        echo "Error: " . $errorMsg;
     }
 }
+
 
 /* Fetch all contracts */
 $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
