@@ -377,7 +377,7 @@ requireRole('user')
     <a href="#" class="admin-feature">System Settings</a>
     <a href="#" class="admin-feature">User Permissions</a>
     <a href="#">Reports</a>
-    <a href="login.php">Logout</a>
+    <a href="logout.php">Logout</a>
   </div>
 
   <div class="content" id="mainContent">

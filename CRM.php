@@ -208,7 +208,7 @@ $result = $conn->query($sql);
         .table-section {
             position: relative;
             background-color: white;
-            padding: 1.5rem;
+            padding: 1.3rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
         }
@@ -417,7 +417,7 @@ $result = $conn->query($sql);
             padding: 0.5rem;
             border: none;
             border-radius: 4px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             background-color: #1a629dff;
             color: white;
@@ -511,7 +511,7 @@ $result = $conn->query($sql);
         <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
         <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
         <a href="CPN.php">Customer Portal & Notification Hub</a>
-        <a href="login.php">Logout</a>
+        <a href="logout.php">Logout</a>
     </div>
 
     <div class="content" id="mainContent">

@@ -367,7 +367,7 @@ while ($row = $result->fetch_assoc()) {
     <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
     <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
     <a href="CPN.php">Customer Portal & Notification Hub</a>
-    <a href="login.php">Logout</a>
+    <a href="logout.php">Logout</a>
   </div>
 
   <div class="content" id="mainContent">
@@ -500,29 +500,45 @@ while ($row = $result->fetch_assoc()) {
             }
         });
 
-    const aValues = ["Active", "Pending", "Expired"];
-    const bValues = [1, 1, 1];
-    const barColors = [
-      "#1e7145",
-      "rgba(185, 214, 59, 1)",
-      "#b91d47"
-    ];
+    // Doughnut Chart: Contracts Overview
+function loadContractsChart() {
+  fetch("CSM.php?action=stats")
+    .then(response => response.json())
+    .then(data => {
+      const ctx2 = document.getElementById("myChart2").getContext("2d");
 
-    new Chart("myChart2", {
-      type: "doughnut",
-      data: {
-        labels: aValues,
-        datasets: [{
-          backgroundColor: barColors,
-          data: bValues
-        }]
-      },
-      options: {
-        title: {
-          display: true,
+      new Chart(ctx2, {
+        type: "doughnut",
+        data: {
+          labels: ["Active", "Expiring Soon", "Compliant"],
+          datasets: [{
+            backgroundColor: [
+              "#1e7145",   // green
+              "#f39c12",   // orange
+              "#3498db"    // blue
+            ],
+            data: [
+              data.totalActive,   // Active contracts
+              data.expiringSoon,  // Expiring soon
+              data.totalCompliant // Compliant
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          legend: {
+            position: "bottom"
+          },
+          title: {
+            display: true,
+          }
         }
-      }
-    });
+      });
+    })
+    .catch(error => console.error("Error loading contracts chart:", error));
+}
+
+document.addEventListener("DOMContentLoaded", loadContractsChart);
   </script>
 </body>
 

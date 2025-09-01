@@ -274,7 +274,7 @@ requireRole('admin')
         <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
         <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
         <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
-        <a href="login.php">Logout</a>
+        <a href="logout.php">Logout</a>
     </div>
 
     <div class="content" id="mainContent">
