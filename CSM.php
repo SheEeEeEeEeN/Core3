@@ -32,8 +32,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
     $row = $result->fetch_assoc();
     $totalCompliant = $row['total_compliant'];
 
-    // Return plain text (pipe-separated)
-    echo "$totalContracts|$totalActive|$expiringSoon|$totalCompliant";
+    // ✅ Return JSON instead of pipe text
+    header('Content-Type: application/json');
+    echo json_encode([
+        'totalContracts' => (int)$totalContracts,
+        'totalActive' => (int)$totalActive,
+        'expiringSoon' => (int)$expiringSoon,
+        'totalCompliant' => (int)$totalCompliant
+    ]);
     exit;
 }
 
@@ -639,19 +645,20 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
         });
 
         function updateDashboard() {
-            fetch('?action=stats')
-                .then(response => response.text())
-                .then(text => {
-                    // Split values by pipe
-                    const [totalContracts, totalActive, expiringSoon, totalCompliant] = text.split('|');
+        fetch('?action=stats')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('totalContracts').textContent = data.totalContracts;
+                document.getElementById('totalActive').textContent = data.totalActive;
+                document.getElementById('expiringSoon').textContent = data.expiringSoon;
+                document.getElementById('totalCompliant').textContent = data.totalCompliant;
+            })
+            .catch(error => console.error('Error fetching stats:', error));
+    }
 
-                    document.getElementById('totalContracts').textContent = totalContracts;
-                    document.getElementById('totalActive').textContent = totalActive;
-                    document.getElementById('expiringSoon').textContent = expiringSoon;
-                    document.getElementById('totalCompliant').textContent = totalCompliant;
-                })
-                .catch(error => console.error('Error fetching stats:', error));
-        }
+    // Update immediately and every 5 seconds
+    updateDashboard();
+    setInterval(updateDashboard, 5000);
 
         // Update immediately and every 5 seconds
         updateDashboard();
