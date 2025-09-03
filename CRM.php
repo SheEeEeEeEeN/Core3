@@ -15,10 +15,18 @@ if (isset($_POST['add'])) {
             VALUES ('$customer_name', '$company', '$email', '$phone', '$status')";
 
     if ($conn->query($sql) === TRUE) {
+        // Log to admin_activity
+        $activity = "Added new customer: $customer_name ($company)";
+        $conn->query("INSERT INTO admin_activity (module, activity, status) 
+                      VALUES ('CRM', '$activity', 'Success')");
+
         header("Location: CRM.php?success=1");
         exit();
     } else {
-        echo "Error: " . $conn->error;
+        $errorMsg = $conn->error;
+        $conn->query("INSERT INTO admin_activity (module, activity, status) 
+                      VALUES ('CRM', 'Add customer failed: $customer_name', 'Failed')");
+        echo "Error: " . $errorMsg;
     }
 }
 
@@ -40,28 +48,45 @@ if (isset($_POST['update'])) {
             WHERE id=$id";
 
     if ($conn->query($sql) === TRUE) {
+        $activity = "Updated customer: $customer_name ($company)";
+        $conn->query("INSERT INTO admin_activity (module, activity, status) 
+                      VALUES ('CRM', '$activity', 'Success')");
+
         header("Location: CRM.php?updated=1");
         exit();
     } else {
-        echo "Error: " . $conn->error;
+        $errorMsg = $conn->error;
+        $conn->query("INSERT INTO admin_activity (module, activity, status) 
+                      VALUES ('CRM', 'Update failed for ID $id', 'Failed')");
+        echo "Error: " . $errorMsg;
     }
 }
 
 /* Delete Customer */
 if (isset($_GET['delete'])) {
     $id = (int) $_GET['delete'];
-    $conn->query("DELETE FROM crm WHERE id=$id");
+    
+    // Fetch customer before delete (for logging)
+    $res = $conn->query("SELECT customer_name, company FROM crm WHERE id=$id");
+    $row = $res->fetch_assoc();
+    $customer_name = $row['customer_name'];
+    $company       = $row['company'];
+
+    if ($conn->query("DELETE FROM crm WHERE id=$id") === TRUE) {
+        $activity = "Deleted customer: $customer_name ($company)";
+        $conn->query("INSERT INTO admin_activity (module, activity, status) 
+                      VALUES ('CRM', '$activity', 'Success')");
+    } else {
+        $conn->query("INSERT INTO admin_activity (module, activity, status) 
+                      VALUES ('CRM', 'Delete failed for customer ID $id', 'Failed')");
+    }
+
     header("Location: CRM.php?deleted=1");
     exit;
 }
 
 /* Fetch Customers */
-$result = $conn->query("SELECT * FROM crm ORDER BY last_contract DESC");
-
-$sql = "SELECT * FROM crm"; // adjust table name
-$result = $conn->query($sql);
-
-
+$result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -208,7 +233,7 @@ $result = $conn->query($sql);
         .table-section {
             position: relative;
             background-color: white;
-            padding: 1.5rem;
+            padding: 1.3rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
         }
@@ -417,7 +442,7 @@ $result = $conn->query($sql);
             padding: 0.5rem;
             border: none;
             border-radius: 4px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             background-color: #1a629dff;
             color: white;
@@ -511,7 +536,7 @@ $result = $conn->query($sql);
         <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
         <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
         <a href="CPN.php">Customer Portal & Notification Hub</a>
-        <a href="login.php">Logout</a>
+        <a href="logout.php">Logout</a>
     </div>
 
     <div class="content" id="mainContent">
