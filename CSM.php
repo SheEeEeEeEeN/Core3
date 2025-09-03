@@ -8,13 +8,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
     $sql = "SELECT COUNT(*) AS total FROM csm";
     $result = $conn->query($sql);
     $row = $result->fetch_assoc();
-    $totalContracts = $row['total']; // fix variable name
+    $totalContracts = $row['total'];
 
     /* Active contract */
     $sql = "SELECT COUNT(*) AS total_active FROM csm WHERE status = 'Active'";
     $result = $conn->query($sql);
     $row = $result->fetch_assoc();
-    $totalActive = $row['total_active']; // fix alias and variable
+    $totalActive = $row['total_active'];
 
     /* Expiring soon */
     $sql = "SELECT COUNT(*) AS expiring_soon 
@@ -32,16 +32,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
     $row = $result->fetch_assoc();
     $totalCompliant = $row['total_compliant'];
 
-    /* Return JSON */
-    header('Content-Type: application/json');
-    echo json_encode([
-        'totalContracts' => $totalContracts,
-        'totalActive' => $totalActive,
-        'totalCompliant' => $totalCompliant,
-        'expiringSoon' => $expiringSoon
-    ]);
+    // Return plain text (pipe-separated)
+    echo "$totalContracts|$totalActive|$expiringSoon|$totalCompliant";
     exit;
 }
+
 
 /* Add contract */
 $contract_limit = 100;
@@ -347,7 +342,21 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
         }
 
         /* Table Section */
-        .table-section {
+        .table-section1 {
+            background-color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .dark-mode .table-section1 {
+            background-color: var(--dark-card);
+            color: var(--text-light);
+        }
+
+        .table-section2 {
             background-color: white;
             text-align: center;
             padding: 1.5rem;
@@ -355,7 +364,7 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
             box-shadow: var(--shadow);
         }
 
-        .dark-mode .table-section {
+        .dark-mode .table-section2 {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
@@ -556,9 +565,9 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
         </div>
 
 
-        <div class="table-section">
+        <div class="table-section1">
             <h3>Contracts List</h3>
-            <table id="contractsTable" class="table-selection">
+            <table id="contractsTable" class="table-selection1">
                 <thead>
                     <tr>
                         <th>Contract ID</th>
@@ -580,6 +589,27 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
                             <td><?= htmlspecialchars($row['sla_compliance']); ?></td>
                         </tr>
                     <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="table-section2">
+            <h3>Additional Table</h3>
+            <table id="additionalTable" class="table-selection2">
+                <thead>
+                    <tr>
+                        <th>Column 1</th>
+                        <th>Column 2</th>
+                        <th>Column 3</th>
+                        <th>Column 4</th>
+                        <th>Column 5</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="5" style="text-align:center;">No data available</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -608,21 +638,24 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
             document.getElementById('mainContent').classList.toggle('expanded');
         });
 
-function updateDashboard() {
-    fetch('?action=stats') // same file, query param triggers JSON
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('totalContracts').textContent = data.totalContracts;
-            document.getElementById('totalActive').textContent = data.totalActive;
-            document.getElementById('totalCompliant').textContent = data.totalCompliant;
-            document.getElementById('expiringSoon').textContent = data.expiringSoon;
-        })
-        .catch(error => console.error('Error fetching stats:', error));
-}
+        function updateDashboard() {
+            fetch('?action=stats')
+                .then(response => response.text())
+                .then(text => {
+                    // Split values by pipe
+                    const [totalContracts, totalActive, expiringSoon, totalCompliant] = text.split('|');
 
-// Update immediately and every 5 seconds
-updateDashboard();
-setInterval(updateDashboard, 5000);
+                    document.getElementById('totalContracts').textContent = totalContracts;
+                    document.getElementById('totalActive').textContent = totalActive;
+                    document.getElementById('expiringSoon').textContent = expiringSoon;
+                    document.getElementById('totalCompliant').textContent = totalCompliant;
+                })
+                .catch(error => console.error('Error fetching stats:', error));
+        }
+
+        // Update immediately and every 5 seconds
+        updateDashboard();
+        setInterval(updateDashboard, 5000);
     </script>
 </body>
 

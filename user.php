@@ -370,12 +370,7 @@ requireRole('user')
     <div class="logo">
       <img src="rem.png" alt="SLATE Logo">
     </div>
-    <div class="system-name">(NAME OF DEPARTMENT)</div>
     <a href="#" class="active">Dashboard</a>
-    <a href="#">Freight Management</a>
-    <a href="#">Employee Management</a>
-    <a href="#" class="admin-feature">System Settings</a>
-    <a href="#" class="admin-feature">User Permissions</a>
     <a href="#">Reports</a>
     <a href="logout.php">Logout</a>
   </div>
@@ -384,7 +379,7 @@ requireRole('user')
     <div class="header">
       <div class="hamburger" id="hamburger">☰</div>
       <div>
-        <h1>User Dashboard <span class="system-title">| (NAME OF DEPARTMENT)</span></h1>
+        <h1>User Dashboard <span class="system-title"></span></h1>
       </div>
       <div class="theme-toggle-container">
         <span class="theme-label">Dark Mode</span>
@@ -397,22 +392,17 @@ requireRole('user')
 
     <div class="dashboard-cards">
       <div class="card">
-        <h3>Total Employees</h3>
+        <h3>Notification</h3>
         <div class="stat-value" id="totalEmployees">0</div>
         <div class="stat-label">Loading data...</div>
       </div>
 
       <div class="card">
-        <h3>Active Employees</h3>
+        <h3>Feedback</h3>
         <div class="stat-value" id="activeEmployees">0</div>
         <div class="stat-label">Loading data...</div>
       </div>
 
-      <div class="card">
-        <h3>Average Salary</h3>
-        <div class="stat-value" id="avgSalary">$0</div>
-        <div class="stat-label">Loading data...</div>
-      </div>
     </div>
 
     <button id="toggleFormBtn" class="btn toggle-form-btn">Add New Employee</button>
@@ -480,17 +470,15 @@ requireRole('user')
     </div>
 
     <div class="table-section">
-      <h3>Employee Compensation</h3>
+      <h3>??????</h3>
       <table id="employeesTable">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Department</th>
-            <th>Position</th>
-            <th>Salary</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Column 1</th>
+                <th>Column 2</th>
+                <th>Column 3</th>
+                <th>Column 4</th>
+                <th>Column 5</th>
           </tr>
         </thead>
         <tbody id="employeesTableBody">

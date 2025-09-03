@@ -6,6 +6,11 @@ $error = "";
 $success = "";
 $showRegister = false; // for staying in register form
 
+// Variables for showing the custom modal after HTML loads
+$alertTitle = "";
+$alertMessage = "";
+$alertRedirect = "";
+
 // Handle AJAX requests for live check
 if (isset($_GET['check'])) {
   $field = $_GET['check'];
@@ -55,11 +60,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['username'] = $db_username;
         $_SESSION['role'] = $role;
 
-        echo "<script>
-                        alert('Login successful! Welcome, $db_username');
-                        window.location.href = '" . ($role === 'admin' ? 'admin.php' : 'user.php') . "';
-                      </script>";
-        exit();
+        // don't echo JS here — set variables and call showAlert after HTML loads
+        $alertTitle = "Login Successful";
+        $alertMessage = "Welcome, $db_username";
+        $alertRedirect = ($role === 'admin' ? 'admin.php' : 'user.php');
+        // do NOT exit() here so the page (and modal JS) is sent
       } else {
         $error = "Invalid password!";
       }
@@ -93,8 +98,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("sss", $username, $email, $hashedPassword);
 
         if ($stmt->execute()) {
+          // set alert variables — will be triggered after page loads
+          $alertTitle = "Registration Successful";
+          $alertMessage = "You can now login.";
+          $alertRedirect = "login.php";
+          // keep $success for backward compatibility if you need it
           $success = "Account created successfully! You can now login.";
-          echo "<script>alert('Registration successful! Please login.');</script>";
+          // do NOT exit() here so the page (and modal JS) is sent
         } else {
           $error = "Error: " . $stmt->error;
         }
@@ -118,7 +128,7 @@ $conn->close();
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SLATE System</title>
   <style>
-    /* Base and layout styles */
+    /* Base and layout styles (kept your original styles) */
     * {
       margin: 0;
       padding: 0;
@@ -271,6 +281,54 @@ $conn->close();
       font-size: .875rem;
     }
 
+    /* Custom alert box */
+    #customAlert {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .alert-content {
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 10px;
+      text-align: center;
+      width: 320px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, .3);
+      font-family: Arial, sans-serif;
+    }
+
+    .alert-content h3 {
+      margin-bottom: 10px;
+      color: #0072ff;
+    }
+
+    .alert-content p {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .alert-content .ok-btn {
+      padding: 8px 16px;
+      border: none;
+      background: linear-gradient(to right, #0072ff, #00c6ff);
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .alert-content .ok-btn:hover {
+      background: linear-gradient(to right, #0052cc, #009ee3);
+    }
+
     @media (max-width:48rem) {
       .login-container {
         flex-direction: column;
@@ -331,7 +389,7 @@ $conn->close();
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit" name="login">Log In</button>
             <?php if (!empty($error) && isset($_POST['login'])): ?>
-              <div class="inline-message error"><?= $error; ?></div>
+              <div class="inline-message error"><?= htmlentities($error) ?></div>
             <?php endif; ?>
           </form>
 
@@ -350,18 +408,26 @@ $conn->close();
             <button type="submit" name="register">Register</button>
 
             <?php if (!empty($error) && isset($_POST['register'])): ?>
-              <div class="inline-message error"><?= $error; ?></div>
+              <div class="inline-message error"><?= htmlentities($error) ?></div>
             <?php endif; ?>
             <?php if (!empty($success) && isset($_POST['register'])): ?>
-              <div class="inline-message success"><?= $success; ?></div>
+              <div class="inline-message success"><?= htmlentities($success) ?></div>
             <?php endif; ?>
           </form>
 
           <div class="switch-link" id="switchToRegister">Don’t have an account? <a onclick="showRegister()">Register</a></div>
           <div class="switch-link" id="switchToLogin" style="display:none;">Already have an account? <a onclick="showLogin()">Login</a></div>
-
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Custom Alert -->
+  <div id="customAlert">
+    <div class="alert-content">
+      <h3 id="alertTitle">Notification</h3>
+      <p id="alertMessage">This is a message</p>
+      <button class="ok-btn" onclick="closeAlert()">OK</button>
     </div>
   </div>
 
@@ -389,20 +455,22 @@ $conn->close();
     // Password match check
     const passwordInput = document.querySelector('#registerForm input[name="password"]');
     const confirmInput = document.querySelector('#registerForm input[name="confirm_password"]');
-    confirmInput.addEventListener('input', () => {
-      let messageBox = document.getElementById('matchMessage');
-      if (confirmInput.value === "") {
-        messageBox.textContent = "";
-        return;
-      }
-      if (passwordInput.value !== confirmInput.value) {
-        messageBox.textContent = "Passwords do not match!";
-        messageBox.style.color = "#ff6b6b";
-      } else {
-        messageBox.textContent = "Passwords match!";
-        messageBox.style.color = "#4caf50";
-      }
-    });
+    if (confirmInput) {
+      confirmInput.addEventListener('input', () => {
+        let messageBox = document.getElementById('matchMessage');
+        if (confirmInput.value === "") {
+          messageBox.textContent = "";
+          return;
+        }
+        if (passwordInput.value !== confirmInput.value) {
+          messageBox.textContent = "Passwords do not match!";
+          messageBox.style.color = "#ff6b6b";
+        } else {
+          messageBox.textContent = "Passwords match!";
+          messageBox.style.color = "#4caf50";
+        }
+      });
+    }
 
     // Live check for username/email
     function checkAvailability(field, value) {
@@ -417,11 +485,39 @@ $conn->close();
         });
     }
 
-    // Stay sa register form kung may error sa registration
+    // Custom alert functions
+    function showAlert(title, message) {
+      document.getElementById("alertTitle").textContent = title;
+      document.getElementById("alertMessage").textContent = message;
+      document.getElementById("customAlert").style.display = "flex";
+    }
+
+    function closeAlert() {
+      document.getElementById("customAlert").style.display = "none";
+    }
+
+    // Stay on register form if php indicated an error during registration
     <?php if ($showRegister): ?>
       showRegister();
     <?php endif; ?>
   </script>
+
+  <!-- Trigger alert (if any) AFTER the showAlert function is defined -->
+  <?php if (!empty($alertMessage)): ?>
+    <script>
+  const __alertTitle = "<?php echo addslashes($alertTitle); ?>";
+  const __alertMessage = "<?php echo addslashes($alertMessage); ?>";
+  const __alertRedirect = "<?php echo addslashes($alertRedirect); ?>";
+
+  showAlert(__alertTitle, __alertMessage);
+  setTimeout(() => {
+    if (__alertRedirect && __alertRedirect.length > 0) {
+      window.location.href = __alertRedirect;
+    }
+  }, 2000);
+</script>
+
+  <?php endif; ?>
 </body>
 
 </html>
