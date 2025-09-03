@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // don't echo JS here — set variables and call showAlert after HTML loads
         $alertTitle = "Login Successful";
         $alertMessage = "Welcome, $db_username";
-        $alertRedirect = ($role === 'admin' ? 'admin' : 'user');
+        $alertRedirect = ($role === 'admin' ? 'admin.php' : 'user.php');
         // do NOT exit() here so the page (and modal JS) is sent
       } else {
         $error = "Invalid password!";
@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           // set alert variables — will be triggered after page loads
           $alertTitle = "Registration Successful";
           $alertMessage = "You can now login.";
-          $alertRedirect = "login";
+          $alertRedirect = "login.php";
           // keep $success for backward compatibility if you need it
           $success = "Account created successfully! You can now login.";
           // do NOT exit() here so the page (and modal JS) is sent
