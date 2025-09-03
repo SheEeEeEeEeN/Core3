@@ -352,13 +352,13 @@ requireRole('admin')
             <img src="rem.png" alt="SLATE Logo">
         </div>
         <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php" class="active">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php">Customer Portal & Notification Hub</a>
-        <a href="logout.php">Logout</a>
+        <a href="admin">Dashboard</a>
+        <a href="CRM">Customer Relationship Management</a>
+        <a href="CSM">Contract & SLA Monitoring</a>
+        <a href="E-Doc">E-Documentations & Compliance Manager</a>
+        <a href="BIFA" class="active">Business Intelligence & Freight Analytics</a>
+        <a href="CPN">Customer Portal & Notification Hub</a>
+        <a href="logout">Logout</a>
     </div>
 
     <div class="content" id="mainContent">

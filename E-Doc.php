@@ -46,7 +46,7 @@ if (isset($_POST['save'])) {
         $conn->query("INSERT INTO admin_activity (`module`, `activity`, `status`, `date`) 
                       VALUES ('$module', '$activity', '$status', NOW())");
 
-        header("Location: E-Doc.php");
+        header("Location: E-Doc");
         exit;
     } else {
         die("Execute failed: " . $stmt->error);
@@ -71,7 +71,7 @@ if (isset($_GET['delete'])) {
         $conn->query("INSERT INTO admin_activity (`module`, `activity`, `status`, `date`) 
                       VALUES ('$module', '$activity', '$status', NOW())");
     }
-    header("Location: E-Doc.php");
+    header("Location: E-Doc");
     exit;
 }
 
@@ -538,13 +538,13 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
             <img src="rem.png" alt="SLATE Logo">
         </div>
         <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php" class="active">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php">Customer Portal & Notification Hub</a>
-        <a href="logout.php">Logout</a>
+        <a href="admin">Dashboard</a>
+        <a href="CRM">Customer Relationship Management</a>
+        <a href="CSM">Contract & SLA Monitoring</a>
+        <a href="E-Doc" class="active">E-Documentations & Compliance Manager</a>
+        <a href="BIFA">Business Intelligence & Freight Analytics</a>
+        <a href="CPN">Customer Portal & Notification Hub</a>
+        <a href="logout">Logout</a>
     </div>
 
     <div class="content" id="mainContent">
