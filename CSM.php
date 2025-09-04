@@ -1,101 +1,166 @@
 <?php
 include 'connection.php';
-include('session.php');
+include 'session.php';
 requireRole('admin');
 
+/* Contract Stats API for AJAX — do this before any output */
 if (isset($_GET['action']) && $_GET['action'] === 'stats') {
-    /* Total contracts */
-    $sql = "SELECT COUNT(*) AS total FROM csm";
-    $result = $conn->query($sql);
-    $row = $result->fetch_assoc();
-    $totalContracts = $row['total'];
+    // Make sure nothing else leaked into output
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    header('Content-Type: application/json; charset=utf-8');
 
-    /* Active contract */
-    $sql = "SELECT COUNT(*) AS total_active FROM csm WHERE status = 'Active'";
-    $result = $conn->query($sql);
-    $row = $result->fetch_assoc();
-    $totalActive = $row['total_active'];
+    $getCount = function (string $sql) use ($conn): int {
+        $res = $conn->query($sql);
+        if (!$res) return 0;
+        $row = $res->fetch_assoc();
+        return (int) array_values($row)[0];
+    };
 
-    /* Expiring soon */
-    $sql = "SELECT COUNT(*) AS expiring_soon 
-            FROM csm 
-            WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)";
-    $result = $conn->query($sql);
-    $row = $result->fetch_assoc();
-    $expiringSoon = $row['expiring_soon'];
+    $totalContracts = $getCount("SELECT COUNT(*) FROM csm");
+    $totalActive    = $getCount("SELECT COUNT(*) FROM csm WHERE status = 'Active'");
+    $expiringSoon   = $getCount("SELECT COUNT(*) FROM csm WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)");
+    $totalCompliant = $getCount("SELECT COUNT(*) FROM csm WHERE sla_compliance = 'Compliant'");
 
-    /* Total compliant */
-    $sql = "SELECT COUNT(*) AS total_compliant 
-            FROM csm 
-            WHERE sla_compliance = 'Compliant'";
-    $result = $conn->query($sql);
-    $row = $result->fetch_assoc();
-    $totalCompliant = $row['total_compliant'];
-
-    // ✅ Return JSON instead of pipe text
-    header('Content-Type: application/json');
     echo json_encode([
-        'totalContracts' => (int)$totalContracts,
-        'totalActive' => (int)$totalActive,
-        'expiringSoon' => (int)$expiringSoon,
-        'totalCompliant' => (int)$totalCompliant
+        'totalContracts' => $totalContracts,
+        'totalActive'    => $totalActive,
+        'expiringSoon'   => $expiringSoon,
+        'totalCompliant' => $totalCompliant,
     ]);
     exit;
 }
 
+/* Initial stats for first render (optional; used by PHP echoes) */
+$sql = "SELECT COUNT(*) AS total FROM csm";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$totalContracts = (int)$row['total'];
+
+$sql = "SELECT COUNT(*) AS total_active FROM csm WHERE status = 'Active'";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$totalActive = (int)$row['total_active'];
+
+$sql = "SELECT COUNT(*) AS expiring_soon 
+        FROM csm 
+        WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$expiringSoon = (int)$row['expiring_soon'];
+
+$sql = "SELECT COUNT(*) AS total_compliant 
+        FROM csm 
+        WHERE sla_compliance = 'Compliant'";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$totalCompliant = (int)$row['total_compliant'];
 
 /* Add contract */
 $contract_limit = 100;
-if (isset($_POST['add_contract'])) {
-    $contract_id    = $conn->real_escape_string($_POST['contract_id']);
-    $client_name    = $conn->real_escape_string($_POST['client_name']);
-    $start_date     = $conn->real_escape_string($_POST['start_date']);
-    $end_date       = $conn->real_escape_string($_POST['end_date']);
-    $status         = $conn->real_escape_string($_POST['status']);
-    $sla_compliance = $conn->real_escape_string($_POST['sla_compliance']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
+    // read safely (no undefined index warnings) and trim
+    $contract_id    = trim($_POST['contract_id'] ?? '');
+    $client_name    = trim($_POST['client_name'] ?? '');
+    $start_date     = trim($_POST['start_date'] ?? '');
+    $end_date       = trim($_POST['end_date'] ?? '');
+    $status         = trim($_POST['status'] ?? '');
+    $sla_compliance = trim($_POST['sla_compliance'] ?? '');
 
-    // Check total contracts
-    $check_sql = "SELECT COUNT(*) AS total FROM csm";
-    $result = $conn->query($check_sql);
-    $row = $result->fetch_assoc();
-    $total_contracts = $row['total'];
+    // simple validation
+    $errors = [];
+    if ($contract_id === '')    $errors[] = 'Contract ID';
+    if ($client_name === '')    $errors[] = 'Client Name';
+    if ($start_date === '')     $errors[] = 'Start Date';
+    if ($end_date === '')       $errors[] = 'End Date';
+    if ($status === '')         $errors[] = 'Status';
+    if ($sla_compliance === '') $errors[] = 'SLA Compliance';
 
-    // Delete oldest if limit reached
-    if ($total_contracts >= $contract_limit) {
-        $oldest_sql = "SELECT contract_id, client_name FROM csm ORDER BY start_date ASC LIMIT 1";
-        $res_old = $conn->query($oldest_sql);
-        $oldest = $res_old->fetch_assoc();
-
-        $delete_sql = "DELETE FROM csm ORDER BY start_date ASC LIMIT 1";
-        $conn->query($delete_sql);
-
-        // Log delete due to limit
-        $activity = "Deleted oldest contract (limit $contract_limit reached): {$oldest['contract_id']} - {$oldest['client_name']}";
-        $conn->query("INSERT INTO admin_activity (module, activity, status) VALUES ('CSM', '$activity', 'Success')");
-    }
-
-    // Insert new contract
-    $insert_sql = "INSERT INTO csm (contract_id, client_name, start_date, end_date, status, sla_compliance) 
-                   VALUES ('$contract_id', '$client_name', '$start_date', '$end_date', '$status', '$sla_compliance')";
-
-    if ($conn->query($insert_sql)) {
-        // Log add
-        $activity = "Added new contract: $contract_id - $client_name";
-        $conn->query("INSERT INTO admin_activity (module, activity, status) VALUES ('CSM', '$activity', 'Success')");
-
-        echo "<script>alert('Contract added successfully');</script>";
+    if (!empty($errors)) {
+        $err = implode(', ', $errors);
+        echo "<script>alert('Please fill the required fields: $err');</script>";
     } else {
-        $errorMsg = $conn->error;
-        $conn->query("INSERT INTO admin_activity (module, activity, status) VALUES ('CSM', 'Failed to add contract: $contract_id', 'Failed')");
-        echo "Error: " . $errorMsg;
+        // Check total contracts
+        $check_sql = "SELECT COUNT(*) AS total FROM csm";
+        $res_check = $conn->query($check_sql);
+        $row_check = $res_check->fetch_assoc();
+        $total_contracts = (int)($row_check['total'] ?? 0);
+
+        // Delete oldest if limit reached
+        if ($total_contracts >= $contract_limit) {
+            $oldest_sql = "SELECT contract_id, client_name FROM csm ORDER BY start_date ASC LIMIT 1";
+            $res_old = $conn->query($oldest_sql);
+            $oldest = $res_old ? $res_old->fetch_assoc() : null;
+
+            $delete_sql = "DELETE FROM csm ORDER BY start_date ASC LIMIT 1";
+            $conn->query($delete_sql);
+
+            if ($oldest) {
+                $activity = "Deleted oldest contract (limit $contract_limit reached): {$oldest['contract_id']} - {$oldest['client_name']}";
+                $stmtLog = $conn->prepare("INSERT INTO admin_activity (module, activity, status) VALUES (?, ?, ?)");
+                if ($stmtLog) {
+                    $module = 'CSM';
+                    $statusLog = 'Success';
+                    $stmtLog->bind_param('sss', $module, $activity, $statusLog);
+                    $stmtLog->execute();
+                    $stmtLog->close();
+                }
+            }
+        }
+
+        // Use prepared statement to insert safely
+        $stmt = $conn->prepare("INSERT INTO csm (contract_id, client_name, start_date, end_date, status, sla_compliance) VALUES (?, ?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('ssssss', $contract_id, $client_name, $start_date, $end_date, $status, $sla_compliance);
+            if ($stmt->execute()) {
+                // Log add (prepared)
+                $activity = "Added new contract: $contract_id - $client_name";
+                $stmtLog = $conn->prepare("INSERT INTO admin_activity (module, activity, status) VALUES (?, ?, ?)");
+                if ($stmtLog) {
+                    $module = 'CSM';
+                    $statusLog = 'Success';
+                    $stmtLog->bind_param('sss', $module, $activity, $statusLog);
+                    $stmtLog->execute();
+                    $stmtLog->close();
+                }
+
+                // show success and trigger dashboard refresh once page loads
+                echo "<script>alert('Contract added successfully');</script>";
+                echo "<script>
+                    // request update after DOM is ready (updateDashboard is defined later in the page)
+                    window.addEventListener('DOMContentLoaded', function() {
+                        if (typeof updateDashboard === 'function') updateDashboard();
+                    });
+                </script>";
+            } else {
+                $errorMsg = $stmt->error;
+                // log failure
+                $stmtLog = $conn->prepare("INSERT INTO admin_activity (module, activity, status) VALUES (?, ?, ?)");
+                if ($stmtLog) {
+                    $module = 'CSM';
+                    $activity = "Failed to add contract: $contract_id";
+                    $statusLog = 'Failed';
+                    $stmtLog->bind_param('sss', $module, $activity, $statusLog);
+                    $stmtLog->execute();
+                    $stmtLog->close();
+                }
+                echo "<div style='color:red'>Error inserting contract: " . htmlspecialchars($errorMsg) . "</div>";
+            }
+            $stmt->close();
+        } else {
+            echo "<div style='color:red'>Prepare failed: " . htmlspecialchars($conn->error) . "</div>";
+        }
     }
 }
 
 
 /* Fetch all contracts */
 $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
-?>
 
+/* Load anything that might output HTML/JS AFTER the stats handler */
+include("darkmode.php");
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -149,6 +214,7 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
             background: #2c3e50;
             color: white;
             padding: 0;
+            transition: all 0.3s ease;
             z-index: 1000;
             transform: translateX(0);
         }
@@ -276,11 +342,17 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
         }
 
         .Contract-content {
-            text-align: center;
+            display: flex;
         }
 
         .contract-form {
             text-align: start;
+            justify-content: center;
+        }
+
+        .contract-form .btn {
+            display: block;
+            margin: 1rem auto 0 auto;
         }
 
         .C-form {
@@ -491,86 +563,65 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
-                    <input type="checkbox" id="themeToggle">
+                    <input type="checkbox" id="adminThemeToggle">
                     <span class="slider"></span>
                 </label>
             </div>
         </div>
 
+        <!-- Dashboard Cards -->
         <div class="dashboard-cards">
             <div class="card">
                 <h3>Total Contracts</h3>
-                <div class="stat-value" id="totalContracts">0</div>
+                <div class="stat-value" id="totalContracts"><?= $totalContracts; ?></div>
             </div>
-
             <div class="card">
                 <h3>Active Contracts</h3>
-                <div class="stat-value" id="totalActive"><?php echo $totalActive; ?></div>
+                <div class="stat-value" id="totalActive"><?= $totalActive; ?></div>
             </div>
-
             <div class="card">
                 <h3>Expiring Soon</h3>
-                <div class="stat-value" id="expiringSoon"><?php echo $expiringSoon; ?></div>
+                <div class="stat-value" id="expiringSoon"><?= $expiringSoon; ?></div>
             </div>
-
             <div class="card">
                 <h3>SLA Compliance</h3>
-                <div class="stat-value" id="totalCompliant"><?php echo $totalCompliant; ?></div>
+                <div class="stat-value" id="totalCompliant"><?= $totalCompliant; ?></div>
             </div>
         </div>
 
 
+        <!-- Add Contract Form -->
         <div class="Select-section">
             <h3>Add New Contract</h3>
             <div class="Contract-content">
-                <form method="POST">
+                <form method="POST" class="contract-form">
                     <div class="C-form">
-                        <div class="contract-form">
-                            <h5>Contract ID</h5>
-                            <input type="text" class="form-control" id="contract_id" name="contract_id" placeholder="Contract ID" required>
-                        </div>
-                        <div class="contract-form">
-                            <h5>Client Name</h5>
-                            <input type="text" class="form-control" id="client_name" name="client_name" placeholder="Client Name" required>
-                        </div>
+                        <input type="text" name="contract_id" placeholder="Contract ID" required>
+                        <input type="text" name="client_name" placeholder="Client Name" required>
                     </div>
                     <div class="C-form">
-                        <div class="contract-form">
-                            <h5>Start Date</h5>
-                            <input type="date" class="form-control" id="start_date" name="start_date" required>
-                        </div>
-                        <div class="contract-form">
-                            <h5>End Date</h5>
-                            <input type="date" class="form-control" id="end_date" name="end_date" required>
-                        </div>
+                        <input type="date" name="start_date" required>
+                        <input type="date" name="end_date" required>
                     </div>
                     <div class="C-form">
-                        <div class="contract-form">
-                            <h5>Status</h5>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="">Select Status</option>
-                                <option value="Active">Active</option>
-                                <option value="Expired">Expired</option>
-                                <option value="Pending">Pending</option>
-                            </select>
-                        </div>
-                        <div class="contract-form">
-                            <h5>SLA Compliance</h5>
-                            <select class="form-select" id="sla_compliance" name="sla_compliance" required>
-                                <option value="">SLA Compliance</option>
-                                <option value="Compliant">Compliant</option>
-                                <option value="Non-Compliant">Non-Compliant</option>
-                            </select>
-                        </div>
+                        <select name="status" required>
+                            <option value="">-- Select Status --</option>
+                            <option value="Active">Active</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                        <select name="sla_compliance" required>
+                            <option value="">-- SLA Compliance --</option>
+                            <option value="Compliant">Compliant</option>
+                            <option value="Non-Compliant">Non-Compliant</option>
+                        </select>
                     </div>
-                    <button type="submit" name="add_contract" class="btn addcontract">
-                        Add Contract
-                    </button>
+                    <button type="submit" name="add_contract" class="btn addcontract">Add Contract</button>
                 </form>
             </div>
         </div>
 
-
+        <!-- Contracts List -->
         <div class="table-section1">
             <h3>Contracts List</h3>
             <table id="contractsTable" class="table-selection1">
@@ -598,46 +649,10 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
                 </tbody>
             </table>
         </div>
-
-
-        <div class="table-section2">
-            <h3>Additional Table</h3>
-            <table id="additionalTable" class="table-selection2">
-                <thead>
-                    <tr>
-                        <th>Column 1</th>
-                        <th>Column 2</th>
-                        <th>Column 3</th>
-                        <th>Column 4</th>
-                        <th>Column 5</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="5" style="text-align:center;">No data available</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </div>
 
     <script>
-        const checkbox = document.getElementById("themeToggle");
-
-        if (localStorage.getItem("darkMode") === "enabled") {
-            document.body.classList.add("dark-mode");
-            checkbox.checked = true;
-        }
-
-        checkbox.addEventListener("change", () => {
-            if (checkbox.checked) {
-                document.body.classList.add("dark-mode");
-                localStorage.setItem("darkMode", "enabled");
-            } else {
-                document.body.classList.remove("dark-mode");
-                localStorage.setItem("darkMode", "disabled");
-            }
-        });
+        initDarkMode("adminThemeToggle", "adminDarkMode");
 
         document.getElementById('hamburger').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');
@@ -645,25 +660,25 @@ $result = $conn->query("SELECT * FROM csm ORDER BY start_date DESC");
         });
 
         function updateDashboard() {
-        fetch('?action=stats')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('totalContracts').textContent = data.totalContracts;
-                document.getElementById('totalActive').textContent = data.totalActive;
-                document.getElementById('expiringSoon').textContent = data.expiringSoon;
-                document.getElementById('totalCompliant').textContent = data.totalCompliant;
-            })
-            .catch(error => console.error('Error fetching stats:', error));
-    }
-
-    // Update immediately and every 5 seconds
-    updateDashboard();
-    setInterval(updateDashboard, 5000);
+            fetch('?action=stats')
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    document.getElementById('totalContracts').textContent = data.totalContracts ?? 0;
+                    document.getElementById('totalActive').textContent = data.totalActive ?? 0;
+                    document.getElementById('expiringSoon').textContent = data.expiringSoon ?? 0;
+                    document.getElementById('totalCompliant').textContent = data.totalCompliant ?? 0;
+                })
+                .catch(err => console.error('Error fetching stats:', err));
+        }
 
         // Update immediately and every 5 seconds
         updateDashboard();
         setInterval(updateDashboard, 5000);
     </script>
+
 </body>
 
 </html>

@@ -2,7 +2,7 @@
 include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('admin')
+requireRole('user')
 ?>
 
 <!DOCTYPE html>
@@ -11,8 +11,7 @@ requireRole('admin')
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <title>User Dashboard | Core 3</title>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -145,54 +144,63 @@ requireRole('admin')
             font-size: 1rem;
         }
 
+
+
         /* Table Section */
-        .searchnotif-section {
-            position: relative;
+        .Tracking_section {
             background-color: white;
             padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            text-align: center;
         }
 
-        .dark-mode .searchnotif-section {
+        .dark-mode .Tracking_section {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
 
-        .portalcontent {
+        .track_content {
             display: flex;
+            justify-content: center;
+            gap: 1rem;
         }
 
-        .search-control input {
-            width: 770px;
-            padding: 0.4rem;
+        .tracking_search input {
+            width: 850px;
+            padding: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
-        }
-
-        .dark-mode .search-control input {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
-        .search-priorities select {
-            width: 400px;
-            padding: 0.4rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
+            font-size: 0.9rem;
             background-color: white;
+            margin: 1rem 0 1rem 0;
         }
 
-        .dark-mode .search-priorities select {
+        .dark-mode .tracking_search input {
             background-color: #2a3a5a;
             border-color: #3a4b6e;
             color: var(--text-light);
         }
+
+        .btn {
+            width: 200px;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 1rem 0 1rem 0;
+        }
+
+        .track-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .track-btn:hover {
+            background-color: #3a5bc7;
+        }
+
 
 
         /* Theme Toggle */
@@ -269,13 +277,10 @@ requireRole('admin')
         <div class="logo">
             <img src="rem.png" alt="SLATE Logo">
         </div>
-        <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
+        <a href="user.php">Dashboard</a>
+        <a href="trackship.php" class="active">Track Shipment</a>
+        <a href="bookship.php">Book Shipment</a>
+        <a href="shiphistory.php">Shipment History</a>
         <a href="logout.php">Logout</a>
     </div>
 
@@ -283,48 +288,38 @@ requireRole('admin')
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>Customer Portal & Notification Hub</h1>
+                <h1>Track Shipment <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
-                    <input type="checkbox" id="adminThemeToggle">
+                    <input type="checkbox" id="userThemeToggle">
                     <span class="slider"></span>
                 </label>
             </div>
         </div>
 
-        <div class="searchnotif-section">
-            <div class="portalcontent">
-                <div class="search-control">
-                    <input type="search" class="control" id="searchInput" placeholder="Search Notification...">
+
+        <div class="Tracking_section">
+            <h2>Track Your Shipment</h2>
+            <div class="track_content">
+                <div class="tracking_search">
+                    <input type="search" class="control" id="tractsearch" placeholder="Enter Tracking Number">
                 </div>
-                <div class="search-priorities">
-                    <select class="priorities" id="priorities">
-                        <option value="">All Priorities</option>
-                        <option value="high">High Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="low">Low Priority</option>
-                    </select>
+                <div class="track_button">
+                    <button id="track" class="btn track-btn">Track</button>
                 </div>
-            </div>
-            <div class="notif-section">
-                <h2>Unread Notification</h2><br>
-                <h2>Read Notification</h2>
             </div>
         </div>
 
-    </div>
-    </div>
+        <script>
+            initDarkMode("userThemeToggle", "userDarkMode");
 
-    <script>
-        initDarkMode("adminThemeToggle", "adminDarkMode");
-
-        document.getElementById('hamburger').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
-        });
-    </script>
+            document.getElementById('hamburger').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+                document.getElementById('mainContent').classList.toggle('expanded');
+            });
+        </script>
 </body>
 
 </html>

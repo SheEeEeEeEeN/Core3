@@ -1,9 +1,10 @@
 <?php
+include("darkmode.php");
 include 'connection.php';
 include('session.php');
 requireRole('admin');
 
-/*total user*/ 
+/*total user*/
 $sql = "SELECT COUNT(*) AS customer_name FROM crm";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
@@ -27,11 +28,11 @@ $date = [];
 $totals = [];
 
 while ($row = $result->fetch_assoc()) {
-    $date[] = $row['date'];
-    $totals[] = $row['total'];
+  $date[] = $row['date'];
+  $totals[] = $row['total'];
 }
 
- /*All activities*/
+/*All activities*/
 $activityResult = $conn->query("SELECT * FROM admin_activity ORDER BY date DESC LIMIT 100");
 
 ?>
@@ -381,7 +382,7 @@ $activityResult = $conn->query("SELECT * FROM admin_activity ORDER BY date DESC 
       <div class="theme-toggle-container">
         <span class="theme-label">Dark Mode</span>
         <label class="theme-switch">
-          <input type="checkbox" id="themeToggle">
+          <input type="checkbox" id="adminThemeToggle">
           <span class="slider"></span>
         </label>
       </div>
@@ -423,126 +424,115 @@ $activityResult = $conn->query("SELECT * FROM admin_activity ORDER BY date DESC 
     </div>
 
     <div class="table-section">
-  <h3>Recent Activity</h3>
-  <table id="recentActivityTable">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Module</th>
-        <th>Activity</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="recentActivityBody">
-      <?php if ($activityResult && $activityResult->num_rows > 0): ?>
-        <?php while ($row = $activityResult->fetch_assoc()): ?>
+      <h3>Recent Activity</h3>
+      <table id="recentActivityTable">
+        <thead>
           <tr>
-            <td><?= htmlspecialchars($row['date']); ?></td>
-            <td><?= htmlspecialchars($row['module']); ?></td>
-            <td><?= htmlspecialchars($row['activity']); ?></td>
-            <td><?= htmlspecialchars($row['status']); ?></td>
+            <th>Date</th>
+            <th>Module</th>
+            <th>Activity</th>
+            <th>Status</th>
           </tr>
-        <?php endwhile; ?>
-      <?php else: ?>
-        <tr><td colspan="4">No recent activity found</td></tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-</div>
+        </thead>
+        <tbody id="recentActivityBody">
+          <?php if ($activityResult && $activityResult->num_rows > 0): ?>
+            <?php while ($row = $activityResult->fetch_assoc()): ?>
+              <tr>
+                <td><?= htmlspecialchars($row['date']); ?></td>
+                <td><?= htmlspecialchars($row['module']); ?></td>
+                <td><?= htmlspecialchars($row['activity']); ?></td>
+                <td><?= htmlspecialchars($row['status']); ?></td>
+              </tr>
+            <?php endwhile; ?>
+          <?php else: ?>
+            <tr>
+              <td colspan="4">No recent activity found</td>
+            </tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
 
-  <script>
-    const checkbox = document.getElementById("themeToggle");
+    <script>
+      initDarkMode("adminThemeToggle", "adminDarkMode");
 
-    if (localStorage.getItem("darkMode") === "enabled") {
-      document.body.classList.add("dark-mode");
-      checkbox.checked = true;
-    }
+      document.getElementById('hamburger').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+        document.getElementById('mainContent').classList.toggle('expanded');
+      });
 
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        document.body.classList.add("dark-mode");
-        localStorage.setItem("darkMode", "enabled");
-      } else {
-        document.body.classList.remove("dark-mode");
-        localStorage.setItem("darkMode", "disabled");
-      }
-    });
-
-
-
-    document.getElementById('hamburger').addEventListener('click', function() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
-      document.getElementById('mainContent').classList.toggle('expanded');
-    });
-
-    const ctx = document.getElementById('myChart1').getContext('2d');
-        const userChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode($date); ?>, 
-                datasets: [{
-                    label: 'Total Users',
-                    data: <?php echo json_encode($totals); ?>, 
-                    borderColor: 'blue',
-                    backgroundColor: 'lightblue',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 }
-                    }
-                }
-            }
-        });
-
-    // Doughnut Chart: Contracts Overview
-function loadContractsChart() {
-  fetch("CSM.php?action=stats")
-    .then(response => response.json())
-    .then(data => {
-      const ctx2 = document.getElementById("myChart2").getContext("2d");
-
-      new Chart(ctx2, {
-        type: "doughnut",
+      const ctx = document.getElementById('myChart1').getContext('2d');
+      const userChart = new Chart(ctx, {
+        type: 'line',
         data: {
-          labels: ["Active", "Expiring Soon", "Compliant"],
+          labels: <?php echo json_encode($date); ?>,
           datasets: [{
-            backgroundColor: [
-              "#1e7145",   // green
-              "#f39c12",   // orange
-              "#3498db"    // blue
-            ],
-            data: [
-              data.totalActive,   // Active contracts
-              data.expiringSoon,  // Expiring soon
-              data.totalCompliant // Compliant
-            ]
+            label: 'Total Users',
+            data: <?php echo json_encode($totals); ?>,
+            borderColor: 'blue',
+            backgroundColor: 'lightblue',
+            fill: true,
+            tension: 0.3
           }]
         },
         options: {
           responsive: true,
-          legend: {
-            position: "bottom"
+          plugins: {
+            legend: {
+              display: true
+            }
           },
-          title: {
-            display: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
+            }
           }
         }
       });
-    })
-    .catch(error => console.error("Error loading contracts chart:", error));
-}
 
-document.addEventListener("DOMContentLoaded", loadContractsChart);
-  </script>
+      // Doughnut Chart: Contracts Overview
+      function loadContractsChart() {
+        fetch("CSM.php?action=stats")
+          .then(response => response.json())
+          .then(data => {
+            const ctx2 = document.getElementById("myChart2").getContext("2d");
+
+            new Chart(ctx2, {
+              type: "doughnut",
+              data: {
+                labels: ["Active", "Expiring Soon", "Compliant"],
+                datasets: [{
+                  backgroundColor: [
+                    "#1e7145", // green
+                    "#f39c12", // orange
+                    "#3498db" // blue
+                  ],
+                  data: [
+                    data.totalActive, // Active contracts
+                    data.expiringSoon, // Expiring soon
+                    data.totalCompliant // Compliant
+                  ]
+                }]
+              },
+              options: {
+                responsive: true,
+                legend: {
+                  position: "bottom"
+                },
+                title: {
+                  display: true,
+                }
+              }
+            });
+          })
+          .catch(error => console.error("Error loading contracts chart:", error));
+      }
+
+      document.addEventListener("DOMContentLoaded", loadContractsChart);
+    </script>
 </body>
 
 </html>

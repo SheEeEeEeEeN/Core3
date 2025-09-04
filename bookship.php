@@ -2,8 +2,29 @@
 include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('admin')
+requireRole('user');
+
+if (isset($_POST['book_shipment'])) {
+    $sender_name   = $conn->real_escape_string(trim($_POST['sender_name']));
+    $receiver_name = $conn->real_escape_string(trim($_POST['receiver_name']));
+    $origin        = $conn->real_escape_string(trim($_POST['origin']));
+    $destination   = $conn->real_escape_string(trim($_POST['destination']));
+    $weight        = $conn->real_escape_string(trim($_POST['weight']));
+    $package       = $conn->real_escape_string(trim($_POST['package']));
+    $user_id       = $_SESSION['user_id'];
+
+    $sql = "INSERT INTO shipments (user_id, sender_name, receiver_name, origin, destination, weight, package_description, status, created_at) 
+            VALUES ('$user_id', '$sender_name', '$receiver_name', '$origin', '$destination', '$weight', '$package', 'Pending', NOW())";
+
+    if ($conn->query($sql) === TRUE) {
+        header("Location: shiphistory.php?success=1");
+        exit();
+    } else {
+        $error = "Error: " . $conn->error;
+    }
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,8 +32,7 @@ requireRole('admin')
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <title>User Dashboard | Core 3</title>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -145,55 +165,65 @@ requireRole('admin')
             font-size: 1rem;
         }
 
-        /* Table Section */
-        .searchnotif-section {
-            position: relative;
+        /*Booking Shipment form*/
+
+        .Shipment_form {
             background-color: white;
             padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            position: relative;
         }
 
-        .dark-mode .searchnotif-section {
+        .dark-mode .Shipment_form {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
 
-        .portalcontent {
-            display: flex;
+        h2 {
+            margin-bottom: 0.5rem;
         }
 
-        .search-control input {
-            width: 770px;
-            padding: 0.4rem;
+        .ship {
+            margin-bottom: 1rem;
+        }
+
+        .ship input,
+        .ship textarea {
+            width: 160vh;
+            padding: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
-        }
-
-        .dark-mode .search-control input {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
-        .search-priorities select {
-            width: 400px;
-            padding: 0.4rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
+            font-size: 0.9rem;
             background-color: white;
+            margin-top: 0.5rem;
         }
 
-        .dark-mode .search-priorities select {
+        .dark-mode .ship input,
+        .dark-mode .ship textarea {
             background-color: #2a3a5a;
             border-color: #3a4b6e;
             color: var(--text-light);
         }
 
+        .btn {
+            width: 200px;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .book_shipment {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .book_shipment:hover {
+            background-color: #3a5bc7;
+        }
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -269,13 +299,10 @@ requireRole('admin')
         <div class="logo">
             <img src="rem.png" alt="SLATE Logo">
         </div>
-        <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
+        <a href="user.php">Dashboard</a>
+        <a href="trackship.php">Track Shipment</a>
+        <a href="bookship.php" class="active">Book Shipment</a>
+        <a href="shiphistory.php">Shipment History</a>
         <a href="logout.php">Logout</a>
     </div>
 
@@ -283,42 +310,54 @@ requireRole('admin')
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>Customer Portal & Notification Hub</h1>
+                <h1>Book Shipment <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
-                    <input type="checkbox" id="adminThemeToggle">
+                    <input type="checkbox" id="userThemeToggle">
                     <span class="slider"></span>
                 </label>
             </div>
         </div>
 
-        <div class="searchnotif-section">
-            <div class="portalcontent">
-                <div class="search-control">
-                    <input type="search" class="control" id="searchInput" placeholder="Search Notification...">
-                </div>
-                <div class="search-priorities">
-                    <select class="priorities" id="priorities">
-                        <option value="">All Priorities</option>
-                        <option value="high">High Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="low">Low Priority</option>
-                    </select>
-                </div>
-            </div>
-            <div class="notif-section">
-                <h2>Unread Notification</h2><br>
-                <h2>Read Notification</h2>
+
+        <div class="Shipment_form">
+            <h2>Book a shipment</h2>
+            <div class="form_content">
+                <form method="POST">
+                    <div class="ship">
+                        <h4>Sender Name</h4>
+                        <input type="text" class="form-control" id="sender_name" name="sender_name" placeholder="Enter sender name" required>
+                    </div>
+                    <div class="ship">
+                        <h4>Receiver Name</h4>
+                        <input type="text" class="form-control" id="receiver_name" name="receiver_name" placeholder="Enter receiver name" required>
+                    </div>
+                    <div class="ship">
+                        <h4>Origin</h4>
+                        <input type="text" class="form-control" id="origin" name="origin" placeholder="Enter origin" required>
+                    </div>
+                    <div class="ship">
+                        <h4>Destination</h4>
+                        <input type="text" class="form-control" id="destination" name="destination" placeholder="Enter destination" required>
+                    </div>
+                    <div class="ship">
+                        <h4>Weight (kg)</h4>
+                        <input type="text" class="form-control" id="weight" name="weight" placeholder="Enter weight" required>
+                    </div>
+                    <div class="ship">
+                        <h4>Package Description</h4>
+                        <textarea class="form-control" id="package" name="package" placeholder="Enter package details" required></textarea>
+                    </div>
+                    <button type="submit" name="book_shipment" class="btn book_shipment">Book Shipment</button>
+                </form>
             </div>
         </div>
-
-    </div>
     </div>
 
     <script>
-        initDarkMode("adminThemeToggle", "adminDarkMode");
+        initDarkMode("userThemeToggle", "userDarkMode");
 
         document.getElementById('hamburger').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');

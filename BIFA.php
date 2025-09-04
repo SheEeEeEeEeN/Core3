@@ -1,4 +1,5 @@
 <?php
+include("darkmode.php");
 include("connection.php");
 include('session.php');
 requireRole('admin')
@@ -220,8 +221,9 @@ requireRole('admin')
             background-color: white;
             margin-top: 0.5rem;
         }
+
         .dark-mode .form input,
-        .dark-mode .form select{
+        .dark-mode .form select {
             background-color: #2a3a5a;
             border-color: #3a4b6e;
             color: var(--text-light);
@@ -370,7 +372,7 @@ requireRole('admin')
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
-                    <input type="checkbox" id="themeToggle">
+                    <input type="checkbox" id="adminThemeToggle">
                     <span class="slider"></span>
                 </label>
             </div>
@@ -437,27 +439,13 @@ requireRole('admin')
         </div>
 
         <script>
-            const checkbox = document.getElementById("themeToggle");
-
-            if (localStorage.getItem("darkMode") === "enabled") {
-                document.body.classList.add("dark-mode");
-                checkbox.checked = true;
-            }
-
-            checkbox.addEventListener("change", () => {
-                if (checkbox.checked) {
-                    document.body.classList.add("dark-mode");
-                    localStorage.setItem("darkMode", "enabled");
-                } else {
-                    document.body.classList.remove("dark-mode");
-                    localStorage.setItem("darkMode", "disabled");
-                }
-            });
+            initDarkMode("adminThemeToggle", "adminDarkMode");
 
             document.getElementById('hamburger').addEventListener('click', function() {
                 document.getElementById('sidebar').classList.toggle('collapsed');
                 document.getElementById('mainContent').classList.toggle('expanded');
             });
+
 
             const xValues = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
             const yValues = [];
@@ -467,7 +455,7 @@ requireRole('admin')
                 data: {
                     labels: xValues,
                     datasets: [{
-                        label:'Shipments',
+                        label: 'Shipments',
                         fill: false,
                         lineTension: 0,
                         backgroundColor: "rgba(0,0,255,1.0)",

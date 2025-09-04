@@ -1,4 +1,5 @@
 <?php
+include("darkmode.php");
 include 'connection.php';
 include('session.php');
 requireRole('admin');
@@ -556,7 +557,7 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
-                    <input type="checkbox" id="themeToggle">
+                    <input type="checkbox" id="adminThemeToggle">
                     <span class="slider"></span>
                 </label>
             </div>
@@ -681,21 +682,7 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
         </div>
 
         <script>
-            // Theme Toggle
-            const checkbox = document.getElementById("themeToggle");
-            if (localStorage.getItem("darkMode") === "enabled") {
-                document.body.classList.add("dark-mode");
-                checkbox.checked = true;
-            }
-            checkbox.addEventListener("change", () => {
-                if (checkbox.checked) {
-                    document.body.classList.add("dark-mode");
-                    localStorage.setItem("darkMode", "enabled");
-                } else {
-                    document.body.classList.remove("dark-mode");
-                    localStorage.setItem("darkMode", "disabled");
-                }
-            });
+            initDarkMode("adminThemeToggle", "adminDarkMode");
 
             // Sidebar Toggle
             document.getElementById('hamburger').addEventListener('click', function() {

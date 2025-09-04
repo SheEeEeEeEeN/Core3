@@ -2,8 +2,16 @@
 include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('admin')
+requireRole('user');
+
+// Get logged in user shipments
+$user_id = $_SESSION['user_id'];
+$result = $conn->query("SELECT id, origin, destination, weight, status, created_at 
+                        FROM shipments 
+                        WHERE user_id = '$user_id' 
+                        ORDER BY created_at DESC");
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,8 +19,7 @@ requireRole('admin')
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <title>User Dashboard | Core 3</title>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -145,55 +152,43 @@ requireRole('admin')
             font-size: 1rem;
         }
 
+
         /* Table Section */
-        .searchnotif-section {
-            position: relative;
+        .History_section {
             background-color: white;
             padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            text-align: center;
         }
 
-        .dark-mode .searchnotif-section {
+        .dark-mode .History_section {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
 
-        .portalcontent {
-            display: flex;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
         }
 
-        .search-control input {
-            width: 770px;
-            padding: 0.4rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
+        th,
+        td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
 
-        .dark-mode .search-control input {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
+        .dark-mode th,
+        .dark-mode td {
+            border-bottom-color: #3a4b6e;
         }
 
-        .search-priorities select {
-            width: 400px;
-            padding: 0.4rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
-            background-color: white;
+        thead {
+            background-color: var(--primary-color);
+            color: white;
         }
-
-        .dark-mode .search-priorities select {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -269,13 +264,10 @@ requireRole('admin')
         <div class="logo">
             <img src="rem.png" alt="SLATE Logo">
         </div>
-        <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
+        <a href="user.php">Dashboard</a>
+        <a href="trackship.php">Track Shipment</a>
+        <a href="bookship.php">Book Shipment</a>
+        <a href="shiphistory.php" class="active">Shipment History</a>
         <a href="logout.php">Logout</a>
     </div>
 
@@ -283,42 +275,57 @@ requireRole('admin')
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>Customer Portal & Notification Hub</h1>
+                <h1>Shipment History <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
-                    <input type="checkbox" id="adminThemeToggle">
+                    <input type="checkbox" id="userThemeToggle">
                     <span class="slider"></span>
                 </label>
             </div>
         </div>
 
-        <div class="searchnotif-section">
-            <div class="portalcontent">
-                <div class="search-control">
-                    <input type="search" class="control" id="searchInput" placeholder="Search Notification...">
-                </div>
-                <div class="search-priorities">
-                    <select class="priorities" id="priorities">
-                        <option value="">All Priorities</option>
-                        <option value="high">High Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="low">Low Priority</option>
-                    </select>
-                </div>
-            </div>
-            <div class="notif-section">
-                <h2>Unread Notification</h2><br>
-                <h2>Read Notification</h2>
-            </div>
-        </div>
 
-    </div>
+
+        <div class="History_section">
+            <h2>User Shipment History</h2>
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Tracking No</th>
+                        <th>Origin</th>
+                        <th>Destination</th>
+                        <th>Weight (kg)</th>
+                        <th>Status</th>
+                        <th>Booked Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($result->num_rows > 0): ?>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?php echo "TRK" . str_pad($row['id'], 6, "0", STR_PAD_LEFT); ?></td>
+                                <td><?php echo htmlspecialchars($row['origin']); ?></td>
+                                <td><?php echo htmlspecialchars($row['destination']); ?></td>
+                                <td><?php echo htmlspecialchars($row['weight']); ?></td>
+                                <td><?php echo htmlspecialchars($row['status']); ?></td>
+                                <td><?php echo date("M d, Y h:i A", strtotime($row['created_at'])); ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6">No shipments found.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+
+            </table>
+        </div>
     </div>
 
     <script>
-        initDarkMode("adminThemeToggle", "adminDarkMode");
+        initDarkMode("userThemeToggle", "userDarkMode");
 
         document.getElementById('hamburger').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');
