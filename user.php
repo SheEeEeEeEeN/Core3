@@ -1,4 +1,5 @@
 <?php
+include("darkmode.php");
 include("connection.php");
 include('session.php');
 requireRole('user')
@@ -6,10 +7,12 @@ requireRole('user')
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Dashboard | Core 3</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
   <style>
     :root {
       --sidebar-width: 250px;
@@ -36,7 +39,6 @@ requireRole('user')
       overflow-x: hidden;
       background-color: var(--secondary-color);
       color: var(--text-dark);
-      transition: all 0.3s;
     }
 
     body.dark-mode {
@@ -67,7 +69,7 @@ requireRole('user')
     .sidebar .logo {
       padding: 1.5rem;
       text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .sidebar .logo img {
@@ -78,15 +80,15 @@ requireRole('user')
     .system-name {
       padding: 0.5rem 1.5rem;
       font-size: 0.9rem;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255, 255, 255, 0.8);
       text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       margin-bottom: 1rem;
     }
 
     .sidebar a {
       display: block;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255, 255, 255, 0.8);
       padding: 0.75rem 1.5rem;
       text-decoration: none;
       border-left: 3px solid transparent;
@@ -95,13 +97,13 @@ requireRole('user')
 
     .sidebar a:hover,
     .sidebar a.active {
-      background-color: rgba(255,255,255,0.1);
+      background-color: rgba(255, 255, 255, 0.1);
       color: white;
       border-left: 3px solid white;
     }
 
     .admin-feature {
-      background-color: rgba(0,0,0,0.1);
+      background-color: rgba(0, 0, 0, 0.1);
     }
 
     /* Main Content */
@@ -150,14 +152,13 @@ requireRole('user')
       gap: 1.5rem;
       margin-bottom: 1.5rem;
     }
- 
+
     .card {
       background-color: white;
       border: none;
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
       padding: 1.5rem;
-      transition: all 0.3s;
     }
 
     .dark-mode .card {
@@ -175,93 +176,50 @@ requireRole('user')
       font-weight: 700;
     }
 
-    /* Form Section */
-    .form-section {
-      background-color: white;
-      padding: 1.5rem;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
+    /*Chartarea*/
+    .chartarea {
+      display: flex;
+      gap: 1.5rem;
       margin-bottom: 1.5rem;
-      display: none;
     }
 
-    .dark-mode .form-section {
+    .dark-mode .area {
       background-color: var(--dark-card);
       color: var(--text-light);
     }
 
-    .form-group {
-      margin-bottom: 1rem;
+    .chart1 {
+      height: 360px;
+      width: 65%;
+      background-color: white;
+      border: none;
+      text-align: center;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
     }
 
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-
-    .dark-mode .form-group input,
-    .dark-mode .form-group select,
-    .dark-mode .form-group textarea {
-      background-color: #2a3a5a;
-      border-color: #3a4b6e;
+    .dark-mode .chart1 {
+      background-color: var(--dark-card);
       color: var(--text-light);
     }
 
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    /* Buttons */
-    .btn {
-      padding: 0.5rem 1rem;
+    .chart2 {
+      height: 360px;
+      width: 35%;
+      background-color: white;
       border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s;
+      text-align: center;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
     }
 
-    .btn-primary {
-      background-color: var(--primary-color);
-      color: white;
+    .dark-mode .chart2 {
+      background-color: var(--dark-card);
+      color: var(--text-light);
     }
 
-    .btn-primary:hover {
-      background-color: #3a5bc7;
-    }
-
-    .btn-secondary {
-      background-color: #6c757d;
-      color: white;
-    }
-
-    .btn-secondary:hover {
-      background-color: #5a6268;
-    }
-
-    .toggle-form-btn {
-      background-color: var(--primary-color);
-      color: white;
-      margin-bottom: 1.5rem;
-    }
-
-    .toggle-form-btn:hover {
-      background-color: #3a5bc7;
-    }
 
     /* Table Section */
     .table-section {
@@ -281,7 +239,8 @@ requireRole('user')
       border-collapse: collapse;
     }
 
-    th, td {
+    th,
+    td {
       padding: 0.75rem;
       text-align: left;
       border-bottom: 1px solid #ddd;
@@ -341,11 +300,11 @@ requireRole('user')
       border-radius: 50%;
     }
 
-    input:checked + .slider {
+    input:checked+.slider {
       background-color: var(--primary-color);
     }
 
-    input:checked + .slider:before {
+    input:checked+.slider:before {
       transform: translateX(26px);
     }
 
@@ -354,24 +313,27 @@ requireRole('user')
       .sidebar {
         transform: translateX(-100%);
       }
-      
+
       .sidebar.show {
         transform: translateX(0);
       }
-      
+
       .content {
         margin-left: 0;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="sidebar" id="sidebar">
     <div class="logo">
       <img src="rem.png" alt="SLATE Logo">
     </div>
-    <a href="#" class="active">Dashboard</a>
-    <a href="#">Reports</a>
+    <a href="user.php" class="active">Dashboard</a>
+    <a href="trackship.php">Track Shipment</a>
+    <a href="bookship.php">Book Shipment</a>
+    <a href="shiphistory.php">Shipment History</a>
     <a href="logout.php">Logout</a>
   </div>
 
@@ -384,7 +346,7 @@ requireRole('user')
       <div class="theme-toggle-container">
         <span class="theme-label">Dark Mode</span>
         <label class="theme-switch">
-          <input type="checkbox" id="themeToggle">
+          <input type="checkbox" id="userThemeToggle">
           <span class="slider"></span>
         </label>
       </div>
@@ -392,96 +354,48 @@ requireRole('user')
 
     <div class="dashboard-cards">
       <div class="card">
-        <h3>Notification</h3>
+        <h3>Total Shipments</h3>
         <div class="stat-value" id="totalEmployees">0</div>
-        <div class="stat-label">Loading data...</div>
       </div>
-
       <div class="card">
-        <h3>Feedback</h3>
+        <h3>In Transit</h3>
         <div class="stat-value" id="activeEmployees">0</div>
-        <div class="stat-label">Loading data...</div>
       </div>
-
+      <div class="card">
+        <h3>Delivered</h3>
+        <div class="stat-value" id="activeEmployees">0</div>
+      </div>
+      <div class="card">
+        <h3>Pending</h3>
+        <div class="stat-value" id="activeEmployees">0</div>
+      </div>
     </div>
 
-    <button id="toggleFormBtn" class="btn toggle-form-btn">Add New Employee</button>
+    <div class="chartarea">
+      <div class="chart1">
+        <h3>Shipment Trends</h3>
+        <canvas id="myChart1" style="height:200px;width:500px;"></canvas>
+      </div>
 
-    <div class="form-section" id="employeeFormSection">
-      <h3 id="formTitle">Add New Employee</h3>
-      <form id="employeeForm">
-        <input type="hidden" id="employeeId">
-        <div class="form-group">
-          <label for="employeeName">Full Name</label>
-          <input type="text" id="employeeName" name="employeeName" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="employeeEmail">Email Address</label>
-          <input type="email" id="employeeEmail" name="employeeEmail" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="employeeDepartment">Department</label>
-          <select id="employeeDepartment" name="employeeDepartment" required>
-            <option value="">Select Department</option>
-            <option value="HR">Human Resources</option>
-            <option value="Finance">Finance</option>
-            <option value="IT">Information Technology</option>
-            <option value="Operations">Operations</option>
-            <option value="Logistics">Logistics</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="employeePosition">Position</label>
-          <input type="text" id="employeePosition" name="employeePosition" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="employeeSalary">Salary (USD)</label>
-          <input type="number" id="employeeSalary" name="employeeSalary" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="employeeStartDate">Start Date</label>
-          <input type="date" id="employeeStartDate" name="employeeStartDate" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="employeeStatus">Status</label>
-          <select id="employeeStatus" name="employeeStatus" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="On Leave">On Leave</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="employeeNotes">Notes</label>
-          <textarea id="employeeNotes" name="employeeNotes" rows="3"></textarea>
-        </div>
-        
-        <div class="form-actions">
-          <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Employee</button>
-        </div>
-      </form>
+      <div class="chart2">
+        <h3>Status Breakdown</h3>
+        <canvas id="myChart2" style="height:110px;width:150px;"></canvas>
+      </div>
     </div>
 
     <div class="table-section">
-      <h3>??????</h3>
-      <table id="employeesTable">
+      <h3>Recent Shipments</h3>
+      <table id="shipmentTable">
         <thead>
           <tr>
-            <th>Column 1</th>
-                <th>Column 2</th>
-                <th>Column 3</th>
-                <th>Column 4</th>
-                <th>Column 5</th>
+            <th>Tracking No.</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Status</th>
+            <th>Booked Date</th>
           </tr>
         </thead>
-        <tbody id="employeesTableBody">
+        <tbody id="shipmentTableBody">
           <!-- Employee data will be loaded here -->
         </tbody>
       </table>
@@ -489,24 +403,68 @@ requireRole('user')
   </div>
 
   <script>
-    // You can keep your existing JavaScript or add new functionality here
-    document.getElementById('themeToggle').addEventListener('change', function() {
-      document.body.classList.toggle('dark-mode', this.checked);
-    });
+    initDarkMode("userThemeToggle", "userDarkMode");
 
     document.getElementById('hamburger').addEventListener('click', function() {
       document.getElementById('sidebar').classList.toggle('collapsed');
       document.getElementById('mainContent').classList.toggle('expanded');
     });
 
-    document.getElementById('toggleFormBtn').addEventListener('click', function() {
-      const formSection = document.getElementById('employeeFormSection');
-      formSection.style.display = formSection.style.display === 'block' ? 'none' : 'block';
+    const xValues = ["Aug 25", "Aug 27", "Aug 30", "Sept 1", "Sept 2", "Sept 4"];
+    const yValues = [7, 8, 8, 9, 9, 9];
+
+    new Chart("myChart1", {
+      type: "line",
+      data: {
+        labels: xValues,
+        datasets: [{
+          fill: false,
+          lineTension: 0,
+          backgroundColor: "rgba(0,0,255,1.0)",
+          borderColor: "rgba(0,0,255,0.1)",
+          data: yValues
+        }]
+      },
+      options: {
+        legend: {
+          display: false
+        },
+        scales: {
+          yAxes: [{
+            ticks: {
+              min: 6,
+              max: 16
+            }
+          }],
+        }
+      }
     });
 
-    document.getElementById('cancelBtn').addEventListener('click', function() {
-      document.getElementById('employeeFormSection').style.display = 'none';
+    var aValues = ["In Transit", "Delivered", "Pending"];
+    var bValues = [55, 49, 44];
+    var barColors = [
+      "#1e7145",
+      "#d2f50bff",
+      "#00aba9"
+    ];
+
+    new Chart("myChart2", {
+      type: "pie",
+      data: {
+        labels: aValues,
+        datasets: [{
+          label: 'Shipments',
+          backgroundColor: barColors,
+          data: bValues
+        }]
+      },
+      options: {
+        title: {
+          display: true,
+        }
+      }
     });
   </script>
 </body>
+
 </html>
