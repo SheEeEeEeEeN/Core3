@@ -1,10 +1,7 @@
-<?php
-include("darkmode.php");
+<?php include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('admin')
-?>
-
+requireRole('admin') ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -146,30 +143,20 @@ requireRole('admin')
         }
 
         /* Table Section */
-        .searchnotif-section {
-            position: relative;
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .dark-mode .searchnotif-section {
-            background-color: var(--dark-card);
-            color: var(--text-light);
-        }
 
         .portalcontent {
             display: flex;
+            margin-bottom: 1rem;
         }
 
         .search-control input {
-            width: 770px;
+            width: 400px;
             padding: 0.4rem;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 4px 0 0 4px;
             font-size: 1rem;
-            margin-right: 1.5rem;
+            border-right: 0;
+            margin: 1rem 0 0.5rem 0;
         }
 
         .dark-mode .search-control input {
@@ -179,13 +166,14 @@ requireRole('admin')
         }
 
         .search-priorities select {
-            width: 400px;
+            width: 225px;
             padding: 0.4rem;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 0 4px 4px 0;
             font-size: 1rem;
-            margin-right: 1.5rem;
+            border-left: 0;
             background-color: white;
+            margin: 1rem 0 0.5rem 0;
         }
 
         .dark-mode .search-priorities select {
@@ -194,6 +182,147 @@ requireRole('admin')
             color: var(--text-light);
         }
 
+        .portal-wrapper {
+            display: flex;
+            gap: 20px;
+        }
+
+        .notifications {
+            flex: 1;
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .notifications h3 {
+            margin: 1rem 0 1rem 0;
+        }
+
+        .dark-mode .notifications {
+            background-color: var(--dark-card);
+            color: var(--text-light);
+        }
+
+        .notif-controls {
+            margin-bottom: 1rem;
+        }
+
+        .notif-controls button {
+            margin-right: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* --- Updated Notification Styles --- */
+        .notif-list .notif-item {
+            padding: 1rem;
+            background-color: #f7f7f7ff;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between; /* left vs right */
+            align-items: center;
+        }
+
+        .dark-mode .notif-list .notif-item {
+            background-color: #293b5eff;
+            color: var(--text-light);
+        }
+
+        .notif-text {
+            display: flex;
+            flex-direction: column; /* stack title + priority */
+        }
+
+        .notif-item .time {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .notif-docs {
+            padding: 2rem;
+            background-color: #f7f7f7ff;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.3rem;
+        }
+
+        .dark-mode .notif-docs {
+            background-color: #293b5eff;
+            color: var(--text-light);
+        }
+
+        .notif-item .priority {
+            margin-left: 10px;
+            font-size: 0.85rem;
+        }
+
+        .priority.high {
+            color: red;
+        }
+
+        .priority.medium {
+            color: orange;
+        }
+
+        .priority.low {
+            color: green;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            gap: 1rem;
+        }
+
+        .summary-box {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .dark-mode .summary-box {
+            background-color: var(--dark-card);
+            color: var(--text-light);
+        }
+
+        .customer-portal {
+            height: 550px;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            grid-column-start: 1;
+            grid-column-end: 4;
+        }
+
+        .dark-mode .customer-portal {
+            background-color: var(--dark-card);
+            color: var(--text-light);
+        }
+
+        .customer-portal p {
+            margin-top: 1rem;
+            font-size: 20px;
+        }
+        .customer-portal button {
+            margin-right: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #46649eff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        .customer-portal h3{
+            margin: 1rem;
+        } 
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -266,9 +395,7 @@ requireRole('admin')
 
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="logo">
-            <img src="rem.png" alt="SLATE Logo">
-        </div>
+        <div class="logo"> <img src="rem.png" alt="SLATE Logo"> </div>
         <div class="system-name">CORE TRANSACTION 3</div>
         <a href="admin.php">Dashboard</a>
         <a href="CRM.php">Customer Relationship Management</a>
@@ -278,7 +405,6 @@ requireRole('admin')
         <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
         <a href="logout.php">Logout</a>
     </div>
-
     <div class="content" id="mainContent">
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
@@ -293,33 +419,100 @@ requireRole('admin')
                 </label>
             </div>
         </div>
-
         <div class="searchnotif-section">
-            <div class="portalcontent">
-                <div class="search-control">
-                    <input type="search" class="control" id="searchInput" placeholder="Search Notification...">
+            <div class="portal-wrapper">
+                <!-- Left Side Notifications -->
+                <div class="notifications">
+                    <!-- Top Controls -->
+                    <h1>Notification</h1>
+                    <div class="portalcontent">
+                        <div class="search-control">
+                            <input type="search" class="control" id="searchInput" placeholder="Search Notification...">
+                        </div>
+                        <div class="search-priorities">
+                            <select class="priorities" id="priorities">
+                                <option value="">All Priorities</option>
+                                <option value="high">High Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="low">Low Priority</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="notif-controls">
+                        <button style="background: #d73636ff;">Unread</button> <button style="background: #5092d9ff;">Read</button> <button style="background: #faa1a1ff;">Mark as Read</button> <button style="background: #47a522ff;">Archive</button>
+                    </div>
+                    <!-- Notification List -->
+                    <div class="notif-list">
+                        <div class="notif-item">
+                            <div class="notif-text">
+                                <strong>System Update</strong>
+                                <span class="priority medium">Medium</span>
+                            </div>
+                            <span class="time">2 hours ago</span>
+                        </div>
+
+                        <div class="notif-item">
+                            <div class="notif-text">
+                                <strong>SLA Alert</strong>
+                                <span class="priority high">High</span>
+                            </div>
+                            <span class="time">Yesterday</span>
+                        </div>
+
+                        <div class="notif-item">
+                            <div class="notif-text">
+                                <strong>Document Reminder</strong>
+                                <span class="priority low">Low</span>
+                            </div>
+                            <span class="time">2 days ago</span>
+                        </div>
+                    </div>
+                    <!-- Current Announcements -->
+                    <h3>Current Announcements</h3>
+                    <div class="notif-docs">
+                        <strong>My Documents</strong>
+                        <p>Compliance Cert will expire in 5 days</p>
+                    </div>
                 </div>
-                <div class="search-priorities">
-                    <select class="priorities" id="priorities">
-                        <option value="">All Priorities</option>
-                        <option value="high">High Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="low">Low Priority</option>
-                    </select>
+                <!-- Right Side Summary -->
+                <div class="summary">
+                    <div class="summary-box">
+                        <p>Unread Notifications</p>
+                        <h2>3</h2>
+                    </div>
+                    <div class="summary-box">
+                        <p>Pending SLA Contracts</p>
+                        <h2>1</h2>
+                    </div>
+                    <div class="summary-box">
+                        <p>Active Shipments</p>
+                        <h2>2</h2>
+                    </div>
+                    <!-- Customer Portal Section -->
+                    <div class="customer-portal">
+                        <h2>Customer Portal</h2>
+                        <p>
+                            <strong>John Doe</strong><br>
+                            ABC Corp.<br>
+                            123-456-7290<br>
+                            johndoe@example.com<br>
+                            1234 Main St, Anytown, USA
+                        </p>
+                        <h3>Contracts & SLA Snapshot</h3>
+                        <ul>
+                            <li style="color:green">● Active</li>
+                            <li style="color:orange">● Expiring Soon</li>
+                            <li style="color:red">● Breach Alert</li>
+                        </ul>
+                        <h3>Documents & Compliance</h3>
+                        <button>My Documents</button>
+                    </div>
                 </div>
-            </div>
-            <div class="notif-section">
-                <h2>Unread Notification</h2><br>
-                <h2>Read Notification</h2>
             </div>
         </div>
-
     </div>
-    </div>
-
     <script>
         initDarkMode("adminThemeToggle", "adminDarkMode");
-
         document.getElementById('hamburger').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');
             document.getElementById('mainContent').classList.toggle('expanded');

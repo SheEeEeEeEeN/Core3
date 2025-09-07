@@ -13,20 +13,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
 
     $getCount = function (string $sql) use ($conn): int {
         $res = $conn->query($sql);
-        if (!$res) return 0;
+        if (!$res)
+            return 0;
         $row = $res->fetch_assoc();
         return (int) array_values($row)[0];
     };
 
     $totalContracts = $getCount("SELECT COUNT(*) FROM csm");
-    $totalActive    = $getCount("SELECT COUNT(*) FROM csm WHERE status = 'Active'");
-    $expiringSoon   = $getCount("SELECT COUNT(*) FROM csm WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)");
+    $totalActive = $getCount("SELECT COUNT(*) FROM csm WHERE status = 'Active'");
+    $expiringSoon = $getCount("SELECT COUNT(*) FROM csm WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)");
     $totalCompliant = $getCount("SELECT COUNT(*) FROM csm WHERE sla_compliance = 'Compliant'");
 
     echo json_encode([
         'totalContracts' => $totalContracts,
-        'totalActive'    => $totalActive,
-        'expiringSoon'   => $expiringSoon,
+        'totalActive' => $totalActive,
+        'expiringSoon' => $expiringSoon,
         'totalCompliant' => $totalCompliant,
     ]);
     exit;
@@ -36,46 +37,52 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
 $sql = "SELECT COUNT(*) AS total FROM csm";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
-$totalContracts = (int)$row['total'];
+$totalContracts = (int) $row['total'];
 
 $sql = "SELECT COUNT(*) AS total_active FROM csm WHERE status = 'Active'";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
-$totalActive = (int)$row['total_active'];
+$totalActive = (int) $row['total_active'];
 
 $sql = "SELECT COUNT(*) AS expiring_soon 
         FROM csm 
         WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
-$expiringSoon = (int)$row['expiring_soon'];
+$expiringSoon = (int) $row['expiring_soon'];
 
 $sql = "SELECT COUNT(*) AS total_compliant 
         FROM csm 
         WHERE sla_compliance = 'Compliant'";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
-$totalCompliant = (int)$row['total_compliant'];
+$totalCompliant = (int) $row['total_compliant'];
 
 /* Add contract */
 $contract_limit = 100;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
     // read safely (no undefined index warnings) and trim
-    $contract_id    = trim($_POST['contract_id'] ?? '');
-    $client_name    = trim($_POST['client_name'] ?? '');
-    $start_date     = trim($_POST['start_date'] ?? '');
-    $end_date       = trim($_POST['end_date'] ?? '');
-    $status         = trim($_POST['status'] ?? '');
+    $contract_id = trim($_POST['contract_id'] ?? '');
+    $client_name = trim($_POST['client_name'] ?? '');
+    $start_date = trim($_POST['start_date'] ?? '');
+    $end_date = trim($_POST['end_date'] ?? '');
+    $status = trim($_POST['status'] ?? '');
     $sla_compliance = trim($_POST['sla_compliance'] ?? '');
 
     // simple validation
     $errors = [];
-    if ($contract_id === '')    $errors[] = 'Contract ID';
-    if ($client_name === '')    $errors[] = 'Client Name';
-    if ($start_date === '')     $errors[] = 'Start Date';
-    if ($end_date === '')       $errors[] = 'End Date';
-    if ($status === '')         $errors[] = 'Status';
-    if ($sla_compliance === '') $errors[] = 'SLA Compliance';
+    if ($contract_id === '')
+        $errors[] = 'Contract ID';
+    if ($client_name === '')
+        $errors[] = 'Client Name';
+    if ($start_date === '')
+        $errors[] = 'Start Date';
+    if ($end_date === '')
+        $errors[] = 'End Date';
+    if ($status === '')
+        $errors[] = 'Status';
+    if ($sla_compliance === '')
+        $errors[] = 'SLA Compliance';
 
     if (!empty($errors)) {
         $err = implode(', ', $errors);
@@ -85,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
         $check_sql = "SELECT COUNT(*) AS total FROM csm";
         $res_check = $conn->query($check_sql);
         $row_check = $res_check->fetch_assoc();
-        $total_contracts = (int)($row_check['total'] ?? 0);
+        $total_contracts = (int) ($row_check['total'] ?? 0);
 
         // Delete oldest if limit reached
         if ($total_contracts >= $contract_limit) {
@@ -126,13 +133,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
                 }
 
                 // show success and trigger dashboard refresh once page loads
-                echo "<script>alert('Contract added successfully');</script>";
                 echo "<script>
-                    // request update after DOM is ready (updateDashboard is defined later in the page)
-                    window.addEventListener('DOMContentLoaded', function() {
-                        if (typeof updateDashboard === 'function') updateDashboard();
-                    });
-                </script>";
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Contract Added',
+                html: 'Contract \"$contract_id - $client_name\" added successfully!',
+                customClass: {
+                    popup: 'swal-small'
+                },
+                timer: 2000,
+                showConfirmButton: false,
+                timerProgressBar: true
+            }).then(() => {
+                if (typeof updateDashboard === 'function') updateDashboard();
+            });
+        });
+    </script>";
             } else {
                 $errorMsg = $stmt->error;
                 // log failure
@@ -169,6 +186,8 @@ include("darkmode.php");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
     <style>
         :root {
@@ -258,6 +277,29 @@ include("darkmode.php");
             color: white;
             border-left: 3px solid white;
         }
+
+
+        /* Make SweetAlert smaller */
+        .swal-small {
+            width: 400px !important;
+            /* smaller width */
+            font-size: 0.8rem !important;
+            /* smaller text */
+            padding: 1rem !important;
+            /* less padding */
+        }
+
+        .swal-small .swal2-title {
+            font-size: 0.85rem !important;
+            /* smaller title */
+        }
+
+        .swal-small .swal2-html-container {
+            font-size: 0.8rem !important;
+            /* smaller body text */
+        }
+
+
 
         .admin-feature {
             background-color: rgba(0, 0, 0, 0.1);
@@ -654,7 +696,7 @@ include("darkmode.php");
     <script>
         initDarkMode("adminThemeToggle", "adminDarkMode");
 
-        document.getElementById('hamburger').addEventListener('click', function() {
+        document.getElementById('hamburger').addEventListener('click', function () {
             document.getElementById('sidebar').classList.toggle('collapsed');
             document.getElementById('mainContent').classList.toggle('expanded');
         });

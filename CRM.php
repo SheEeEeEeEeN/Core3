@@ -4,32 +4,6 @@ include 'connection.php';
 include('session.php');
 requireRole('admin');
 
-/* Add New Customer */
-if (isset($_POST['add'])) {
-    $customer_name = $conn->real_escape_string($_POST['customer_name']);
-    $company       = $conn->real_escape_string($_POST['company']);
-    $email         = $conn->real_escape_string($_POST['email']);
-    $phone         = $conn->real_escape_string($_POST['phone']);
-    $status        = $conn->real_escape_string($_POST['status']);
-
-    $sql = "INSERT INTO crm (customer_name, company, email, phone, status) 
-            VALUES ('$customer_name', '$company', '$email', '$phone', '$status')";
-
-    if ($conn->query($sql) === TRUE) {
-        // Log to admin_activity
-        $activity = "Added new customer: $customer_name ($company)";
-        $conn->query("INSERT INTO admin_activity (module, activity, status) 
-                      VALUES ('CRM', '$activity', 'Success')");
-
-        header("Location: CRM.php?success=1");
-        exit();
-    } else {
-        $errorMsg = $conn->error;
-        $conn->query("INSERT INTO admin_activity (module, activity, status) 
-                      VALUES ('CRM', 'Add customer failed: $customer_name', 'Failed')");
-        echo "Error: " . $errorMsg;
-    }
-}
 
 /* Update Customer */
 if (isset($_POST['update'])) {
@@ -97,6 +71,7 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -454,6 +429,25 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
             background-color: #0476d3ff;
         }
 
+        /* Make SweetAlert smaller */
+        .swal-small {
+            width: 400px !important;
+            /* shrink width */
+            font-size: 0.85rem !important;
+            /* smaller text */
+            padding: 0.5rem !important;
+        }
+
+        .swal-small .swal2-title {
+            font-size: 0.1rem !important;
+            /* smaller title */
+        }
+
+        .swal-small .swal2-html-container {
+            font-size: 0.85rem !important;
+            /* smaller body text */
+        }
+
 
 
         /* Theme Toggle */
@@ -569,10 +563,7 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
                         <option value="Inactive">Inactive</option>
                     </select>
                 </div>
-                <display class="table-button">
-                    <button id="addM" class="btn toggle-table-btn">Add New Employee</button>
             </div>
-
 
             <table id="CustomersTable">
                 <thead>
@@ -625,7 +616,7 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
                                 <td><?= htmlspecialchars($row['last_contract']); ?></td>
                                 <td>
                                     <a href="CRM.php?edit=<?= $row['id']; ?>" class="edit">Edit</a>
-                                    <a href="CRM.php?delete=<?= $row['id']; ?>" onclick="return confirm('Delete this record?')" class="delete">Delete</a>
+                                    <a href="CRM.php?delete=<?= $row['id']; ?>" class="delete">Delete</a>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -734,6 +725,56 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
         // Event listeners
         searchInput.addEventListener('input', filterTable);
         filterStatus.addEventListener('change', filterTable);
+
+         // SweetAlert for delete confirmation
+document.querySelectorAll('.delete').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    const url = this.getAttribute('href');
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "This record will be permanently deleted.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!',
+      customClass: { popup: 'swal-small' } // ✅ small size
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = url;
+      }
+    });
+  });
+});
+
+// ✅ Success alerts (Add, Update, Delete)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('success')) {
+  Swal.fire({
+    title: 'Added!',
+    text: 'Employee has been added successfully.',
+    icon: 'success',
+    customClass: { popup: 'swal-small' } // ✅ small size
+  });
+}
+if (urlParams.has('updated')) {
+  Swal.fire({
+    title: 'Updated!',
+    text: 'Employee has been updated successfully.',
+    icon: 'success',
+    customClass: { popup: 'swal-small' } // ✅ small size
+  });
+}
+if (urlParams.has('deleted')) {
+  Swal.fire({
+    title: 'Deleted!',
+    text: 'Employee has been deleted successfully.',
+    icon: 'success',
+    customClass: { popup: 'swal-small' } // ✅ small size
+  });
+}
     </script>
 </body>
 
