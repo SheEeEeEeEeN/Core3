@@ -2,16 +2,8 @@
 include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('user');
-
-// Get logged in user shipments
-$user_id = $_SESSION['user_id'];
-$result = $conn->query("SELECT id, origin, destination, weight, status, created_at 
-                        FROM shipments 
-                        WHERE user_id = '$user_id' 
-                        ORDER BY created_at DESC");
+requireRole('user')
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -153,8 +145,9 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         }
 
 
+
         /* Table Section */
-        .History_section {
+        .Tracking_section {
             background-color: white;
             padding: 1.5rem;
             border-radius: var(--border-radius);
@@ -162,33 +155,53 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
             text-align: center;
         }
 
-        .dark-mode .History_section {
+        .dark-mode .Tracking_section {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
+        .track_content {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
         }
 
-        th,
-        td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        .tracking_search input {
+            width: 850px;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+            margin: 1rem 0 1rem 0;
         }
 
-        .dark-mode th,
-        .dark-mode td {
-            border-bottom-color: #3a4b6e;
+        .dark-mode .tracking_search input {
+            background-color: #2a3a5a;
+            border-color: #3a4b6e;
+            color: var(--text-light);
         }
 
-        thead {
+        .btn {
+            width: 200px;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 1rem 0 1rem 0;
+        }
+
+        .track-btn {
             background-color: var(--primary-color);
             color: white;
         }
+
+        .track-btn:hover {
+            background-color: #3a5bc7;
+        }
+
+
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -267,8 +280,8 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         <a href="user.php">Dashboard</a>
         <a href="trackship.php">Track Shipment</a>
         <a href="bookship.php">Book Shipment</a>
-        <a href="shiphistory.php" class="active">Shipment History</a>
-        <a href="reports.php">Reports</a>
+        <a href="shiphistory.php">Shipment History</a>
+        <a href="reports.php" class="active">Reports</a>
         <a href="logout.php">Logout</a>
     </div>
 
@@ -276,7 +289,7 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>Shipment History <span class="system-title"></span></h1>
+                <h1>Track Shipment <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
@@ -288,51 +301,21 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         </div>
 
 
-
-        <div class="History_section">
-            <h2>User Shipment History</h2>
-            <table id="historyTable">
-                <thead>
-                    <tr>
-                        <th>Tracking No</th>
-                        <th>Origin</th>
-                        <th>Destination</th>
-                        <th>Weight (kg)</th>
-                        <th>Status</th>
-                        <th>Booked Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo "TRK" . str_pad($row['id'], 6, "0", STR_PAD_LEFT); ?></td>
-                                <td><?php echo htmlspecialchars($row['origin']); ?></td>
-                                <td><?php echo htmlspecialchars($row['destination']); ?></td>
-                                <td><?php echo htmlspecialchars($row['weight']); ?></td>
-                                <td><?php echo htmlspecialchars($row['status']); ?></td>
-                                <td><?php echo date("M d, Y h:i A", strtotime($row['created_at'])); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="6">No shipments found.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-
-            </table>
+        <div class="Tracking_section">
+            <h2>Reports</h2>
+            <div class="track_content">
+                /*         */
+            </div>
         </div>
-    </div>
 
-    <script>
-        initDarkMode("userThemeToggle", "userDarkMode");
+        <script>
+            initDarkMode("userThemeToggle", "userDarkMode");
 
-        document.getElementById('hamburger').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
-        });
-    </script>
+            document.getElementById('hamburger').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+                document.getElementById('mainContent').classList.toggle('expanded');
+            });
+        </script>
 </body>
 
 </html>

@@ -303,6 +303,7 @@ if (isset($_POST['book_shipment'])) {
         <a href="trackship.php">Track Shipment</a>
         <a href="bookship.php" class="active">Book Shipment</a>
         <a href="shiphistory.php">Shipment History</a>
+        <a href="reports.php">Reports</a>
         <a href="logout.php">Logout</a>
     </div>
 

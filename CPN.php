@@ -143,7 +143,6 @@ requireRole('admin') ?>
         }
 
         /* Table Section */
-
         .portalcontent {
             display: flex;
             margin-bottom: 1rem;
@@ -224,7 +223,8 @@ requireRole('admin') ?>
             border-radius: var(--border-radius);
             margin-bottom: 0.5rem;
             display: flex;
-            justify-content: space-between; /* left vs right */
+            justify-content: space-between;
+            /* left vs right */
             align-items: center;
         }
 
@@ -235,7 +235,8 @@ requireRole('admin') ?>
 
         .notif-text {
             display: flex;
-            flex-direction: column; /* stack title + priority */
+            flex-direction: column;
+            /* stack title + priority */
         }
 
         .notif-item .time {
@@ -310,6 +311,7 @@ requireRole('admin') ?>
             margin-top: 1rem;
             font-size: 20px;
         }
+
         .customer-portal button {
             margin-right: 0.5rem;
             padding: 0.5rem 1rem;
@@ -320,9 +322,10 @@ requireRole('admin') ?>
             cursor: pointer;
             margin: 0.5rem;
         }
-        .customer-portal h3{
+
+        .customer-portal h3 {
             margin: 1rem;
-        } 
+        }
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -396,14 +399,7 @@ requireRole('admin') ?>
 <body>
     <div class="sidebar" id="sidebar">
         <div class="logo"> <img src="rem.png" alt="SLATE Logo"> </div>
-        <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
-        <a href="logout.php">Logout</a>
+        <div class="system-name">CORE TRANSACTION 3</div> <a href="admin.php">Dashboard</a> <a href="CRM.php">Customer Relationship Management</a> <a href="CSM.php">Contract & SLA Monitoring</a> <a href="E-Doc.php">E-Documentations & Compliance Manager</a> <a href="BIFA.php">Business Intelligence & Freight Analytics</a> <a href="CPN.php" class="active">Customer Portal & Notification Hub</a> <a href="logout.php">Logout</a>
     </div>
     <div class="content" id="mainContent">
         <div class="header">
@@ -411,70 +407,38 @@ requireRole('admin') ?>
             <div>
                 <h1>Customer Portal & Notification Hub</h1>
             </div>
-            <div class="theme-toggle-container">
-                <span class="theme-label">Dark Mode</span>
-                <label class="theme-switch">
-                    <input type="checkbox" id="adminThemeToggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            <div class="theme-toggle-container"> <span class="theme-label">Dark Mode</span> <label class="theme-switch"> <input type="checkbox" id="adminThemeToggle"> <span class="slider"></span> </label> </div>
         </div>
         <div class="searchnotif-section">
-            <div class="portal-wrapper">
-                <!-- Left Side Notifications -->
-                <div class="notifications">
-                    <!-- Top Controls -->
+            <div class="portal-wrapper"> <!-- Left Side Notifications -->
+                <div class="notifications"> <!-- Top Controls -->
                     <h1>Notification</h1>
                     <div class="portalcontent">
-                        <div class="search-control">
-                            <input type="search" class="control" id="searchInput" placeholder="Search Notification...">
-                        </div>
-                        <div class="search-priorities">
-                            <select class="priorities" id="priorities">
+                        <div class="search-control"> <input type="search" class="control" id="searchInput" placeholder="Search Notification..."> </div>
+                        <div class="search-priorities"> <select class="priorities" id="priorities">
                                 <option value="">All Priorities</option>
                                 <option value="high">High Priority</option>
                                 <option value="medium">Medium Priority</option>
                                 <option value="low">Low Priority</option>
-                            </select>
-                        </div>
+                            </select> </div>
                     </div>
-                    <div class="notif-controls">
-                        <button style="background: #d73636ff;">Unread</button> <button style="background: #5092d9ff;">Read</button> <button style="background: #faa1a1ff;">Mark as Read</button> <button style="background: #47a522ff;">Archive</button>
-                    </div>
-                    <!-- Notification List -->
+                    <div class="notif-controls"> <button style="background: #d73636ff;">Unread</button> <button style="background: #5092d9ff;">Read</button> <button style="background: #faa1a1ff;">Mark as Read</button> <button style="background: #47a522ff;">Archive</button> </div> <!-- Notification List -->
                     <div class="notif-list">
                         <div class="notif-item">
-                            <div class="notif-text">
-                                <strong>System Update</strong>
-                                <span class="priority medium">Medium</span>
-                            </div>
-                            <span class="time">2 hours ago</span>
+                            <div class="notif-text"> <strong>System Update</strong> <span class="priority medium">Medium</span> </div> <span class="time">2 hours ago</span>
                         </div>
-
                         <div class="notif-item">
-                            <div class="notif-text">
-                                <strong>SLA Alert</strong>
-                                <span class="priority high">High</span>
-                            </div>
-                            <span class="time">Yesterday</span>
+                            <div class="notif-text"> <strong>SLA Alert</strong> <span class="priority high">High</span> </div> <span class="time">Yesterday</span>
                         </div>
-
                         <div class="notif-item">
-                            <div class="notif-text">
-                                <strong>Document Reminder</strong>
-                                <span class="priority low">Low</span>
-                            </div>
-                            <span class="time">2 days ago</span>
+                            <div class="notif-text"> <strong>Document Reminder</strong> <span class="priority low">Low</span> </div> <span class="time">2 days ago</span>
                         </div>
-                    </div>
-                    <!-- Current Announcements -->
+                    </div> <!-- Current Announcements -->
                     <h3>Current Announcements</h3>
-                    <div class="notif-docs">
-                        <strong>My Documents</strong>
+                    <div class="notif-docs"> <strong>My Documents</strong>
                         <p>Compliance Cert will expire in 5 days</p>
                     </div>
-                </div>
-                <!-- Right Side Summary -->
+                </div> <!-- Right Side Summary -->
                 <div class="summary">
                     <div class="summary-box">
                         <p>Unread Notifications</p>
@@ -487,25 +451,17 @@ requireRole('admin') ?>
                     <div class="summary-box">
                         <p>Active Shipments</p>
                         <h2>2</h2>
-                    </div>
-                    <!-- Customer Portal Section -->
+                    </div> <!-- Customer Portal Section -->
                     <div class="customer-portal">
                         <h2>Customer Portal</h2>
-                        <p>
-                            <strong>John Doe</strong><br>
-                            ABC Corp.<br>
-                            123-456-7290<br>
-                            johndoe@example.com<br>
-                            1234 Main St, Anytown, USA
-                        </p>
+                        <p> <strong>John Doe</strong><br> ABC Corp.<br> 123-456-7290<br> johndoe@example.com<br> 1234 Main St, Anytown, USA </p>
                         <h3>Contracts & SLA Snapshot</h3>
                         <ul>
                             <li style="color:green">● Active</li>
                             <li style="color:orange">● Expiring Soon</li>
                             <li style="color:red">● Breach Alert</li>
                         </ul>
-                        <h3>Documents & Compliance</h3>
-                        <button>My Documents</button>
+                        <h3>Documents & Compliance</h3> <button>My Documents</button>
                     </div>
                 </div>
             </div>

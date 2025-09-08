@@ -691,12 +691,33 @@ include("darkmode.php");
                 </tbody>
             </table>
         </div>
+
+        <div class="table-section1">
+            <h3>ADD KO DAW SABI NI LEAD</h3>
+            <table id="contractsTable" class="table-selection1">
+                <thead>
+                    <tr>
+                        <th>??????</th>
+                        <th>??????</th>
+                        <th>??????</th>
+                        <th>??????</th>
+                        <th>??????</th>
+                        <th>??????</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   
+                </tbody>
+            </table>
+        </div>
+
+
     </div>
 
     <script>
         initDarkMode("adminThemeToggle", "adminDarkMode");
 
-        document.getElementById('hamburger').addEventListener('click', function () {
+        document.getElementById('hamburger').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');
             document.getElementById('mainContent').classList.toggle('expanded');
         });

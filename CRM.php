@@ -2,67 +2,75 @@
 include("darkmode.php");
 include 'connection.php';
 include('session.php');
-requireRole('admin');
+requireRole('admin'); // ✅ Only admins can manage accounts
 
+/* Add Account */
+if (isset($_POST['add'])) {
+    $username = $conn->real_escape_string($_POST['username']);
+    $email    = $conn->real_escape_string($_POST['email']);
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // ✅ secure hash
+    $role     = $conn->real_escape_string($_POST['role']);
 
-/* Update Customer */
-if (isset($_POST['update'])) {
-    $id            = (int) $_POST['id'];
-    $customer_name = $conn->real_escape_string($_POST['customer_name']);
-    $company       = $conn->real_escape_string($_POST['company']);
-    $email         = $conn->real_escape_string($_POST['email']);
-    $phone         = $conn->real_escape_string($_POST['phone']);
-    $status        = $conn->real_escape_string($_POST['status']);
-
-    $sql = "UPDATE crm 
-            SET customer_name='$customer_name', 
-                company='$company', 
-                email='$email', 
-                phone='$phone',
-                status='$status'
-            WHERE id=$id";
+    $sql = "INSERT INTO accounts (username, email, password, role, created_at) 
+            VALUES ('$username', '$email', '$password', '$role', NOW())";
 
     if ($conn->query($sql) === TRUE) {
-        $activity = "Updated customer: $customer_name ($company)";
+        $activity = "Added new account: $username ($role)";
         $conn->query("INSERT INTO admin_activity (module, activity, status) 
                       VALUES ('CRM', '$activity', 'Success')");
-
-        header("Location: CRM.php?updated=1");
+        header("Location: CRM.php?success=1");
         exit();
     } else {
-        $errorMsg = $conn->error;
-        $conn->query("INSERT INTO admin_activity (module, activity, status) 
-                      VALUES ('CRM', 'Update failed for ID $id', 'Failed')");
-        echo "Error: " . $errorMsg;
+        echo "Error: " . $conn->error;
     }
 }
 
-/* Delete Customer */
+/* Update Account */
+if (isset($_POST['update'])) {
+    $id       = (int) $_POST['id'];
+    $username = $conn->real_escape_string($_POST['username']);
+    $email    = $conn->real_escape_string($_POST['email']);
+    $role     = $conn->real_escape_string($_POST['role']);
+
+    $sql = "UPDATE accounts 
+            SET username='$username', 
+                email='$email',
+                role='$role'
+            WHERE id=$id";
+
+    if ($conn->query($sql) === TRUE) {
+        $activity = "Updated account: $username ($role)";
+        $conn->query("INSERT INTO admin_activity (module, activity, status) 
+                      VALUES ('CRM', '$activity', 'Success')");
+        header("Location: CRM.php?updated=1");
+        exit();
+    } else {
+        echo "Error: " . $conn->error;
+    }
+}
+
+/* Delete Account */
 if (isset($_GET['delete'])) {
     $id = (int) $_GET['delete'];
 
-    // Fetch customer before delete (for logging)
-    $res = $conn->query("SELECT customer_name, company FROM crm WHERE id=$id");
+    $res = $conn->query("SELECT username, role FROM accounts WHERE id=$id");
     $row = $res->fetch_assoc();
-    $customer_name = $row['customer_name'];
-    $company       = $row['company'];
+    $username = $row['username'];
+    $role     = $row['role'];
 
-    if ($conn->query("DELETE FROM crm WHERE id=$id") === TRUE) {
-        $activity = "Deleted customer: $customer_name ($company)";
+    if ($conn->query("DELETE FROM accounts WHERE id=$id") === TRUE) {
+        $activity = "Deleted account: $username ($role)";
         $conn->query("INSERT INTO admin_activity (module, activity, status) 
                       VALUES ('CRM', '$activity', 'Success')");
-    } else {
-        $conn->query("INSERT INTO admin_activity (module, activity, status) 
-                      VALUES ('CRM', 'Delete failed for customer ID $id', 'Failed')");
     }
-
     header("Location: CRM.php?deleted=1");
     exit;
 }
 
-/* Fetch Customers */
-$result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
+/* Fetch Accounts */
+$result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -361,11 +369,9 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
             background-color: #e50d0dff;
         }
 
-        .Cname,
-        .Ccompany,
-        .Cemail,
-        .Cphone,
-        .Sstatus {
+        .username,
+        .email,
+        .role {
             width: 150px;
             padding: 0.2rem;
             border: 1px solid #ddd;
@@ -373,7 +379,6 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
             font-size: 0.9rem;
             background-color: white;
         }
-
 
         .dark-mode td input,
         .dark-mode td select {
@@ -387,7 +392,7 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
             padding: 0.5rem;
             border: none;
             border-radius: 4px;
-            font-size: 0.9rem;
+            font-size: 1rem;
             cursor: pointer;
             background-color: #4fcbdeff;
             color: white;
@@ -402,7 +407,7 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
             padding: 0.5rem;
             border: none;
             border-radius: 4px;
-            font-size: 0.9rem;
+            font-size: 1rem;
             cursor: pointer;
             background-color: var(--tertiary-color);
             color: white;
@@ -418,7 +423,7 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
             padding: 0.5rem;
             border: none;
             border-radius: 4px;
-            font-size: 0.9rem;
+            font-size: 1rem;
             cursor: pointer;
             background-color: #1a629dff;
             color: white;
@@ -552,68 +557,53 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
         <div class="table-section">
             <div class="table-section1">
                 <div class="table-head">
-                    <input type="search" class="control" id="searchInput" placeholder="Search customer...">
+                    <input type="search" class="control" id="searchInput" placeholder="Search username...">
                 </div>
 
                 <div class="table-head">
-                    <select class="select" id="filterStatus">
-                        <option value="">Filter by Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Prospect">Prospect</option>
-                        <option value="Inactive">Inactive</option>
+                    <select class="select" id="filterRole">
+                        <option value="">Filter by Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
                     </select>
                 </div>
+
             </div>
 
-            <table id="CustomersTable">
+            <table id="AccountsTable">
                 <thead>
                     <tr>
-                        <th>Customer Name</th>
-                        <th>Company</th>
+                        <th>Username</th>
                         <th>Email</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        <th>Last Contact</th>
+                        <th>Role</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="customerData">
-                    <?php
-                    // Fetch customers newest first
-                    $sql = "SELECT * FROM crm ORDER BY id DESC";
-                    $result = $conn->query($sql);
-                    while ($row = $result->fetch_assoc()):
-                    ?>
+                <tbody id="accountData">
+                    <?php while ($row = $result->fetch_assoc()): ?>
                         <?php if (isset($_GET['edit']) && $_GET['edit'] == $row['id']): ?>
                             <tr>
                                 <form method="POST">
-                                    <td><input type="text" class="Cname" name="customer_name" value="<?= htmlspecialchars($row['customer_name']); ?>" required></td>
-                                    <td><input type="text" class="Ccompany" name="company" value="<?= htmlspecialchars($row['company']); ?>" required></td>
-                                    <td><input type="email" class="Cemail" name="email" value="<?= htmlspecialchars($row['email']); ?>" required></td>
-                                    <td><input type="text" class="Cphone" name="phone" value="<?= htmlspecialchars($row['phone']); ?>"></td>
+                                    <td><input class="username" type="text" name="username" value="<?= htmlspecialchars($row['username']); ?>" required></td>
+                                    <td><input class="email" type="email" name="email" value="<?= htmlspecialchars($row['email']); ?>" required></td>
                                     <td>
-                                        <select class="Sstatus" name="status" required>
-                                            <option value="Active" <?= $row['status'] == 'Active' ? 'selected' : ''; ?>>Active</option>
-                                            <option value="Prospect" <?= $row['status'] == 'Prospect' ? 'selected' : ''; ?>>Prospect</option>
-                                            <option value="Inactive" <?= $row['status'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
+                                        <select class="role" name="role" required>
+                                            <option value="admin" <?= $row['role'] == 'admin' ? 'selected' : ''; ?>>Admin</option>
+                                            <option value="user" <?= $row['role'] == 'user' ? 'selected' : ''; ?>>User</option>
                                         </select>
                                     </td>
-                                    <td><?= htmlspecialchars($row['last_contract']); ?></td>
                                     <td>
                                         <input type="hidden" name="id" value="<?= $row['id']; ?>">
-                                        <button type="submit" class="Eupdate" name="update">Save</button>
+                                        <button type="submit" name="update" class="Eupdate">Save</button>
                                         <a href="CRM.php" class="Ecancel">Cancel</a>
                                     </td>
                                 </form>
                             </tr>
                         <?php else: ?>
                             <tr>
-                                <td><?= htmlspecialchars($row['customer_name']); ?></td>
-                                <td><?= htmlspecialchars($row['company']); ?></td>
+                                <td><?= htmlspecialchars($row['username']); ?></td>
                                 <td><?= htmlspecialchars($row['email']); ?></td>
-                                <td><?= htmlspecialchars($row['phone']); ?></td>
-                                <td><?= htmlspecialchars($row['status']); ?></td>
-                                <td><?= htmlspecialchars($row['last_contract']); ?></td>
+                                <td><?= htmlspecialchars($row['role']); ?></td>
                                 <td>
                                     <a href="CRM.php?edit=<?= $row['id']; ?>" class="edit">Edit</a>
                                     <a href="CRM.php?delete=<?= $row['id']; ?>" class="delete">Delete</a>
@@ -629,153 +619,147 @@ $result = $conn->query("SELECT * FROM crm ORDER BY id DESC");
 
             <div class="modal-section" id="addmodal">
                 <div class="modal-content">
-                    <form class="modal-content1" method="POST">
+                    <form method="POST">
                         <div class="modal-header">
-                            <h3 class="modal-title" id="addCustomerModalLabel">Add New Customer</h3>
+                            <h3>Add New Account</h3>
                         </div>
                         <div class="modal-body">
                             <div class="add-form">
-                                <label>Customer Name</label>
-                                <input type="text" class="form-control" name="customer_name" required>
-                            </div>
-                            <div class="add-form">
-                                <label>Company</label>
-                                <input type="text" class="form-control" name="company" required>
+                                <label>Username</label>
+                                <input type="text" name="username" required>
                             </div>
                             <div class="add-form">
                                 <label>Email</label>
-                                <input type="email" class="form-control" name="email" required>
+                                <input type="email" name="email" required>
                             </div>
                             <div class="add-form">
-                                <label>Phone</label>
-                                <input type="text" class="form-control" name="phone" required>
+                                <label>Password</label>
+                                <input type="password" name="password" required>
                             </div>
                             <div class="add-form">
-                                <label>Status</label>
-                                <select class="form-select" name="status" required>
-                                    <option value="Active">Active</option>
-                                    <option value="Prospect">Prospect</option>
-                                    <option value="Inactive">Inactive</option>
+                                <label>Role</label>
+                                <select name="role" required>
+                                    <option value="admin">Admin</option>
+                                    <option value="user">User</option>
                                 </select>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" id="cancel" class="btn btn-cancel">Cancel</button>
-                            <button type="submit" name="add" class="btn btn-add">Add Customer</button>
+                            <button type="submit" name="add" class="btn btn-add">Add Account</button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
 
 
 
-    <script>
-        initDarkMode("adminThemeToggle", "adminDarkMode");
+            <script>
+    initDarkMode("adminThemeToggle", "adminDarkMode");
 
-        document.getElementById('hamburger').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
-        });
+    document.getElementById('hamburger').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+        document.getElementById('mainContent').classList.toggle('expanded');
+    });
 
-        /* modal */
-        var modal = document.getElementById("addmodal");
-        var btn = document.getElementById("addM");
-        var span = document.getElementsByClassName("cancel")[0];
+    /* modal */
+    var modal = document.getElementById("addmodal");
+    var btn = document.getElementById("openAddModal"); // ✅ fix id
+    var cancelBtn = document.getElementById("cancel"); // ✅ fix cancel
+
+    if (btn) {
         btn.onclick = function() {
             modal.style.display = "block";
         }
-        cancel.onclick = function() {
+    }
+    cancelBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+    window.onclick = function(event) {
+        if (event.target == modal) {
             modal.style.display = "none";
         }
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-        /* search/filter */
+    }
 
-        const searchInput = document.getElementById('searchInput');
-        const filterStatus = document.getElementById('filterStatus');
-        const tbody = document.getElementById('customerData');
+    /* search/filter */
+    const searchInput = document.getElementById('searchInput');
+    const filterRole = document.getElementById('filterRole');
+    const tbody = document.getElementById('accountData');
 
-        // Helper: get text from td or input
-        function getCellText(td) {
-            const input = td.querySelector('input, select');
-            return input ? input.value.toLowerCase() : td.textContent.toLowerCase();
-        }
+    function getCellText(td) {
+        const input = td.querySelector('input, select');
+        return input ? input.value.toLowerCase() : td.textContent.toLowerCase();
+    }
 
-        // Filter table function
-        function filterTable() {
-            const searchValue = searchInput.value.toLowerCase();
-            const statusValue = filterStatus.value.toLowerCase();
+    function filterTable() {
+        const searchValue = searchInput.value.toLowerCase();
+        const roleValue = filterRole.value.toLowerCase();
 
-            Array.from(tbody.rows).forEach(row => {
-                const nameText = getCellText(row.cells[0]); // Customer Name
-                const statusText = getCellText(row.cells[4]); // Status column
+        Array.from(tbody.rows).forEach(row => {
+            const usernameText = getCellText(row.cells[0]); // Username
+            const roleText = getCellText(row.cells[2]);     // Role
 
-                const matchesSearch = nameText.includes(searchValue);
-                const matchesStatus = statusValue === "" || statusText === statusValue;
+            const matchesSearch = usernameText.includes(searchValue);
+            const matchesRole = roleValue === "" || roleText === roleValue;
 
-                row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+            row.style.display = (matchesSearch && matchesRole) ? "" : "none";
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    filterRole.addEventListener('change', filterTable);
+
+    // SweetAlert for delete confirmation
+    document.querySelectorAll('.delete').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This account will be permanently deleted.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                customClass: { popup: 'swal-small' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
             });
-        }
-
-        // Event listeners
-        searchInput.addEventListener('input', filterTable);
-        filterStatus.addEventListener('change', filterTable);
-
-         // SweetAlert for delete confirmation
-document.querySelectorAll('.delete').forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    const url = this.getAttribute('href');
-
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "This record will be permanently deleted.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, delete it!',
-      customClass: { popup: 'swal-small' } // ✅ small size
-    }).then((result) => {
-      if (result.isConfirmed) {
-        window.location.href = url;
-      }
+        });
     });
-  });
-});
 
-// ✅ Success alerts (Add, Update, Delete)
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('success')) {
-  Swal.fire({
-    title: 'Added!',
-    text: 'Employee has been added successfully.',
-    icon: 'success',
-    customClass: { popup: 'swal-small' } // ✅ small size
-  });
-}
-if (urlParams.has('updated')) {
-  Swal.fire({
-    title: 'Updated!',
-    text: 'Employee has been updated successfully.',
-    icon: 'success',
-    customClass: { popup: 'swal-small' } // ✅ small size
-  });
-}
-if (urlParams.has('deleted')) {
-  Swal.fire({
-    title: 'Deleted!',
-    text: 'Employee has been deleted successfully.',
-    icon: 'success',
-    customClass: { popup: 'swal-small' } // ✅ small size
-  });
-}
-    </script>
+    // ✅ Success alerts (Add, Update, Delete)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+        Swal.fire({
+            title: 'Added!',
+            text: 'Account has been added successfully.',
+            icon: 'success',
+            customClass: { popup: 'swal-small' }
+        });
+    }
+    if (urlParams.has('updated')) {
+        Swal.fire({
+            title: 'Updated!',
+            text: 'Account has been updated successfully.',
+            icon: 'success',
+            customClass: { popup: 'swal-small' }
+        });
+    }
+    if (urlParams.has('deleted')) {
+        Swal.fire({
+            title: 'Deleted!',
+            text: 'Account has been deleted successfully.',
+            icon: 'success',
+            customClass: { popup: 'swal-small' }
+        });
+    }
+</script>
+
 </body>
 
 </html>
