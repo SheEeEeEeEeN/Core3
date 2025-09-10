@@ -114,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // ✅ safely close connection at the end
 if (isset($conn) && $conn instanceof mysqli) {
-    $conn->close();
+  $conn->close();
 }
 ?>
 
@@ -503,17 +503,17 @@ if (isset($conn) && $conn instanceof mysqli) {
   <!-- Trigger alert (if any) AFTER the showAlert function is defined -->
   <?php if (!empty($alertMessage)): ?>
     <script>
-  const __alertTitle = "<?php echo addslashes($alertTitle); ?>";
-  const __alertMessage = "<?php echo addslashes($alertMessage); ?>";
-  const __alertRedirect = "<?php echo addslashes($alertRedirect); ?>";
+      const __alertTitle = "<?php echo addslashes($alertTitle); ?>";
+      const __alertMessage = "<?php echo addslashes($alertMessage); ?>";
+      const __alertRedirect = "<?php echo addslashes($alertRedirect); ?>";
 
-  showAlert(__alertTitle, __alertMessage);
-  setTimeout(() => {
-    if (__alertRedirect && __alertRedirect.length > 0) {
-      window.location.href = __alertRedirect;
-    }
-  }, 2000);
-</script>
+      showAlert(__alertTitle, __alertMessage);
+      setTimeout(() => {
+        if (__alertRedirect && __alertRedirect.length > 0) {
+          window.location.href = __alertRedirect;
+        }
+      }, 2000);
+    </script>
 
   <?php endif; ?>
 </body>

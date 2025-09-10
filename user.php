@@ -3,6 +3,7 @@ include("darkmode.php");
 include("connection.php");
 include('session.php');
 requireRole('user')
+
 ?>
 
 <!DOCTYPE html>
@@ -144,6 +145,62 @@ requireRole('user')
       color: var(--primary-color);
       font-size: 1rem;
     }
+
+    /* User Icon */
+        .user_icon {
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .user_icon img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user_dropdown {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            min-width: 150px;
+            z-index: 2000;
+            overflow: hidden;
+        }
+
+        .user_dropdown a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .user_dropdown a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .dark-mode .user_dropdown {
+            background-color: var(--dark-card);
+            color: var(--text-light);
+        }
+
+        .dark-mode .user_dropdown a {
+            color: var(--text-light);
+        }
+
+        .dark-mode .user_dropdown a:hover {
+            background-color: #2a3a5a;
+        }
 
     /* Dashboard Cards */
     .dashboard-cards {
@@ -335,7 +392,7 @@ requireRole('user')
     <a href="bookship.php">Book Shipment</a>
     <a href="shiphistory.php">Shipment History</a>
     <a href="reports.php">Reports</a>
-    <a href="logout.php">Logout</a>
+    <a href="feedback.php">Feedback</a>
   </div>
 
   <div class="content" id="mainContent">
@@ -345,6 +402,13 @@ requireRole('user')
         <h1>User Dashboard <span class="system-title"></span></h1>
       </div>
       <div class="theme-toggle-container">
+         <div class="user_icon" id="userIcon">
+                    <img src="user.png" alt="User">
+                    <div class="user_dropdown" id="userDropdown">
+                        <a href="profile.php">Profile</a>
+                        <a href="logout.php">Logout</a>
+                    </div>
+                </div>
         <span class="theme-label">Dark Mode</span>
         <label class="theme-switch">
           <input type="checkbox" id="userThemeToggle">
@@ -465,6 +529,22 @@ requireRole('user')
         }
       }
     });
+
+    // Toggle dropdown
+            const userIcon = document.getElementById("userIcon");
+            const userDropdown = document.getElementById("userDropdown");
+
+            userIcon.addEventListener("click", () => {
+                userDropdown.style.display =
+                    userDropdown.style.display === "block" ? "none" : "block";
+            });
+
+            // Close dropdown if clicking outside
+            document.addEventListener("click", (e) => {
+                if (!userIcon.contains(e.target)) {
+                    userDropdown.style.display = "none";
+                }
+            });
   </script>
 </body>
 

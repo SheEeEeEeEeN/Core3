@@ -282,6 +282,7 @@ requireRole('user')
         <a href="bookship.php">Book Shipment</a>
         <a href="shiphistory.php">Shipment History</a>
         <a href="reports.php" class="active">Reports</a>
+        <a href="feedback.php">Feedback</a>
         <a href="logout.php">Logout</a>
     </div>
 
