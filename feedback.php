@@ -4,7 +4,9 @@ include("connection.php");
 include('session.php');
 requireRole('user');
 
-// Handle feedback submission
+$account_id = $_SESSION['account_id'];
+
+/*Handle feedback submission*/
 if (isset($_POST['Send_feedback'])) {
     $comment = trim($_POST['comment']);
     $account_id = $_SESSION['account_id']; // make sure this is set at login

@@ -1,6 +1,6 @@
 <?php
 session_start();
-include("connection.php"); // ✅ now $conn is ready automatically
+include("connection.php");
 
 $error = "";
 $success = "";
@@ -57,6 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       if (password_verify($password, $db_password)) {
         session_regenerate_id(true);
         $_SESSION['user_id'] = $id;
+        $_SESSION['account_id']  = $id;
         $_SESSION['username'] = $db_username;
         $_SESSION['role'] = $role;
 

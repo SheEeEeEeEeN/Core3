@@ -2,12 +2,31 @@
 include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('admin')
-?>
+requireRole('admin');
 
+// Fetch feedback messages
+$unread = [];
+$read   = [];
+
+// Example: assuming you add a column `status` in `feedback` table ("unread", "read")
+$sql = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
+        FROM feedback f 
+        JOIN accounts a ON f.account_id = a.id 
+        ORDER BY f.created_at DESC";
+
+$result = $conn->query($sql);
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        if ($row['status'] === 'unread') {
+            $unread[] = $row;
+        } else {
+            $read[] = $row;
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -152,6 +171,7 @@ requireRole('admin')
             padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            margin-bottom: 1rem;
         }
 
         .dark-mode .searchnotif-section {
@@ -263,7 +283,6 @@ requireRole('admin')
         }
     </style>
 </head>
-
 <body>
     <div class="sidebar" id="sidebar">
         <div class="logo">
@@ -294,14 +313,45 @@ requireRole('admin')
             </div>
         </div>
 
+        <!-- Unread Notifications -->
         <div class="searchnotif-section">
             <div class="notif-section">
                 <h2>Unread Notification</h2><br>
-                <h2>Read Notification</h2>
+                <?php if (!empty($unread)): ?>
+                    <ul>
+                        <?php foreach ($unread as $fb): ?>
+                            <li>
+                                <strong><?= htmlspecialchars($fb['username']) ?></strong> 
+                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
+                                <?= nl2br(htmlspecialchars($fb['comment'])) ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p>No unread notifications.</p>
+                <?php endif; ?>
             </div>
         </div>
 
-    </div>
+        <!-- Read Notifications -->
+        <div class="searchnotif-section">
+            <div class="notif-section">
+                <h2>Read Notification</h2><br>
+                <?php if (!empty($read)): ?>
+                    <ul style="list-style:none; padding:0;">
+                        <?php foreach ($read as $fb): ?>
+                            <li style="margin-bottom:1rem; padding:0.8rem; border-bottom:1px solid #ddd;">
+                                <strong><?= htmlspecialchars($fb['username']) ?></strong> 
+                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
+                                <?= nl2br(htmlspecialchars($fb['comment'])) ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p>No read notifications yet.</p>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -313,5 +363,4 @@ requireRole('admin')
         });
     </script>
 </body>
-
 </html>
