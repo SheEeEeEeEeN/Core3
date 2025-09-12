@@ -8,19 +8,30 @@ requireRole('admin');
 $unread = [];
 $read   = [];
 
-$sql = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
-        FROM feedback f 
-        JOIN accounts a ON f.account_id = a.id 
-        ORDER BY f.created_at DESC";
+// Unread (all)
+$sqlUnread = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
+              FROM feedback f 
+              JOIN accounts a ON f.account_id = a.id 
+              WHERE f.status = 'unread'
+              ORDER BY f.created_at DESC";
+$resultUnread = $conn->query($sqlUnread);
+if ($resultUnread && $resultUnread->num_rows > 0) {
+    while ($row = $resultUnread->fetch_assoc()) {
+        $unread[] = $row;
+    }
+}
 
-$result = $conn->query($sql);
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        if ($row['status'] === 'unread') {
-            $unread[] = $row;
-        } else {
-            $read[] = $row;
-        }
+// Read (limit 20 only)
+$sqlRead = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
+            FROM feedback f 
+            JOIN accounts a ON f.account_id = a.id 
+            WHERE f.status != 'unread'
+            ORDER BY f.created_at DESC
+            LIMIT 20";
+$resultRead = $conn->query($sqlRead);
+if ($resultRead && $resultRead->num_rows > 0) {
+    while ($row = $resultRead->fetch_assoc()) {
+        $read[] = $row;
     }
 }
 ?>
@@ -120,11 +131,6 @@ if ($result && $result->num_rows > 0) {
             border-left: 3px solid white;
         }
 
-        .admin-feature {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Main Content */
         .content {
             margin-left: var(--sidebar-width);
             padding: 20px;
@@ -135,7 +141,6 @@ if ($result && $result->num_rows > 0) {
             margin-left: 0;
         }
 
-        /* Header */
         .header {
             background-color: white;
             padding: 1rem;
@@ -158,12 +163,6 @@ if ($result && $result->num_rows > 0) {
             padding: 0.5rem;
         }
 
-        .system-title {
-            color: var(--primary-color);
-            font-size: 1rem;
-        }
-
-        /* Table Section */
         .searchnotif-section {
             position: relative;
             background-color: white;
@@ -178,104 +177,12 @@ if ($result && $result->num_rows > 0) {
             color: var(--text-light);
         }
 
-        .portalcontent {
-            display: flex;
-        }
-
-        .search-control input {
-            width: 770px;
-            padding: 0.4rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
-        }
-
-        .dark-mode .search-control input {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
-        /* Theme Toggle */
-        .theme-toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .theme-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: var(--primary-color);
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(26px);
-        }
-
-        /* Responsive */
-        @media (max-width: 992px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.show {
-                transform: translateX(0);
-            }
-
-            .content {
-                margin-left: 0;
-            }
-        }
-
         .notif-section {
             margin-top: 1rem;
         }
 
-        .dark-mode .notif_section {
-            background-color: var(--dark-card);
-            color: var(--text-light);
-        }
-
-        .notif-section h2 {
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
+        .notif-section h2{
+            margin-bottom: 0.7rem;
         }
 
         .notif-list {
@@ -359,24 +266,95 @@ if ($result && $result->num_rows > 0) {
             margin-bottom: 0.3rem;
         }
 
-        /* Scrollable unread container */
-        .unread-container {
+        /* Scrollable containers */
+        .unread-container,
+        .read-container {
             max-height: 400px;
             overflow-y: auto;
             padding-right: 8px;
         }
 
-        .unread-container::-webkit-scrollbar {
+        .unread-container::-webkit-scrollbar,
+        .read-container::-webkit-scrollbar {
             width: 8px;
         }
 
-        .unread-container::-webkit-scrollbar-thumb {
+        .unread-container::-webkit-scrollbar-thumb,
+        .read-container::-webkit-scrollbar-thumb {
             background: var(--primary-color);
             border-radius: 4px;
         }
 
-        .unread-container::-webkit-scrollbar-track {
+        .unread-container::-webkit-scrollbar-track,
+        .read-container::-webkit-scrollbar-track {
             background: #f1f1f1;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
@@ -384,20 +362,22 @@ if ($result && $result->num_rows > 0) {
 <body>
     <div class="sidebar" id="sidebar">
         <div class="logo"> <img src="rem.png" alt="SLATE Logo"> </div>
-        <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
+        <div class="system-name">CORE TRANSACTION 3</div> 
+        <a href="admin.php">Dashboard</a> 
+        <a href="CRM.php">Customer Relationship Management</a> 
+        <a href="CSM.php">Contract & SLA Monitoring</a> 
+        <a href="E-Doc.php">E-Documentations & Compliance Manager</a> 
+        <a href="BIFA.php">Business Intelligence & Freight Analytics</a> 
+        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a> 
         <a href="logout.php">Logout</a>
     </div>
 
     <div class="content" id="mainContent">
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
-            <h1>Customer Portal & Notification Hub</h1>
+            <div>
+                <h1>Customer Portal & Notification Hub</h1>
+            </div>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
@@ -420,7 +400,6 @@ if ($result && $result->num_rows > 0) {
                                     <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
                                     <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-                                    <!-- Reply Box -->
                                     <form class="reply-box" method="post" action="reply.php">
                                         <input type="hidden" name="feedback_id" value="<?= $fb['id'] ?>">
                                         <textarea name="reply_message" placeholder="Write your reply..." required></textarea>
@@ -439,43 +418,45 @@ if ($result && $result->num_rows > 0) {
         <!-- Read Notifications -->
         <div class="searchnotif-section">
             <div class="notif-section">
-                <h2>Read Notification</h2>
+                <h2>Read Notifications</h2>
                 <?php if (!empty($read)): ?>
-                    <ul class="notif-list">
-                        <?php foreach ($read as $fb): ?>
-                            <li class="notif-item">
-                                <strong class="Ureply"><?= htmlspecialchars($fb['username']) ?></strong>
-                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
-                                <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
+                    <div class="read-container">
+                        <ul class="notif-list">
+                            <?php foreach ($read as $fb): ?>
+                                <li class="notif-item">
+                                    <strong class="Ureply"><?= htmlspecialchars($fb['username']) ?></strong>
+                                    <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
+                                    <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-                                <?php
-                                $sqlReplies = "SELECT r.reply_message, r.created_at, a.username AS admin_name
-                                   FROM replies r
-                                   JOIN accounts a ON r.admin_id = a.id
-                                   WHERE r.feedback_id = ?
-                                   ORDER BY r.created_at ASC";
-                                $replyStmt = $conn->prepare($sqlReplies);
-                                $replyStmt->bind_param("i", $fb['id']);
-                                $replyStmt->execute();
-                                $replyResult = $replyStmt->get_result();
+                                    <?php
+                                    $sqlReplies = "SELECT r.reply_message, r.created_at, a.username AS admin_name
+                                       FROM replies r
+                                       JOIN accounts a ON r.admin_id = a.id
+                                       WHERE r.feedback_id = ?
+                                       ORDER BY r.created_at ASC";
+                                    $replyStmt = $conn->prepare($sqlReplies);
+                                    $replyStmt->bind_param("i", $fb['id']);
+                                    $replyStmt->execute();
+                                    $replyResult = $replyStmt->get_result();
 
-                                if ($replyResult->num_rows > 0): ?>
-                                    <div class="replies">
-                                        <strong>Replies:</strong>
-                                        <ul>
-                                            <?php while ($r = $replyResult->fetch_assoc()): ?>
-                                                <li>
-                                                    <em><?= htmlspecialchars($r['admin_name']) ?></em>
-                                                    (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):
-                                                    <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
-                                                </li>
-                                            <?php endwhile; ?>
-                                        </ul>
-                                    </div>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                                    if ($replyResult->num_rows > 0): ?>
+                                        <div class="replies">
+                                            <strong>Replies:</strong>
+                                            <ul>
+                                                <?php while ($r = $replyResult->fetch_assoc()): ?>
+                                                    <li>
+                                                        <em><?= htmlspecialchars($r['admin_name']) ?></em>
+                                                        (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):
+                                                        <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
+                                                    </li>
+                                                <?php endwhile; ?>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
                 <?php else: ?>
                     <p>No read notifications yet.</p>
                 <?php endif; ?>
@@ -491,5 +472,4 @@ if ($result && $result->num_rows > 0) {
         </script>
     </div>
 </body>
-
 </html>
