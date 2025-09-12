@@ -22,18 +22,34 @@ if (isset($_POST['Send_feedback'])) {
     }
 }
 
-// Fetch feedback (all users OR just the logged in user)
+// Fetch feedback with reply from admin
 $feedbacks = [];
-$sql = "SELECT f.comment, f.created_at, a.username 
+
+$sql = "SELECT f.id, f.comment, f.created_at, a.username 
         FROM feedback f 
-        JOIN accounts a ON f.account_id = a.id   -- or a.account_id
+        JOIN accounts a ON f.account_id = a.id
         ORDER BY f.created_at DESC LIMIT 5";
 $result = $conn->query($sql);
+
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
+        // Fetch replies for this feedback
+        $replySql = "SELECT r.reply_message, r.created_at, u.username AS admin_name
+                     FROM replies r
+                     JOIN accounts u ON r.admin_id = u.id
+                     WHERE r.feedback_id = ?
+                     ORDER BY r.created_at ASC";
+        $stmt = $conn->prepare($replySql);
+        $stmt->bind_param("i", $row['id']);
+        $stmt->execute();
+        $replies = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $row['replies'] = $replies;
         $feedbacks[] = $row;
     }
 }
+
+
 ?>
 
 
@@ -283,6 +299,46 @@ if ($result && $result->num_rows > 0) {
             background-color: #3a5bc7;
         }
 
+        /* Admin Replies Box */
+        .admin-replies {
+            margin-top: 0.5rem;
+            padding: 0.6rem;
+            background: #f8f9fc;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 6px;
+            color: #333;
+        }
+
+        .admin-replies ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0.3rem 0 0;
+        }
+
+        .admin-replies li {
+            margin-bottom: 0.4rem;
+            padding: 0.4rem;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        /* Dark Mode Styling */
+        body.dark-mode .admin-replies {
+            background: #2c2f33;
+            border-left: 4px solid #7289da;
+            color: #ddd;
+        }
+
+        body.dark-mode .admin-replies li {
+            background: #23272a;
+            color: #ccc;
+        }
+
+        .Userfeed {
+            font-size: 1rem;
+            color: #2d7ff2ff;
+        }
+
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -391,33 +447,51 @@ if ($result && $result->num_rows > 0) {
 
 
         <div class="Feedback_section">
-    <h2>Send Feedback/Concern</h2>
-    <?php if (isset($success)) echo "<p style='color:green;'>$success</p>"; ?>
-    <?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
-    <form method="POST">
-        <div class="Feedback_content">
-            <textarea class="comment" id="comment" name="comment" placeholder="Enter your feedback" required></textarea>
+            <h2>Send Feedback/Concern</h2>
+            <?php if (isset($success)) echo "<p style='color:green;'>$success</p>"; ?>
+            <?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
+            <form method="POST">
+                <div class="Feedback_content">
+                    <textarea class="comment" id="comment" name="comment" placeholder="Enter your feedback" required></textarea>
+                </div>
+                <button type="submit" name="Send_feedback" class="btn Send_feedback">Send</button>
+            </form>
         </div>
-        <button type="submit" name="Send_feedback" class="btn Send_feedback">Send</button>
-    </form>
-</div>
 
-<div class="Feedback_section">
-    <h2>Recent Feedback</h2>
-    <?php if (!empty($feedbacks)): ?>
-        <ul style="list-style:none; padding:0;">
-            <?php foreach ($feedbacks as $fb): ?>
-                <li style="margin-bottom:1rem; padding:0.8rem; border-bottom:1px solid #ddd;">
-                    <strong><?= htmlspecialchars($fb['username']) ?></strong> 
-                    <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
-                    <?= nl2br(htmlspecialchars($fb['comment'])) ?>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php else: ?>
-        <p>No feedback yet.</p>
-    <?php endif; ?>
-</div>
+        <div class="Feedback_section">
+            <h2>Recent Feedback</h2>
+            <?php if (!empty($feedbacks)): ?>
+                <ul style="list-style:none; padding:0;">
+                    <?php foreach ($feedbacks as $fb): ?>
+                        <li style="margin-bottom:1rem; padding:0.8rem; border-bottom:1px solid #ddd;">
+                            <strong class="Userfeed"><?= htmlspecialchars($fb['username']) ?></strong>
+                            <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
+
+                            <p style="margin:0.5rem 0;"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
+
+                            <?php if (!empty($fb['replies'])): ?>
+                                <div class="admin-replies">
+                                    <strong>Admin Replies:</strong>
+                                    <ul>
+                                        <?php foreach ($fb['replies'] as $r): ?>
+                                            <li>
+                                                <em><?= htmlspecialchars($r['admin_name']) ?></em>
+                                                (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):<br>
+                                                <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+
+                        </li>
+                    <?php endforeach; ?>
+
+                </ul>
+            <?php else: ?>
+                <p>No feedback yet.</p>
+            <?php endif; ?>
+        </div>
 
 
         <script>

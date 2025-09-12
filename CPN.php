@@ -8,7 +8,6 @@ requireRole('admin');
 $unread = [];
 $read   = [];
 
-// Example: assuming you add a column `status` in `feedback` table ("unread", "read")
 $sql = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
         FROM feedback f 
         JOIN accounts a ON f.account_id = a.id 
@@ -27,11 +26,11 @@ if ($result && $result->num_rows > 0) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -198,22 +197,6 @@ if ($result && $result->num_rows > 0) {
             color: var(--text-light);
         }
 
-        .search-priorities select {
-            width: 400px;
-            padding: 0.4rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
-            background-color: white;
-        }
-
-        .dark-mode .search-priorities select {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -281,29 +264,115 @@ if ($result && $result->num_rows > 0) {
                 margin-left: 0;
             }
         }
+
+        .notif-section {
+            margin-top: 1rem;
+        }
+
+        .dark-mode .notif_section {
+            background-color: var(--dark-card);
+            color: var(--text-light);
+        }
+
+        .notif-section h2 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .notif-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notif-item {
+            background: #fff;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+
+        body.dark-mode .notif-item {
+            background: #1e2b53ff;
+            color: var(--text-light);
+        }
+
+        .Ureply{
+            font-size: 1rem;
+            color: #2d7ff2ff;
+        }
+
+        .notif-item small {
+            font-size: 0.8rem;
+            color: gray;
+        }
+
+        .notif-comment {
+            margin: 0.5rem 0;
+        }
+
+        .reply-box {
+            margin-top: 0.5rem
+        }
+
+        .reply-box textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        body.dark-mode .reply-box textarea {
+            background: #2a3a5a;
+            border-color: #3a4b6e;
+            color: var(--text-light);
+        }
+
+        .reply-box button {
+            margin-top: 0.5rem;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .reply-box button:hover {
+            background: #3c5ac2;
+        }
+
+        .replies {
+            margin-top: 0.5rem;
+            padding: 0.5rem 0 0 1rem;
+            border-left: 3px solid var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .replies ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .replies li {
+            margin-bottom: 0.3rem;
+        }
     </style>
 </head>
+
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="logo">
-            <img src="rem.png" alt="SLATE Logo">
-        </div>
-        <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
-        <a href="logout.php">Logout</a>
+        <div class="logo"> <img src="rem.png" alt="SLATE Logo"> </div>
+        <div class="system-name">CORE TRANSACTION 3</div> <a href="admin.php">Dashboard</a> <a href="CRM.php">Customer Relationship Management</a> <a href="CSM.php">Contract & SLA Monitoring</a> <a href="E-Doc.php">E-Documentations & Compliance Manager</a> <a href="BIFA.php">Business Intelligence & Freight Analytics</a> <a href="CPN.php" class="active">Customer Portal & Notification Hub</a> <a href="logout.php">Logout</a>
     </div>
+    <!-- Sidebar + Header skipped for brevity, keep your existing one -->
 
     <div class="content" id="mainContent">
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
-            <div>
-                <h1>Customer Portal & Notification Hub</h1>
-            </div>
+            <h1>Customer Portal & Notification Hub</h1>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
@@ -316,15 +385,23 @@ if ($result && $result->num_rows > 0) {
         <!-- Unread Notifications -->
         <div class="searchnotif-section">
             <div class="notif-section">
-                <h2>Unread Notification</h2><br>
+                <h2>Unread Notifications</h2>
                 <?php if (!empty($unread)): ?>
-                    <ul>
+                    <ul class="notif-list">
                         <?php foreach ($unread as $fb): ?>
-                            <li>
-                                <strong><?= htmlspecialchars($fb['username']) ?></strong> 
-                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
-                                <?= nl2br(htmlspecialchars($fb['comment'])) ?>
+                            <li class="notif-item">
+                                <strong><?= htmlspecialchars($fb['username']) ?></strong>
+                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
+                                <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
+
+                                <!-- Reply Box -->
+                                <form class="reply-box" method="post" action="reply.php">
+                                    <input type="hidden" name="feedback_id" value="<?= $fb['id'] ?>">
+                                    <textarea name="reply_message" placeholder="Write your reply..." required></textarea>
+                                    <button type="submit">Send Reply</button>
+                                </form>
                             </li>
+
                         <?php endforeach; ?>
                     </ul>
                 <?php else: ?>
@@ -336,14 +413,41 @@ if ($result && $result->num_rows > 0) {
         <!-- Read Notifications -->
         <div class="searchnotif-section">
             <div class="notif-section">
-                <h2>Read Notification</h2><br>
+                <h2>Read Notification</h2>
                 <?php if (!empty($read)): ?>
-                    <ul style="list-style:none; padding:0;">
+                    <ul class="notif-list">
                         <?php foreach ($read as $fb): ?>
-                            <li style="margin-bottom:1rem; padding:0.8rem; border-bottom:1px solid #ddd;">
-                                <strong><?= htmlspecialchars($fb['username']) ?></strong> 
-                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
-                                <?= nl2br(htmlspecialchars($fb['comment'])) ?>
+                            <li class="notif-item">
+                                <strong class="Ureply"><?= htmlspecialchars($fb['username']) ?></strong>
+                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
+                                <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
+
+                                <!-- 👇 ADD THIS PART TO SHOW REPLIES -->
+                                <?php
+                                $sqlReplies = "SELECT r.reply_message, r.created_at, a.username AS admin_name
+                                   FROM replies r
+                                   JOIN accounts a ON r.admin_id = a.id
+                                   WHERE r.feedback_id = ?
+                                   ORDER BY r.created_at ASC";
+                                $replyStmt = $conn->prepare($sqlReplies);
+                                $replyStmt->bind_param("i", $fb['id']);
+                                $replyStmt->execute();
+                                $replyResult = $replyStmt->get_result();
+
+                                if ($replyResult->num_rows > 0): ?>
+                                    <div class="replies">
+                                        <strong>Replies:</strong>
+                                        <ul>
+                                            <?php while ($r = $replyResult->fetch_assoc()): ?>
+                                                <li>
+                                                    <em><?= htmlspecialchars($r['admin_name']) ?></em>
+                                                    (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):
+                                                    <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
+                                                </li>
+                                            <?php endwhile; ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -352,15 +456,15 @@ if ($result && $result->num_rows > 0) {
                 <?php endif; ?>
             </div>
         </div>
-    </div>
 
-    <script>
-        initDarkMode("adminThemeToggle", "adminDarkMode");
 
-        document.getElementById('hamburger').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
-        });
-    </script>
+        <script>
+            initDarkMode("adminThemeToggle", "adminDarkMode");
+            document.getElementById('hamburger').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+                document.getElementById('mainContent').classList.toggle('expanded');
+            });
+        </script>
 </body>
+
 </html>
