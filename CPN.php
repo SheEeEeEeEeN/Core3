@@ -197,7 +197,6 @@ if ($result && $result->num_rows > 0) {
             color: var(--text-light);
         }
 
-
         /* Theme Toggle */
         .theme-toggle-container {
             display: flex;
@@ -298,7 +297,7 @@ if ($result && $result->num_rows > 0) {
             color: var(--text-light);
         }
 
-        .Ureply{
+        .Ureply {
             font-size: 1rem;
             color: #2d7ff2ff;
         }
@@ -359,15 +358,41 @@ if ($result && $result->num_rows > 0) {
         .replies li {
             margin-bottom: 0.3rem;
         }
+
+        /* Scrollable unread container */
+        .unread-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .unread-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .unread-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .unread-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
     </style>
 </head>
 
 <body>
     <div class="sidebar" id="sidebar">
         <div class="logo"> <img src="rem.png" alt="SLATE Logo"> </div>
-        <div class="system-name">CORE TRANSACTION 3</div> <a href="admin.php">Dashboard</a> <a href="CRM.php">Customer Relationship Management</a> <a href="CSM.php">Contract & SLA Monitoring</a> <a href="E-Doc.php">E-Documentations & Compliance Manager</a> <a href="BIFA.php">Business Intelligence & Freight Analytics</a> <a href="CPN.php" class="active">Customer Portal & Notification Hub</a> <a href="logout.php">Logout</a>
+        <div class="system-name">CORE TRANSACTION 3</div>
+        <a href="admin.php">Dashboard</a>
+        <a href="CRM.php">Customer Relationship Management</a>
+        <a href="CSM.php">Contract & SLA Monitoring</a>
+        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
+        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
+        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
+        <a href="logout.php">Logout</a>
     </div>
-    <!-- Sidebar + Header skipped for brevity, keep your existing one -->
 
     <div class="content" id="mainContent">
         <div class="header">
@@ -387,23 +412,24 @@ if ($result && $result->num_rows > 0) {
             <div class="notif-section">
                 <h2>Unread Notifications</h2>
                 <?php if (!empty($unread)): ?>
-                    <ul class="notif-list">
-                        <?php foreach ($unread as $fb): ?>
-                            <li class="notif-item">
-                                <strong><?= htmlspecialchars($fb['username']) ?></strong>
-                                <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
-                                <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
+                    <div class="unread-container">
+                        <ul class="notif-list">
+                            <?php foreach ($unread as $fb): ?>
+                                <li class="notif-item">
+                                    <strong><?= htmlspecialchars($fb['username']) ?></strong>
+                                    <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
+                                    <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-                                <!-- Reply Box -->
-                                <form class="reply-box" method="post" action="reply.php">
-                                    <input type="hidden" name="feedback_id" value="<?= $fb['id'] ?>">
-                                    <textarea name="reply_message" placeholder="Write your reply..." required></textarea>
-                                    <button type="submit">Send Reply</button>
-                                </form>
-                            </li>
-
-                        <?php endforeach; ?>
-                    </ul>
+                                    <!-- Reply Box -->
+                                    <form class="reply-box" method="post" action="reply.php">
+                                        <input type="hidden" name="feedback_id" value="<?= $fb['id'] ?>">
+                                        <textarea name="reply_message" placeholder="Write your reply..." required></textarea>
+                                        <button type="submit">Send Reply</button>
+                                    </form>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
                 <?php else: ?>
                     <p>No unread notifications.</p>
                 <?php endif; ?>
@@ -422,7 +448,6 @@ if ($result && $result->num_rows > 0) {
                                 <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
                                 <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-                                <!-- 👇 ADD THIS PART TO SHOW REPLIES -->
                                 <?php
                                 $sqlReplies = "SELECT r.reply_message, r.created_at, a.username AS admin_name
                                    FROM replies r
@@ -457,7 +482,6 @@ if ($result && $result->num_rows > 0) {
             </div>
         </div>
 
-
         <script>
             initDarkMode("adminThemeToggle", "adminDarkMode");
             document.getElementById('hamburger').addEventListener('click', function() {
@@ -465,6 +489,7 @@ if ($result && $result->num_rows > 0) {
                 document.getElementById('mainContent').classList.toggle('expanded');
             });
         </script>
+    </div>
 </body>
 
 </html>
