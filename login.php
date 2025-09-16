@@ -178,6 +178,9 @@ if (isset($conn) && $conn instanceof mysqli) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SLATE System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * {
       margin: 0;
@@ -379,6 +382,44 @@ if (isset($conn) && $conn instanceof mysqli) {
       background: linear-gradient(to right, #0052cc, #009ee3);
     }
 
+    /* Fix checkbox alignment */
+    .terms-checkbox {
+      display: flex;
+      align-items: center;
+      margin-top: .5rem;
+      font-size: 14px;
+      color: #fff;
+      gap: 6px;
+      /* space between checkbox and text */
+    }
+
+    .terms-checkbox input[type="checkbox"] {
+      margin: 0;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      accent-color: #00c6ff;
+      /* modern browsers: custom color */
+      cursor: pointer;
+    }
+
+    .terms-checkbox label {
+      margin: 0;
+      line-height: 1;
+      /* keeps text centered with checkbox */
+    }
+
+    .terms-checkbox a {
+      color: #00c6ff;
+      text-decoration: none;
+    }
+
+    .terms-checkbox a:hover {
+      text-decoration: underline;
+    }
+
+
+
     @media (max-width:48rem) {
       .login-container {
         flex-direction: column;
@@ -434,17 +475,66 @@ if (isset($conn) && $conn instanceof mysqli) {
           <h2 id="formTitle">SLATE Login</h2>
 
           <!-- Login Form -->
-          <form id="loginForm" class="login-form" method="POST" action="login.php">
+          <form id="loginForm" class="login-form" method="POST" action="login.php" onsubmit="return checkTerms()">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
+
             <button type="submit" name="login" id="loginBtn"
               <?php if ($_SESSION['lockout_time'] > time()) echo "disabled style='cursor:not-allowed;opacity:0.6;'"; ?>>
               Log In
             </button>
+
+            <!-- ✅ Terms Agreement -->
+            <div class="terms-checkbox">
+              <input type="checkbox" id="agreeLogin" name="terms">
+              <label for="agreeLogin">
+                I agree to the
+                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">
+                  Terms & Conditions
+                </a>
+              </label>
+            </div>
+
+
+
+
             <?php if (!empty($error) && isset($_POST['login'])): ?>
               <div class="inline-message error"><?= $error ?></div>
             <?php endif; ?>
           </form>
+
+
+          <!-- Terms & Conditions Modal -->
+          <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-lg">
+              <div class="modal-content" style="background:#222; color:#fff; border-radius:10px;">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="termsModalLabel">Terms & Conditions</h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height:400px; overflow-y:auto; font-size:14px;">
+                  <p><strong>1. Acceptance of Terms</strong></p>
+                  <p>By creating an account, you agree to follow our system rules and policies.</p>
+
+                  <p><strong>2. User Responsibilities</strong></p>
+                  <p>You must provide accurate information when registering and respect the system’s usage rules.</p>
+
+                  <p><strong>3. Data Privacy</strong></p>
+                  <p>We handle your data securely and will not share it without consent, except as required by law.</p>
+
+                  <p><strong>4. Restrictions</strong></p>
+                  <p>Do not misuse the system, attempt unauthorized access, or disrupt service operations.</p>
+
+                  <p><strong>5. Changes to Terms</strong></p>
+                  <p>We may update these Terms & Conditions, and continued use means you accept those changes.</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
 
 
           <!-- Register Form -->
@@ -576,6 +666,32 @@ if (isset($conn) && $conn instanceof mysqli) {
         }
       }, 1000);
     }
+
+    // ✅ Ensure terms are checked before login
+    function checkTerms() {
+      const terms = document.getElementById("agreeLogin");
+      if (!terms.checked) {
+        alert("You must agree to the Terms & Conditions before logging in.");
+        return false; // stop form submission
+      }
+      return true;
+    }
+
+    // ✅ Ensure terms are checked before login with SweetAlert2
+function checkTerms() {
+  const terms = document.getElementById("agreeLogin");
+  if (!terms.checked) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Terms & Conditions',
+      text: 'You must agree to the Terms & Conditions before logging in.',
+      confirmButtonColor: '#0072ff'
+    });
+    return false; // stop form submission
+  }
+  return true;
+}
+
   </script>
 
   <!-- Trigger alert (if any) AFTER the showAlert function is defined -->
