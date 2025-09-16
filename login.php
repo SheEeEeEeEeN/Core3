@@ -11,6 +11,17 @@ $alertTitle = "";
 $alertMessage = "";
 $alertRedirect = "";
 
+// ✅ Initialize login attempts & lockout tracking
+if (!isset($_SESSION['login_attempts'])) {
+  $_SESSION['login_attempts'] = 0;
+}
+if (!isset($_SESSION['lockout_time'])) {
+  $_SESSION['lockout_time'] = 0;
+}
+if (!isset($_SESSION['lockout_count'])) {
+  $_SESSION['lockout_count'] = 0; // how many times user got locked
+}
+
 // Handle AJAX requests for live check
 if (isset($_GET['check'])) {
   $field = $_GET['check'];
@@ -42,35 +53,76 @@ if (isset($_GET['check'])) {
 // Handle login
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   if (isset($_POST['login'])) {
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
-
-    $stmt = $conn->prepare("SELECT id, username, password, role FROM accounts WHERE username=?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
-
-    if ($stmt->num_rows == 1) {
-      $stmt->bind_result($id, $db_username, $db_password, $role);
-      $stmt->fetch();
-
-      if (password_verify($password, $db_password)) {
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = $id;
-        $_SESSION['account_id']  = $id;
-        $_SESSION['username'] = $db_username;
-        $_SESSION['role'] = $role;
-
-        $alertTitle = "Login Successful";
-        $alertMessage = "Welcome, $db_username";
-        $alertRedirect = ($role === 'admin' ? 'admin.php' : 'user.php');
-      } else {
-        $error = "Invalid password!";
-      }
+    // Check lockout
+    if ($_SESSION['lockout_time'] > time()) {
+      $remaining = $_SESSION['lockout_time'] - time();
+      $error = "Too many failed attempts. Please wait <span id='countdown'>{$remaining}</span> seconds.";
     } else {
-      $error = "No account found with that username.";
+      $username = trim($_POST['username']);
+      $password = $_POST['password'];
+
+      $stmt = $conn->prepare("SELECT id, username, password, role FROM accounts WHERE username=?");
+      $stmt->bind_param("s", $username);
+      $stmt->execute();
+      $stmt->store_result();
+
+      if ($stmt->num_rows == 1) {
+        $stmt->bind_result($id, $db_username, $db_password, $role);
+        $stmt->fetch();
+
+        if (password_verify($password, $db_password)) {
+          // ✅ Reset everything after successful login
+          $_SESSION['login_attempts'] = 0;
+          $_SESSION['lockout_time'] = 0;
+          $_SESSION['lockout_count'] = 0;
+
+          session_regenerate_id(true);
+          $_SESSION['user_id'] = $id;
+          $_SESSION['account_id'] = $id;
+          $_SESSION['username'] = $db_username;
+          $_SESSION['role'] = $role;
+
+          $alertTitle = "Login Successful";
+          $alertMessage = "Welcome, $db_username";
+          $alertRedirect = ($role === 'admin' ? 'admin.php' : 'user.php');
+        } else {
+          // ❌ Wrong password
+          $_SESSION['login_attempts']++;
+
+          if ($_SESSION['login_attempts'] >= 3) {
+            $_SESSION['login_attempts'] = 0; // reset counter after lockout
+            $_SESSION['lockout_count']++;   // count how many lockouts
+
+            // Progressive lockout: 30s → 60s → 120s
+            $durations = [30, 60, 120];
+            $index = min($_SESSION['lockout_count'] - 1, count($durations) - 1);
+            $lockTime = $durations[$index];
+
+            $_SESSION['lockout_time'] = time() + $lockTime;
+            $error = "Too many failed attempts. Please wait <span id='countdown'>{$lockTime}</span> seconds.";
+          } else {
+            $error = "Invalid password!"; // ✅ cleaned (removed 1/3)
+          }
+        }
+      } else {
+        // ❌ No account found
+        $_SESSION['login_attempts']++;
+        if ($_SESSION['login_attempts'] >= 3) {
+          $_SESSION['login_attempts'] = 0;
+          $_SESSION['lockout_count']++;
+
+          $durations = [30, 60, 120];
+          $index = min($_SESSION['lockout_count'] - 1, count($durations) - 1);
+          $lockTime = $durations[$index];
+
+          $_SESSION['lockout_time'] = time() + $lockTime;
+          $error = "Too many failed attempts. Please wait <span id='countdown'>{$lockTime}</span> seconds.";
+        } else {
+          $error = "No account found."; // ✅ cleaned (removed 1/3)
+        }
+      }
+      $stmt->close();
     }
-    $stmt->close();
   } elseif (isset($_POST['register'])) {
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
@@ -127,7 +179,6 @@ if (isset($conn) && $conn instanceof mysqli) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SLATE System</title>
   <style>
-    /* Base and layout styles (kept your original styles) */
     * {
       margin: 0;
       padding: 0;
@@ -386,11 +437,15 @@ if (isset($conn) && $conn instanceof mysqli) {
           <form id="loginForm" class="login-form" method="POST" action="login.php">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" name="login">Log In</button>
+            <button type="submit" name="login" id="loginBtn"
+              <?php if ($_SESSION['lockout_time'] > time()) echo "disabled style='cursor:not-allowed;opacity:0.6;'"; ?>>
+              Log In
+            </button>
             <?php if (!empty($error) && isset($_POST['login'])): ?>
-              <div class="inline-message error"><?= htmlentities($error) ?></div>
+              <div class="inline-message error"><?= $error ?></div>
             <?php endif; ?>
           </form>
+
 
           <!-- Register Form -->
           <form id="registerForm" class="register-form" method="POST" action="login.php" style="display:none;">
@@ -499,6 +554,28 @@ if (isset($conn) && $conn instanceof mysqli) {
     <?php if ($showRegister): ?>
       showRegister();
     <?php endif; ?>
+
+    // 🔥 Lockout countdown for button only
+    const countdownEl = document.getElementById('countdown');
+    const loginBtn = document.getElementById('loginBtn');
+    if (countdownEl && loginBtn) {
+      loginBtn.disabled = true;
+      loginBtn.style.cursor = "not-allowed";
+      loginBtn.style.opacity = "0.6";
+
+      let timeLeft = parseInt(countdownEl.textContent);
+      const timer = setInterval(() => {
+        timeLeft--;
+        countdownEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          loginBtn.disabled = false;
+          loginBtn.style.cursor = "pointer";
+          loginBtn.style.opacity = "1";
+          location.reload(); // refresh to clear message
+        }
+      }, 1000);
+    }
   </script>
 
   <!-- Trigger alert (if any) AFTER the showAlert function is defined -->
@@ -515,7 +592,6 @@ if (isset($conn) && $conn instanceof mysqli) {
         }
       }, 2000);
     </script>
-
   <?php endif; ?>
 </body>
 
