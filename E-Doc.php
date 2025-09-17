@@ -25,7 +25,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["uploadfile"])) {
         $status = "Pending Review";
         $conn->query("INSERT INTO admin_activity (`module`, `activity`, `status`, `date`) 
                       VALUES ('$module', '$activity', '$status', NOW())");
+
+        $_SESSION['alert'] = ['title' => 'Success!', 'text' => 'Document uploaded successfully.', 'icon' => 'success'];
+    } else {
+        $_SESSION['alert'] = ['title' => 'Error!', 'text' => 'Failed to upload document.', 'icon' => 'error'];
     }
+
+    header("Location: E-Doc.php");
+    exit;
 }
 
 // Edit Document
@@ -47,11 +54,13 @@ if (isset($_POST['save'])) {
         $conn->query("INSERT INTO admin_activity (`module`, `activity`, `status`, `date`) 
                       VALUES ('$module', '$activity', '$status', NOW())");
 
-        header("Location: E-Doc.php");
-        exit;
+        $_SESSION['alert'] = ['title' => 'Saved!', 'text' => 'Document updated successfully.', 'icon' => 'success'];
     } else {
-        die("Execute failed: " . $stmt->error);
+        $_SESSION['alert'] = ['title' => 'Error!', 'text' => 'Failed to save changes.', 'icon' => 'error'];
     }
+
+    header("Location: E-Doc.php");
+    exit;
 }
 
 // Delete Document
@@ -91,6 +100,7 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Documentation & Compliance Manager</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -463,6 +473,21 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
             color: var(--text-light);
         }
 
+        /* Make SweetAlert smaller */
+    .swal-small {
+        width: 400px !important; /* shrink width */
+        font-size: 0.85rem !important; /* smaller text */
+        padding: 0.5rem !important;
+    }
+
+    .swal-small .swal2-title {
+        font-size: 1rem !important; /* smaller title */
+    }
+
+    .swal-small .swal2-html-container {
+        font-size: 0.85rem !important; /* smaller body text */
+    }
+
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -668,7 +693,7 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
                 <td>
                   <a class='download' href='uploads/{$row['filename']}' download>Download</a>  
                   <a class='edit' href='?edit={$row['id']}'>Edit</a>  
-                  <a class='delete' href='?delete={$row['id']}' onclick=\"return confirm('Delete this document?')\">Delete</a>
+                  <a class='delete' href='?delete={$row['id']}'>Delete</a>
                 </td>
               </tr>";
                             }
@@ -710,6 +735,48 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
                     row.style.display = (title.includes(searchValue) || type.includes(searchValue)) && (!statusFilter || status === statusFilter) ? "" : "none";
                 });
             });
+
+            // SweetAlert Delete Confirmation
+    document.addEventListener("DOMContentLoaded", function() {
+        const deleteLinks = document.querySelectorAll(".delete");
+
+        deleteLinks.forEach(link => {
+            link.addEventListener("click", function(e) {
+                e.preventDefault(); // stop default action
+                const url = this.getAttribute("href");
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This document will be permanently deleted.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#c03838ff',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete it!',
+                    customClass: {
+                        popup: 'swal-small'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url; // proceed with delete
+                    }
+                });
+            });
+        });
+    });
+
+    <?php if (isset($_SESSION['alert'])): 
+    $alert = $_SESSION['alert'];
+    unset($_SESSION['alert']); ?>
+    Swal.fire({
+        title: '<?= $alert['title'] ?>',
+        text: '<?= $alert['text'] ?>',
+        icon: '<?= $alert['icon'] ?>',
+        confirmButtonColor: '#4e73df',
+        customClass: { popup: 'swal-small' }
+    });
+<?php endif; ?>
+        
         </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     </div>

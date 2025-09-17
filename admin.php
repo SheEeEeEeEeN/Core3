@@ -4,23 +4,24 @@ include 'connection.php';
 include('session.php');
 requireRole('admin');
 
-/*total user*/
-$sql = "SELECT COUNT(*) AS customer_name FROM crm";
+/* total users */
+$sql = "SELECT COUNT(*) AS total_users FROM accounts";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
-$totalUsers = $row['customer_name'];
-/*Active contract*/
+$totalUsers = $row['total_users'];
+
+/* Active contracts (now from csm) */
 $sql = "SELECT COUNT(*) as total_active
-        FROM crm
+        FROM csm
         WHERE status = 'Active'";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
-
 $totalActive = $row['total_active'];
-/*User graph*/
-$sql = "SELECT DATE(last_contract) as date, COUNT(*) as total 
-        FROM crm 
-        GROUP BY DATE(last_contract) 
+
+/* User growth – based on account creation date */
+$sql = "SELECT DATE(created_at) as date, COUNT(*) as total 
+        FROM accounts 
+        GROUP BY DATE(created_at) 
         ORDER BY date ASC";
 $result = $conn->query($sql);
 
@@ -32,8 +33,9 @@ while ($row = $result->fetch_assoc()) {
   $totals[] = $row['total'];
 }
 
-/*All activities*/
+/* All activities */
 $activityResult = $conn->query("SELECT * FROM admin_activity ORDER BY date DESC LIMIT 100");
+
 
 ?>
 

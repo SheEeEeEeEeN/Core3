@@ -1,6 +1,6 @@
 <?php
 session_start();
-include("connection.php"); // ✅ now $conn is ready automatically
+include("connection.php");
 
 $error = "";
 $success = "";
@@ -10,6 +10,17 @@ $showRegister = false; // for staying in register form
 $alertTitle = "";
 $alertMessage = "";
 $alertRedirect = "";
+
+// ✅ Initialize login attempts & lockout tracking
+if (!isset($_SESSION['login_attempts'])) {
+  $_SESSION['login_attempts'] = 0;
+}
+if (!isset($_SESSION['lockout_time'])) {
+  $_SESSION['lockout_time'] = 0;
+}
+if (!isset($_SESSION['lockout_count'])) {
+  $_SESSION['lockout_count'] = 0; // how many times user got locked
+}
 
 // Handle AJAX requests for live check
 if (isset($_GET['check'])) {
@@ -42,34 +53,76 @@ if (isset($_GET['check'])) {
 // Handle login
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   if (isset($_POST['login'])) {
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
-
-    $stmt = $conn->prepare("SELECT id, username, password, role FROM accounts WHERE username=?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
-
-    if ($stmt->num_rows == 1) {
-      $stmt->bind_result($id, $db_username, $db_password, $role);
-      $stmt->fetch();
-
-      if (password_verify($password, $db_password)) {
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = $id;
-        $_SESSION['username'] = $db_username;
-        $_SESSION['role'] = $role;
-
-        $alertTitle = "Login Successful";
-        $alertMessage = "Welcome, $db_username";
-        $alertRedirect = ($role === 'admin' ? 'admin.php' : 'user.php');
-      } else {
-        $error = "Invalid password!";
-      }
+    // Check lockout
+    if ($_SESSION['lockout_time'] > time()) {
+      $remaining = $_SESSION['lockout_time'] - time();
+      $error = "Too many failed attempts. Please wait <span id='countdown'>{$remaining}</span> seconds.";
     } else {
-      $error = "No account found with that username.";
+      $username = trim($_POST['username']);
+      $password = $_POST['password'];
+
+      $stmt = $conn->prepare("SELECT id, username, password, role FROM accounts WHERE username=?");
+      $stmt->bind_param("s", $username);
+      $stmt->execute();
+      $stmt->store_result();
+
+      if ($stmt->num_rows == 1) {
+        $stmt->bind_result($id, $db_username, $db_password, $role);
+        $stmt->fetch();
+
+        if (password_verify($password, $db_password)) {
+          // ✅ Reset everything after successful login
+          $_SESSION['login_attempts'] = 0;
+          $_SESSION['lockout_time'] = 0;
+          $_SESSION['lockout_count'] = 0;
+
+          session_regenerate_id(true);
+          $_SESSION['user_id'] = $id;
+          $_SESSION['account_id'] = $id;
+          $_SESSION['username'] = $db_username;
+          $_SESSION['role'] = $role;
+
+          $alertTitle = "Login Successful";
+          $alertMessage = "Welcome, $db_username";
+          $alertRedirect = ($role === 'admin' ? 'admin.php' : 'user.php');
+        } else {
+          // ❌ Wrong password
+          $_SESSION['login_attempts']++;
+
+          if ($_SESSION['login_attempts'] >= 3) {
+            $_SESSION['login_attempts'] = 0; // reset counter after lockout
+            $_SESSION['lockout_count']++;   // count how many lockouts
+
+            // Progressive lockout: 30s → 60s → 120s
+            $durations = [30, 60, 120];
+            $index = min($_SESSION['lockout_count'] - 1, count($durations) - 1);
+            $lockTime = $durations[$index];
+
+            $_SESSION['lockout_time'] = time() + $lockTime;
+            $error = "Too many failed attempts. Please wait <span id='countdown'>{$lockTime}</span> seconds.";
+          } else {
+            $error = "Invalid password!"; // ✅ cleaned (removed 1/3)
+          }
+        }
+      } else {
+        // ❌ No account found
+        $_SESSION['login_attempts']++;
+        if ($_SESSION['login_attempts'] >= 3) {
+          $_SESSION['login_attempts'] = 0;
+          $_SESSION['lockout_count']++;
+
+          $durations = [30, 60, 120];
+          $index = min($_SESSION['lockout_count'] - 1, count($durations) - 1);
+          $lockTime = $durations[$index];
+
+          $_SESSION['lockout_time'] = time() + $lockTime;
+          $error = "Too many failed attempts. Please wait <span id='countdown'>{$lockTime}</span> seconds.";
+        } else {
+          $error = "No account found."; // ✅ cleaned (removed 1/3)
+        }
+      }
+      $stmt->close();
     }
-    $stmt->close();
   } elseif (isset($_POST['register'])) {
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
@@ -114,7 +167,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // ✅ safely close connection at the end
 if (isset($conn) && $conn instanceof mysqli) {
-    $conn->close();
+  $conn->close();
 }
 ?>
 
@@ -125,8 +178,10 @@ if (isset($conn) && $conn instanceof mysqli) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SLATE System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    /* Base and layout styles (kept your original styles) */
     * {
       margin: 0;
       padding: 0;
@@ -262,14 +317,21 @@ if (isset($conn) && $conn instanceof mysqli) {
     }
 
     .switch-link a {
-      color: #00c6ff;
+      color: #00c6ff !important;
+      /* force bright cyan */
+      font-weight: 600;
+      /* make it bold */
       cursor: pointer;
       text-decoration: none;
+      transition: color 0.3s;
     }
 
     .switch-link a:hover {
+      color: #0072ff !important;
+      /* darker blue on hover */
       text-decoration: underline;
     }
+
 
     footer {
       text-align: center;
@@ -327,6 +389,54 @@ if (isset($conn) && $conn instanceof mysqli) {
       background: linear-gradient(to right, #0052cc, #009ee3);
     }
 
+    /* Fix checkbox alignment */
+    .terms-checkbox {
+      display: flex;
+      align-items: center;
+      margin-top: .5rem;
+      font-size: 14px;
+      color: #fff;
+      gap: 6px;
+      /* space between checkbox and text */
+    }
+
+    .terms-checkbox input[type="checkbox"] {
+      margin: 0;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      accent-color: #00c6ff;
+      /* modern browsers: custom color */
+      cursor: pointer;
+    }
+
+    .terms-checkbox label {
+      margin: 0;
+      line-height: 1;
+      /* keeps text centered with checkbox */
+    }
+
+    .terms-checkbox a {
+      color: #00c6ff;
+      text-decoration: none;
+    }
+
+    .terms-checkbox a:hover {
+      text-decoration: underline;
+    }
+
+    .normal-swal {
+      font-size: 14px;
+      border-radius: 10px;
+    }
+
+    .swal-title-blue {
+      color: #0072ff !important;
+      /* bright blue */
+      font-weight: bold;
+    }
+
+
     @media (max-width:48rem) {
       .login-container {
         flex-direction: column;
@@ -382,14 +492,63 @@ if (isset($conn) && $conn instanceof mysqli) {
           <h2 id="formTitle">SLATE Login</h2>
 
           <!-- Login Form -->
-          <form id="loginForm" class="login-form" method="POST" action="login.php">
+          <form id="loginForm" class="login-form" method="POST" action="login.php" onsubmit="return checkTerms()">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" name="login">Log In</button>
+
+            <button type="submit" name="login" id="loginBtn"
+              <?php if ($_SESSION['lockout_time'] > time()) echo "disabled style='cursor:not-allowed;opacity:0.6;'"; ?>>
+              Log In
+            </button>
+
+            <!-- ✅ Terms Agreement -->
+            <div class="terms-checkbox">
+              <input type="checkbox" id="agreeLogin" name="terms">
+              <label for="agreeLogin">
+                I agree to the
+                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">
+                  Terms & Conditions
+                </a>
+              </label>
+            </div>
+
             <?php if (!empty($error) && isset($_POST['login'])): ?>
-              <div class="inline-message error"><?= htmlentities($error) ?></div>
+              <div class="inline-message error"><?= $error ?></div>
             <?php endif; ?>
           </form>
+
+
+          <!-- Terms & Conditions Modal -->
+          <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-lg">
+              <div class="modal-content" style="background:#222; color:#fff; border-radius:10px;">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="termsModalLabel">Terms & Conditions</h5>
+                </div>
+                <div class="modal-body" style="max-height:400px; overflow-y:auto; font-size:14px;">
+                  <p><strong>1. Acceptance of Terms</strong></p>
+                  <p>By creating an account, you agree to follow our system rules and policies.</p>
+
+                  <p><strong>2. User Responsibilities</strong></p>
+                  <p>You must provide accurate information when registering and respect the system’s usage rules.</p>
+
+                  <p><strong>3. Data Privacy</strong></p>
+                  <p>We handle your data securely and will not share it without consent, except as required by law.</p>
+
+                  <p><strong>4. Restrictions</strong></p>
+                  <p>Do not misuse the system, attempt unauthorized access, or disrupt service operations.</p>
+
+                  <p><strong>5. Changes to Terms</strong></p>
+                  <p>We may update these Terms & Conditions, and continued use means you accept those changes.</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
 
           <!-- Register Form -->
           <form id="registerForm" class="register-form" method="POST" action="login.php" style="display:none;">
@@ -498,23 +657,72 @@ if (isset($conn) && $conn instanceof mysqli) {
     <?php if ($showRegister): ?>
       showRegister();
     <?php endif; ?>
+
+    // 🔥 Lockout countdown for button only
+    const countdownEl = document.getElementById('countdown');
+    const loginBtn = document.getElementById('loginBtn');
+    if (countdownEl && loginBtn) {
+      loginBtn.disabled = true;
+      loginBtn.style.cursor = "not-allowed";
+      loginBtn.style.opacity = "0.6";
+
+      let timeLeft = parseInt(countdownEl.textContent);
+      const timer = setInterval(() => {
+        timeLeft--;
+        countdownEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          loginBtn.disabled = false;
+          loginBtn.style.cursor = "pointer";
+          loginBtn.style.opacity = "1";
+          location.reload(); // refresh to clear message
+        }
+      }, 1000);
+    }
+
+    // ✅ Ensure terms are checked before login
+    function checkTerms() {
+      const terms = document.getElementById("agreeLogin");
+      if (!terms.checked) {
+        alert("You must agree to the Terms & Conditions before logging in.");
+        return false; // stop form submission
+      }
+      return true;
+    }
+
+    // ✅ Ensure terms are checked before login with SweetAlert2
+    function checkTerms() {
+      const terms = document.getElementById("agreeLogin");
+      if (!terms.checked) {
+        Swal.fire({
+          title: 'Terms & Conditions',
+          text: 'You must agree to the Terms & Conditions before logging in.',
+          confirmButtonColor: '#0072ff',
+          customClass: {
+            popup: 'normal-swal',
+            title: 'swal-title-blue' // 👈 add custom class for title
+          }
+        });
+        return false; // stop form submission
+      }
+      return true;
+    }
   </script>
 
   <!-- Trigger alert (if any) AFTER the showAlert function is defined -->
   <?php if (!empty($alertMessage)): ?>
     <script>
-  const __alertTitle = "<?php echo addslashes($alertTitle); ?>";
-  const __alertMessage = "<?php echo addslashes($alertMessage); ?>";
-  const __alertRedirect = "<?php echo addslashes($alertRedirect); ?>";
+      const __alertTitle = "<?php echo addslashes($alertTitle); ?>";
+      const __alertMessage = "<?php echo addslashes($alertMessage); ?>";
+      const __alertRedirect = "<?php echo addslashes($alertRedirect); ?>";
 
-  showAlert(__alertTitle, __alertMessage);
-  setTimeout(() => {
-    if (__alertRedirect && __alertRedirect.length > 0) {
-      window.location.href = __alertRedirect;
-    }
-  }, 2000);
-</script>
-
+      showAlert(__alertTitle, __alertMessage);
+      setTimeout(() => {
+        if (__alertRedirect && __alertRedirect.length > 0) {
+          window.location.href = __alertRedirect;
+        }
+      }, 2000);
+    </script>
   <?php endif; ?>
 </body>
 

@@ -4,12 +4,59 @@ include("connection.php");
 include('session.php');
 requireRole('user');
 
-// Get logged in user shipments
-$user_id = $_SESSION['user_id'];
-$result = $conn->query("SELECT id, origin, destination, weight, status, created_at 
-                        FROM shipments 
-                        WHERE user_id = '$user_id' 
-                        ORDER BY created_at DESC");
+$account_id = $_SESSION['account_id'];
+
+/*Handle feedback submission*/
+if (isset($_POST['Send_feedback'])) {
+    $comment = trim($_POST['comment']);
+    $account_id = $_SESSION['account_id']; // make sure this is set at login
+
+    if (!empty($comment)) {
+        $stmt = $conn->prepare("INSERT INTO feedback (account_id, comment, created_at) VALUES (?, ?, NOW())");
+        $stmt->bind_param("is", $account_id, $comment);
+        $stmt->execute();
+        $stmt->close();
+        $success = "Feedback submitted successfully!";
+    } else {
+        $error = "Please enter feedback.";
+    }
+}
+
+// Fetch feedback with reply from admin
+$feedbacks = [];
+
+$sql = "SELECT f.id, f.comment, f.created_at, a.username 
+        FROM feedback f 
+        JOIN accounts a ON f.account_id = a.id
+        WHERE f.account_id = ? 
+        ORDER BY f.created_at DESC LIMIT 5";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $account_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        // Fetch replies for this feedback
+        $replySql = "SELECT r.reply_message, r.created_at, u.username AS admin_name
+                     FROM replies r
+                     JOIN accounts u ON r.admin_id = u.id
+                     WHERE r.feedback_id = ?
+                     ORDER BY r.created_at ASC";
+        $stmt2 = $conn->prepare($replySql);
+        $stmt2->bind_param("i", $row['id']);
+        $stmt2->execute();
+        $replies = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt2->close();
+
+        $row['replies'] = $replies;
+        $feedbacks[] = $row;
+    }
+}
+$stmt->close();
+
+
 ?>
 
 
@@ -209,42 +256,96 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         }
 
 
-        /* Table Section */
-        .History_section {
+
+        /* Feedback Section */
+        .Feedback_section {
             background-color: white;
             padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            text-align: center;
+            margin-bottom: 1rem;
         }
 
-        .dark-mode .History_section {
+        .dark-mode .Feedback_section {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
+        .Feedback_content textarea {
+            width: 160vh;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+            margin-top: 0.5rem;
         }
 
-        th,
-        td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        .dark-mode .Feedback_content textarea {
+            background-color: #2a3a5a;
+            border-color: #3a4b6e;
+            color: var(--text-light);
         }
 
-        .dark-mode th,
-        .dark-mode td {
-            border-bottom-color: #3a4b6e;
+        .btn {
+            width: 200px;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.8rem;
         }
 
-        thead {
+        .Send_feedback {
             background-color: var(--primary-color);
             color: white;
         }
+
+        .Send_feedback:hover {
+            background-color: #3a5bc7;
+        }
+
+        /* Admin Replies Box */
+        .admin-replies {
+            margin-top: 0.5rem;
+            padding: 0.6rem;
+            background: #f8f9fc;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 6px;
+            color: #333;
+        }
+
+        .admin-replies ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0.3rem 0 0;
+        }
+
+        .admin-replies li {
+            margin-bottom: 0.4rem;
+            padding: 0.4rem;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        /* Dark Mode Styling */
+        body.dark-mode .admin-replies {
+            background: #2c2f33;
+            border-left: 4px solid #7289da;
+            color: #ddd;
+        }
+
+        body.dark-mode .admin-replies li {
+            background: #23272a;
+            color: #ccc;
+        }
+
+        .Userfeed {
+            font-size: 1rem;
+            color: #2d7ff2ff;
+        }
+
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -323,25 +424,26 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         <a href="user.php">Dashboard</a>
         <a href="trackship.php">Track Shipment</a>
         <a href="bookship.php">Book Shipment</a>
-        <a href="shiphistory.php" class="active">Shipment History</a>
+        <a href="shiphistory.php">Shipment History</a>
         <a href="reports.php">Reports</a>
-        <a href="feedback.php">Feedback</a>
+        <a href="feedback.php" class="active">Feedback</a>
     </div>
 
     <div class="content" id="mainContent">
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>Shipment History <span class="system-title"></span></h1>
+                <h1>Feedback <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
-                 <div class="user_icon" id="userIcon">
+                <div class="user_icon" id="userIcon">
                     <img src="user.png" alt="User">
                     <div class="user_dropdown" id="userDropdown">
                         <a href="profile.php">Profile</a>
                         <a href="logout.php">Logout</a>
                     </div>
                 </div>
+
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
                     <input type="checkbox" id="userThemeToggle">
@@ -351,52 +453,63 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         </div>
 
 
-
-        <div class="History_section">
-            <h2>User Shipment History</h2>
-            <table id="historyTable">
-                <thead>
-                    <tr>
-                        <th>Tracking No</th>
-                        <th>Origin</th>
-                        <th>Destination</th>
-                        <th>Weight (kg)</th>
-                        <th>Status</th>
-                        <th>Booked Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo "TRK" . str_pad($row['id'], 6, "0", STR_PAD_LEFT); ?></td>
-                                <td><?php echo htmlspecialchars($row['origin']); ?></td>
-                                <td><?php echo htmlspecialchars($row['destination']); ?></td>
-                                <td><?php echo htmlspecialchars($row['weight']); ?></td>
-                                <td><?php echo htmlspecialchars($row['status']); ?></td>
-                                <td><?php echo date("M d, Y h:i A", strtotime($row['created_at'])); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="6">No shipments found.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-
-            </table>
+        <div class="Feedback_section">
+            <h2>Send Feedback/Concern</h2>
+            <?php if (isset($success)) echo "<p style='color:green;'>$success</p>"; ?>
+            <?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
+            <form method="POST">
+                <div class="Feedback_content">
+                    <textarea class="comment" id="comment" name="comment" placeholder="Enter your feedback" required></textarea>
+                </div>
+                <button type="submit" name="Send_feedback" class="btn Send_feedback">Send</button>
+            </form>
         </div>
-    </div>
 
-    <script>
-        initDarkMode("userThemeToggle", "userDarkMode");
+        <div class="Feedback_section">
+            <h2>Recent Feedback</h2>
+            <?php if (!empty($feedbacks)): ?>
+                <ul style="list-style:none; padding:0;">
+                    <?php foreach ($feedbacks as $fb): ?>
+                        <li style="margin-bottom:1rem; padding:0.8rem; border-bottom:1px solid #ddd;">
+                            <strong class="Userfeed"><?= htmlspecialchars($fb['username']) ?></strong>
+                            <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
 
-        document.getElementById('hamburger').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
-        });
+                            <p style="margin:0.5rem 0;"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-        // Toggle dropdown
+                            <?php if (!empty($fb['replies'])): ?>
+                                <div class="admin-replies">
+                                    <strong>Admin Replies:</strong>
+                                    <ul>
+                                        <?php foreach ($fb['replies'] as $r): ?>
+                                            <li>
+                                                <em><?= htmlspecialchars($r['admin_name']) ?></em>
+                                                (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):<br>
+                                                <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+
+                        </li>
+                    <?php endforeach; ?>
+
+                </ul>
+            <?php else: ?>
+                <p>No feedback yet.</p>
+            <?php endif; ?>
+        </div>
+
+
+        <script>
+            initDarkMode("userThemeToggle", "userDarkMode");
+
+            document.getElementById('hamburger').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+                document.getElementById('mainContent').classList.toggle('expanded');
+            });
+
+            // Toggle dropdown
             const userIcon = document.getElementById("userIcon");
             const userDropdown = document.getElementById("userDropdown");
 
@@ -411,7 +524,7 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
                     userDropdown.style.display = "none";
                 }
             });
-    </script>
+        </script>
 </body>
 
 </html>
