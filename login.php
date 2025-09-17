@@ -418,6 +418,16 @@ if (isset($conn) && $conn instanceof mysqli) {
       text-decoration: underline;
     }
 
+    .normal-swal {
+      font-size: 14px;
+      border-radius: 10px;
+    }
+
+    .swal-title-blue {
+      color: #0072ff !important;
+      /* bright blue */
+      font-weight: bold;
+    }
 
 
     @media (max-width:48rem) {
@@ -495,9 +505,6 @@ if (isset($conn) && $conn instanceof mysqli) {
               </label>
             </div>
 
-
-
-
             <?php if (!empty($error) && isset($_POST['login'])): ?>
               <div class="inline-message error"><?= $error ?></div>
             <?php endif; ?>
@@ -510,7 +517,6 @@ if (isset($conn) && $conn instanceof mysqli) {
               <div class="modal-content" style="background:#222; color:#fff; border-radius:10px;">
                 <div class="modal-header">
                   <h5 class="modal-title" id="termsModalLabel">Terms & Conditions</h5>
-                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="max-height:400px; overflow-y:auto; font-size:14px;">
                   <p><strong>1. Acceptance of Terms</strong></p>
@@ -678,20 +684,22 @@ if (isset($conn) && $conn instanceof mysqli) {
     }
 
     // ✅ Ensure terms are checked before login with SweetAlert2
-function checkTerms() {
-  const terms = document.getElementById("agreeLogin");
-  if (!terms.checked) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Terms & Conditions',
-      text: 'You must agree to the Terms & Conditions before logging in.',
-      confirmButtonColor: '#0072ff'
-    });
-    return false; // stop form submission
-  }
-  return true;
-}
-
+    function checkTerms() {
+      const terms = document.getElementById("agreeLogin");
+      if (!terms.checked) {
+        Swal.fire({
+          title: 'Terms & Conditions',
+          text: 'You must agree to the Terms & Conditions before logging in.',
+          confirmButtonColor: '#0072ff',
+          customClass: {
+            popup: 'normal-swal',
+            title: 'swal-title-blue' // 👈 add custom class for title
+          }
+        });
+        return false; // stop form submission
+      }
+      return true;
+    }
   </script>
 
   <!-- Trigger alert (if any) AFTER the showAlert function is defined -->
