@@ -492,7 +492,7 @@ if (isset($conn) && $conn instanceof mysqli) {
           <h2 id="formTitle">SLATE Login</h2>
 
           <!-- Login Form -->
-          <form id="loginForm" class="login-form" method="POST" action="login.php" onsubmit="return checkTerms()">
+          <form id="loginForm" class="login-form" method="POST" action="login.php">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
 
@@ -501,54 +501,10 @@ if (isset($conn) && $conn instanceof mysqli) {
               Log In
             </button>
 
-            <!-- ✅ Terms Agreement -->
-            <div class="terms-checkbox">
-              <input type="checkbox" id="agreeLogin" name="terms">
-              <label for="agreeLogin">
-                I agree to the
-                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">
-                  Terms & Conditions
-                </a>
-              </label>
-            </div>
-
             <?php if (!empty($error) && isset($_POST['login'])): ?>
               <div class="inline-message error"><?= $error ?></div>
             <?php endif; ?>
           </form>
-
-
-          <!-- Terms & Conditions Modal -->
-          <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-scrollable modal-lg">
-              <div class="modal-content" style="background:#222; color:#fff; border-radius:10px;">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="termsModalLabel">Terms & Conditions</h5>
-                </div>
-                <div class="modal-body" style="max-height:400px; overflow-y:auto; font-size:14px;">
-                  <p><strong>1. Acceptance of Terms</strong></p>
-                  <p>By creating an account, you agree to follow our system rules and policies.</p>
-
-                  <p><strong>2. User Responsibilities</strong></p>
-                  <p>You must provide accurate information when registering and respect the system’s usage rules.</p>
-
-                  <p><strong>3. Data Privacy</strong></p>
-                  <p>We handle your data securely and will not share it without consent, except as required by law.</p>
-
-                  <p><strong>4. Restrictions</strong></p>
-                  <p>Do not misuse the system, attempt unauthorized access, or disrupt service operations.</p>
-
-                  <p><strong>5. Changes to Terms</strong></p>
-                  <p>We may update these Terms & Conditions, and continued use means you accept those changes.</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
 
           <!-- Register Form -->
           <form id="registerForm" class="register-form" method="POST" action="login.php" style="display:none;">
@@ -562,6 +518,17 @@ if (isset($conn) && $conn instanceof mysqli) {
             <input type="password" name="confirm_password" placeholder="Confirm Password" required>
             <div id="matchMessage" class="inline-message"></div>
 
+            <!-- ✅ Terms Agreement for Register -->
+            <div class="terms-checkbox">
+              <input type="checkbox" id="agreeRegister" name="terms">
+              <label for="agreeRegister">
+                I agree to the
+                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">
+                  Terms & Conditions
+                </a>
+              </label>
+            </div>
+
             <button type="submit" name="register">Register</button>
 
             <?php if (!empty($error) && isset($_POST['register'])): ?>
@@ -571,6 +538,68 @@ if (isset($conn) && $conn instanceof mysqli) {
               <div class="inline-message success"><?= htmlentities($success) ?></div>
             <?php endif; ?>
           </form>
+
+          <!-- Terms & Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content" style="background:#222; color:#fff; border-radius:10px;">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="termsModalLabel">Terms & Conditions</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body" style="max-height:450px; overflow-y:auto; font-size:15px; line-height:1.7; text-align:left;">
+
+        <h5 style="margin-top:15px;">1. Acceptance of Terms</h5>
+        <ul style="margin-left:20px;">
+          <li>By creating an account, you agree to follow our system rules and policies.</li>
+          <li>Please read these terms carefully before using the system.</li>
+        </ul>
+
+        <h5 style="margin-top:15px;">2. User Responsibilities</h5>
+        <ul style="margin-left:20px;">
+          <li>Provide accurate and truthful information when registering.</li>
+          <li>Respect the system’s usage rules and guidelines.</li>
+          <li>Failure to comply may result in account suspension or termination.</li>
+        </ul>
+
+        <h5 style="margin-top:15px;">3. Data Privacy</h5>
+        <ul style="margin-left:20px;">
+          <li>Your data is handled securely and will not be shared without consent, except as required by law.</li>
+          <li>You are responsible for keeping your login credentials confidential.</li>
+          <li>Do not share your account with others.</li>
+        </ul>
+
+        <h5 style="margin-top:15px;">4. Restrictions</h5>
+        <ul style="margin-left:20px;">
+          <li>Do not misuse the system or attempt unauthorized access.</li>
+          <li>Do not disrupt service operations in any way.</li>
+          <li>Malicious activity may result in legal action.</li>
+        </ul>
+
+        <h5 style="margin-top:15px;">5. Changes to Terms</h5>
+        <ul style="margin-left:20px;">
+          <li>We may update these Terms & Conditions from time to time.</li>
+          <li>Continued use of the system constitutes acceptance of any changes.</li>
+          <li>It is your responsibility to review the terms periodically.</li>
+        </ul>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
 
           <div class="switch-link" id="switchToRegister">Don’t have an account? <a onclick="showRegister()">Register</a></div>
           <div class="switch-link" id="switchToLogin" style="display:none;">Already have an account? <a onclick="showLogin()">Login</a></div>
@@ -690,23 +719,22 @@ if (isset($conn) && $conn instanceof mysqli) {
       return true;
     }
 
-    // ✅ Ensure terms are checked before login with SweetAlert2
-    function checkTerms() {
-      const terms = document.getElementById("agreeLogin");
+    // Ensure terms are checked before register
+    document.querySelector('#registerForm').addEventListener('submit', function(e) {
+      const terms = document.getElementById("agreeRegister");
       if (!terms.checked) {
+        e.preventDefault(); // stop form submission
         Swal.fire({
           title: 'Terms & Conditions',
-          text: 'You must agree to the Terms & Conditions before logging in.',
+          text: 'You must agree to the Terms & Conditions before registering.',
           confirmButtonColor: '#0072ff',
           customClass: {
             popup: 'normal-swal',
-            title: 'swal-title-blue' // 👈 add custom class for title
+            title: 'swal-title-blue'
           }
         });
-        return false; // stop form submission
       }
-      return true;
-    }
+    });
   </script>
 
   <!-- Trigger alert (if any) AFTER the showAlert function is defined -->
