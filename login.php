@@ -317,14 +317,21 @@ if (isset($conn) && $conn instanceof mysqli) {
     }
 
     .switch-link a {
-      color: #00c6ff;
+      color: #00c6ff !important;
+      /* force bright cyan */
+      font-weight: 600;
+      /* make it bold */
       cursor: pointer;
       text-decoration: none;
+      transition: color 0.3s;
     }
 
     .switch-link a:hover {
+      color: #0072ff !important;
+      /* darker blue on hover */
       text-decoration: underline;
     }
+
 
     footer {
       text-align: center;

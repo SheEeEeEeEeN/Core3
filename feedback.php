@@ -28,8 +28,13 @@ $feedbacks = [];
 $sql = "SELECT f.id, f.comment, f.created_at, a.username 
         FROM feedback f 
         JOIN accounts a ON f.account_id = a.id
+        WHERE f.account_id = ? 
         ORDER BY f.created_at DESC LIMIT 5";
-$result = $conn->query($sql);
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $account_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -39,15 +44,17 @@ if ($result && $result->num_rows > 0) {
                      JOIN accounts u ON r.admin_id = u.id
                      WHERE r.feedback_id = ?
                      ORDER BY r.created_at ASC";
-        $stmt = $conn->prepare($replySql);
-        $stmt->bind_param("i", $row['id']);
-        $stmt->execute();
-        $replies = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt2 = $conn->prepare($replySql);
+        $stmt2->bind_param("i", $row['id']);
+        $stmt2->execute();
+        $replies = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt2->close();
 
         $row['replies'] = $replies;
         $feedbacks[] = $row;
     }
 }
+$stmt->close();
 
 
 ?>
