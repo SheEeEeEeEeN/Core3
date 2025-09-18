@@ -33,7 +33,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
     exit;
 }
 
-/* Initial stats for first render (optional; used by PHP echoes) */
 $sql = "SELECT COUNT(*) AS total FROM csm";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
@@ -58,12 +57,32 @@ $result = $conn->query($sql);
 $row = $result->fetch_assoc();
 $totalCompliant = (int) $row['total_compliant'];
 
+/* ✅ Auto-generate next Contract ID */
+$prefix = "CON-";
+$sql = "SELECT contract_id FROM csm ORDER BY contract_id DESC LIMIT 1";
+$res = $conn->query($sql);
+if ($res && $res->num_rows > 0) {
+    $last = $res->fetch_assoc()['contract_id'];
+    $num = (int) filter_var($last, FILTER_SANITIZE_NUMBER_INT);
+    $nextId = $prefix . str_pad($num + 1, 4, "0", STR_PAD_LEFT);
+} else {
+    $nextId = $prefix . "0001";
+}
+
+/* ✅ Fetch clients from accounts table */
+$clients = [];
+$resClients = $conn->query("SELECT username FROM accounts ORDER BY username ASC");
+if ($resClients) {
+    while ($row = $resClients->fetch_assoc()) {
+        $clients[] = $row['username'];
+    }
+}
+
 /* Add contract */
 $contract_limit = 100;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
     // read safely (no undefined index warnings) and trim
-    // Auto-generate Contract ID: e.g., C-20250918-ABC123
-    $contract_id = "C-" . date("Ymd") . "-" . strtoupper(substr(md5(uniqid(rand(), true)), 0, 6));
+    $contract_id = trim($_POST['contract_id'] ?? '');
     $client_name = trim($_POST['client_name'] ?? '');
     $start_date = trim($_POST['start_date'] ?? '');
     $end_date = trim($_POST['end_date'] ?? '');
@@ -638,8 +657,16 @@ include("darkmode.php");
             <div class="Contract-content">
                 <form method="POST" class="contract-form">
                     <div class="C-form">
-                        <input type="text" name="contract_id" placeholder="Contract ID" required>
-                        <input type="text" name="client_name" placeholder="Client Name" required>
+                        <!-- Auto-generated Contract ID (read-only) -->
+                        <input type="text" name="contract_id" value="<?= $nextId ?>" readonly>
+
+                        <!-- Dropdown of clients from accounts -->
+                        <select name="client_name" required>
+                            <option value="">-- Select Client --</option>
+                            <?php foreach ($clients as $c): ?>
+                                <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="C-form">
                         <input type="date" name="start_date" required>
@@ -662,6 +689,7 @@ include("darkmode.php");
                 </form>
             </div>
         </div>
+
 
         <!-- Contracts List -->
         <div class="table-section1">

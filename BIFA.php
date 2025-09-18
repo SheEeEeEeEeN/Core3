@@ -2,10 +2,8 @@
 include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('admin')
+requireRole('admin');
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,7 +11,8 @@ requireRole('admin')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <!-- ✅ Use Chart.js v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -48,7 +47,6 @@ requireRole('admin')
             color: var(--text-light);
         }
 
-        /* Sidebar */
         .sidebar {
             width: var(--sidebar-width);
             height: 100vh;
@@ -79,8 +77,8 @@ requireRole('admin')
         }
 
         .system-name {
-            padding: 0.5rem 1.5rem;
-            font-size: 0.9rem;
+            padding: .5rem 1.5rem;
+            font-size: .9rem;
             color: rgba(255, 255, 255, 0.8);
             text-align: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -90,7 +88,7 @@ requireRole('admin')
         .sidebar a {
             display: block;
             color: rgba(255, 255, 255, 0.8);
-            padding: 0.75rem 1.5rem;
+            padding: .75rem 1.5rem;
             text-decoration: none;
             border-left: 3px solid transparent;
             transition: all 0.3s;
@@ -103,11 +101,6 @@ requireRole('admin')
             border-left: 3px solid white;
         }
 
-        .admin-feature {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Main Content */
         .content {
             margin-left: var(--sidebar-width);
             padding: 20px;
@@ -118,7 +111,6 @@ requireRole('admin')
             margin-left: 0;
         }
 
-        /* Header */
         .header {
             background-color: white;
             padding: 1rem;
@@ -138,7 +130,7 @@ requireRole('admin')
         .hamburger {
             font-size: 1.5rem;
             cursor: pointer;
-            padding: 0.5rem;
+            padding: .5rem;
         }
 
         .system-title {
@@ -146,7 +138,6 @@ requireRole('admin')
             font-size: 1rem;
         }
 
-        /* Dashboard Cards */
         .dashboard-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -177,107 +168,51 @@ requireRole('admin')
             font-weight: 700;
         }
 
-        /* Table Section */
-        .table-section {
-            position: relative;
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .dark-mode .table-section {
-            background-color: var(--dark-card);
-            color: var(--text-light);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        /* Select Section */
-        .Select-section {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 1.5rem;
-        }
-
-        .Select-section1 {
-            display: flex;
-            text-align: center;
-            justify-content: space-between;
-        }
-
-        .form input,
-        .form select {
-            width: 390px;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            background-color: white;
-            margin-top: 0.5rem;
-        }
-
-        .dark-mode .form input,
-        .dark-mode .form select {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
-        .dark-mode .Select-section {
-            background-color: var(--dark-card);
-            color: var(--text-light);
-        }
-
-        /* Charts */
         .chartarea {
             display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
 
-        .dark-mode .area {
+        .chart1,
+        .chart2,
+        .chart3,
+        .chart4 {
+            background-color: white;
+            text-align: center;
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 1rem;
+        }
+
+        .dark-mode .chart1,
+        .dark-mode .chart2,
+        .dark-mode .chart3,
+        .dark-mode .chart4 {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
 
         .chart1 {
             height: 360px;
-            width: 65%;
-            background-color: white;
-            text-align: center;
-            border: none;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 1rem;
-        }
-
-        .dark-mode .chart1 {
-            background-color: var(--dark-card);
-            color: var(--text-light);
+            width: 50%;
         }
 
         .chart2 {
             height: 360px;
-            width: 35%;
-            background-color: white;
-            text-align: center;
-            border: none;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 1rem;
+            width: 50%;
         }
 
-        .dark-mode .chart2 {
-            background-color: var(--dark-card);
-            color: var(--text-light);
+        .chart3 {
+            height: 360px;
+            width: 50%;
         }
 
+        .chart4 {
+            height: 360px;
+            width: 50%;
+        }
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -350,9 +285,7 @@ requireRole('admin')
 
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="logo">
-            <img src="rem.png" alt="SLATE Logo">
-        </div>
+        <div class="logo"><img src="rem.png" alt="SLATE Logo"></div>
         <div class="system-name">CORE TRANSACTION 3</div>
         <a href="admin.php">Dashboard</a>
         <a href="CRM.php">Customer Relationship Management</a>
@@ -365,9 +298,7 @@ requireRole('admin')
     <div class="content" id="mainContent">
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
-            <div>
-                <h1>Business Intelligence & Freight Analytics</h1>
-            </div>
+            <h1>Business Intelligence & Freight Analytics</h1>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
@@ -380,127 +311,127 @@ requireRole('admin')
         <div class="dashboard-cards">
             <div class="card">
                 <h3>Total Shipments</h3>
-                <div class="stat-value" id="Total Shipments">0</div>
-                <div class="stat-label">Loading data...</div>
+                <div class="stat-value" id="totalShipments">0</div>
             </div>
-
             <div class="card">
                 <h3>On-Time Delivery</h3>
-                <div class="stat-value" id="On-Time Delivery">0</div>
-                <div class="stat-label">Loading data...</div>
+                <div class="stat-value" id="onTimeDelivery">0</div>
             </div>
-
             <div class="card">
-                <h3>Delayed Shipments</h3>
-                <div class="stat-value" id="Delayed Shipments">0</div>
-                <div class="stat-label">Loading data...</div>
+                <h3>Active Routes</h3>
+                <div class="stat-value" id="activeRoutes">0</div>
             </div>
-
             <div class="card">
-                <h3>Total Revenue</h3>
-                <div class="stat-value" id="Total Revenue">0</div>
-                <div class="stat-label">Loading data...</div>
-            </div>
-        </div>
-
-        <div class="Select-section">
-            <div class="Select-section1">
-                <div class="form">
-                    <h4>From</h4>
-                    <input type="date" id="From" name="From">
-                </div>
-                <div class="form">
-                    <h4>To</h4>
-                    <input type="date" id="To" name="To">
-                </div>
-                <div class="form">
-                    <h4>Region</h4>
-                    <select class="status" id="Status">
-                        <option value="">All</option>
-                        <option value="Active">Active</option>
-                        <option value="Expired">Expired</option>
-                        <option value="Pending Renewal">Pending Renewal</option>
-                    </select>
-                </div>
+                <h3>Current Delays</h3>
+                <div class="stat-value" id="currentDelays">0</div>
             </div>
         </div>
 
         <div class="chartarea">
             <div class="chart1">
-                <h3>Monthly Shipment</h3>
-                <canvas id="monthlychart" style="height:200px;width:500px;"></canvas>
+                <h3>Shipments (Last 7 Dyas)</h3>
+                <canvas id="Shipmentchart"></canvas>
             </div>
-
             <div class="chart2">
-                <h3>Revenue by Region</h3>
-                <canvas id="revenuechart" style="height:110px;width:150px;"></canvas>
+                <h3>Current Delay Reasons</h3>
+                <canvas id="Currentdelaychart"></canvas>
+            </div>
+        </div>
+
+        <div class="chartarea">
+            <div class="chart3">
+                <h3>Cost Breakdown (Monthly)</h3>
+                <canvas id="costchart"></canvas>
+            </div>
+            <div class="chart4">
+                <h3>Total Routes by Volume</h3>
+                <canvas id="totalrouteschart"></canvas>
             </div>
         </div>
 
         <script>
             initDarkMode("adminThemeToggle", "adminDarkMode");
 
-            document.getElementById('hamburger').addEventListener('click', function() {
+            document.getElementById('hamburger').addEventListener('click', () => {
                 document.getElementById('sidebar').classList.toggle('collapsed');
                 document.getElementById('mainContent').classList.toggle('expanded');
             });
 
-
-            const xValues = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
-            const yValues = [];
-
-            new Chart("monthlychart", {
+            const ShipmentCtx = document.getElementById("Shipmentchart").getContext("2d");
+            new Chart(ShipmentCtx, {
                 type: "line",
                 data: {
-                    labels: xValues,
+                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
                     datasets: [{
-                        label: 'Shipments',
+                        label: "Shipments",
+                        data: [650, 700, 750, 800, 850, 900, 950],
                         fill: false,
-                        lineTension: 0,
-                        backgroundColor: "rgba(0,0,255,1.0)",
                         borderColor: "rgba(86, 120, 177, 0.92)",
-                        data: yValues
+                        tension: 0.1
                     }]
                 },
                 options: {
-                    legend: {
-                        display: true
-                    },
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                min: 500,
-                                max: 1100
-                            }
-                        }],
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
                     }
                 }
             });
 
-            const aValues = ["Asia", "Europe", "North America"];
-            const bValues = [1, 1, 1];
-            const barColors = [
-                "#c3f13ae4",
-                "#b928eaff",
-                "#1e84d7ff",
-            ];
-
-            new Chart("revenuechart", {
+            const DelayCtx = document.getElementById("Currentdelaychart").getContext("2d");
+            new Chart(DelayCtx, {
                 type: "pie",
                 data: {
-                    labels: aValues,
+                    labels: ["Weather", "Traffic", "Customs", "Mechanical"],
                     datasets: [{
-                        backgroundColor: barColors,
-                        data: bValues
+                        data: [1, 1, 1, 1],
+                        backgroundColor: ["#c3f13a", "#b928ea", "#1e84d7", "#d7561eff"]
+                    }]
+                }
+            });
+
+            const costCtx = document.getElementById("costchart").getContext("2d");
+            new Chart(costCtx, {
+                type: "pie",
+                data: {
+                    labels: ["Fuel", "Labor", "Carrier", "Tolls", "Other"],
+                    datasets: [{
+                        data: [55, 49, 44, 24, 15],
+                        backgroundColor: ["#b91d47", "#00aba9", "#2b5797", "#e8c3b9", "#1e7145"]
                     }]
                 },
                 options: {
-                    title: {
-                        display: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                        }
+                    }
+                }
+            });
+
+            const routesCtx = document.getElementById("totalrouteschart").getContext("2d");
+            new Chart(routesCtx, {
+                type: "bar",
+                data: {
+                    labels: ["Manila-Cebu", "Manila-Davao", "Cebu-Davao", "Manila-HK"],
+                    datasets: [{
+                        label: "Shipments",
+                        data: [55, 49, 44, 24],
+                        backgroundColor: ["red", "green", "blue", "brown"]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                        }
                     }
                 }
             });
         </script>
+    </div>
 </body>
 
 </html>
