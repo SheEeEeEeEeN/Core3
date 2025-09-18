@@ -325,7 +325,6 @@ $result = $conn->query("SELECT id, origin, destination, weight, status, created_
         <a href="bookship.php">Book Shipment</a>
         <a href="shiphistory.php" class="active">Shipment History</a>
         <a href="CPN.php">Customer Portal & Notification Hub</a>
-        <a href="feedback.php">Feedback</a>
     </div>
 
     <div class="content" id="mainContent">

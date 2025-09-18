@@ -360,7 +360,6 @@ if (isset($_POST['book_shipment'])) {
         <a href="bookship.php" class="active">Book Shipment</a>
         <a href="shiphistory.php">Shipment History</a>
         <a href="CPN.php">Customer Portal & Notification Hub</a>
-        <a href="feedback.php">Feedback</a>
     </div>
 
     <div class="content" id="mainContent">

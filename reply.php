@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update->execute();
 
             // Redirect back to notifications page
-            header("Location: CPN.php?reply=success");
+            header("Location: CRM.php?reply=success");
             exit();
         } else {
             die("Error saving reply: " . $conn->error);

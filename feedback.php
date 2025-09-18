@@ -426,7 +426,6 @@ $stmt->close();
         <a href="bookship.php">Book Shipment</a>
         <a href="shiphistory.php">Shipment History</a>
         <a href="CPN.php">Customer Portal & Notification Hub</a>
-        <a href="feedback.php" class="active">Feedback</a>
     </div>
 
     <div class="content" id="mainContent">

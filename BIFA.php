@@ -195,22 +195,22 @@ requireRole('admin');
         }
 
         .chart1 {
-            height: 360px;
+            height: 250px;
             width: 50%;
         }
 
         .chart2 {
-            height: 360px;
+            height: 250px;
             width: 50%;
         }
 
         .chart3 {
-            height: 360px;
+            height: 250px;
             width: 50%;
         }
 
         .chart4 {
-            height: 360px;
+            height: 250px;
             width: 50%;
         }
 
@@ -330,22 +330,22 @@ requireRole('admin');
         <div class="chartarea">
             <div class="chart1">
                 <h3>Shipments (Last 7 Dyas)</h3>
-                <canvas id="Shipmentchart"></canvas>
+                <canvas id="Shipmentchart" style="height:200px;width:550px;"></canvas>
             </div>
             <div class="chart2">
                 <h3>Current Delay Reasons</h3>
-                <canvas id="Currentdelaychart"></canvas>
+                <canvas id="Currentdelaychart" style="height:200px;width:550px;"></canvas>
             </div>
         </div>
 
         <div class="chartarea">
             <div class="chart3">
                 <h3>Cost Breakdown (Monthly)</h3>
-                <canvas id="costchart"></canvas>
+                <canvas id="costchart" style="height:200px;width:550px;"></canvas>
             </div>
             <div class="chart4">
                 <h3>Total Routes by Volume</h3>
-                <canvas id="totalrouteschart"></canvas>
+                <canvas id="totalrouteschart" style="height:200px;width:550px;"></canvas>
             </div>
         </div>
 
@@ -380,15 +380,24 @@ requireRole('admin');
                 }
             });
 
-            const DelayCtx = document.getElementById("Currentdelaychart").getContext("2d");
-            new Chart(DelayCtx, {
-                type: "pie",
+            const ctx = document.getElementById('Currentdelaychart');
+            new Chart(ctx, {
+                type: "doughnut",
                 data: {
                     labels: ["Weather", "Traffic", "Customs", "Mechanical"],
                     datasets: [{
-                        data: [1, 1, 1, 1],
-                        backgroundColor: ["#c3f13a", "#b928ea", "#1e84d7", "#d7561eff"]
+                        data: [55, 49, 44, 24],
+                        backgroundColor: ["#b91d47", "#00aba9", "#e8c3b9", "#1e7145"]
                     }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                        },
+                    }
                 }
             });
 
@@ -403,10 +412,10 @@ requireRole('admin');
                     }]
                 },
                 options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
                     plugins: {
-                        title: {
-                            display: true,
-                        }
+                        
                     }
                 }
             });
@@ -424,9 +433,7 @@ requireRole('admin');
                 },
                 options: {
                     plugins: {
-                        title: {
-                            display: true,
-                        }
+                    
                     }
                 }
             });

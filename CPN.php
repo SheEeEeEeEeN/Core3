@@ -3,6 +3,60 @@ include("darkmode.php");
 include("connection.php");
 include('session.php');
 requireRole('user');
+
+$account_id = $_SESSION['account_id'];
+
+/*Handle feedback submission*/
+if (isset($_POST['Send_feedback'])) {
+    $comment = trim($_POST['comment']);
+    $account_id = $_SESSION['account_id']; // make sure this is set at login
+
+    if (!empty($comment)) {
+        $stmt = $conn->prepare("INSERT INTO feedback (account_id, comment, created_at) VALUES (?, ?, NOW())");
+        $stmt->bind_param("is", $account_id, $comment);
+        $stmt->execute();
+        $stmt->close();
+        $success = "Feedback submitted successfully!";
+    } else {
+        $error = "Please enter feedback.";
+    }
+}
+
+// Fetch feedback with reply from admin
+$feedbacks = [];
+
+$sql = "SELECT f.id, f.comment, f.created_at, a.username 
+        FROM feedback f 
+        JOIN accounts a ON f.account_id = a.id
+        WHERE f.account_id = ? 
+        ORDER BY f.created_at DESC LIMIT 5";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $account_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        // Fetch replies for this feedback
+        $replySql = "SELECT r.reply_message, r.created_at, u.username AS admin_name
+                     FROM replies r
+                     JOIN accounts u ON r.admin_id = u.id
+                     WHERE r.feedback_id = ?
+                     ORDER BY r.created_at ASC";
+        $stmt2 = $conn->prepare($replySql);
+        $stmt2->bind_param("i", $row['id']);
+        $stmt2->execute();
+        $replies = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt2->close();
+
+        $row['replies'] = $replies;
+        $feedbacks[] = $row;
+    }
+}
+$stmt->close();
+
+
 ?>
 
 
@@ -202,19 +256,96 @@ requireRole('user');
         }
 
 
-        /* Table Section */
-        .History_section {
+
+        /* Feedback Section */
+        .Feedback_section {
             background-color: white;
             padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            text-align: center;
+            margin-bottom: 1rem;
         }
 
-        .dark-mode .History_section {
+        .dark-mode .Feedback_section {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
+
+        .Feedback_content textarea {
+            width: 160vh;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+            margin-top: 0.5rem;
+        }
+
+        .dark-mode .Feedback_content textarea {
+            background-color: #2a3a5a;
+            border-color: #3a4b6e;
+            color: var(--text-light);
+        }
+
+        .btn {
+            width: 200px;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.8rem;
+        }
+
+        .Send_feedback {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .Send_feedback:hover {
+            background-color: #3a5bc7;
+        }
+
+        /* Admin Replies Box */
+        .admin-replies {
+            margin-top: 0.5rem;
+            padding: 0.6rem;
+            background: #f8f9fc;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 6px;
+            color: #333;
+        }
+
+        .admin-replies ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0.3rem 0 0;
+        }
+
+        .admin-replies li {
+            margin-bottom: 0.4rem;
+            padding: 0.4rem;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        /* Dark Mode Styling */
+        body.dark-mode .admin-replies {
+            background: #2c2f33;
+            border-left: 4px solid #7289da;
+            color: #ddd;
+        }
+
+        body.dark-mode .admin-replies li {
+            background: #23272a;
+            color: #ccc;
+        }
+
+        .Userfeed {
+            font-size: 1rem;
+            color: #2d7ff2ff;
+        }
+
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -295,7 +426,6 @@ requireRole('user');
         <a href="bookship.php">Book Shipment</a>
         <a href="shiphistory.php">Shipment History</a>
         <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
-        <a href="feedback.php">Feedback</a>
     </div>
 
     <div class="content" id="mainContent">
@@ -312,6 +442,7 @@ requireRole('user');
                         <a href="logout.php">Logout</a>
                     </div>
                 </div>
+
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
                     <input type="checkbox" id="userThemeToggle">
@@ -321,37 +452,78 @@ requireRole('user');
         </div>
 
 
-
-        <div class="History_section">
-            <h2>??????????????????????</h2>
-        
+        <div class="Feedback_section">
+            <h2>Send Feedback/Concern</h2>
+            <?php if (isset($success)) echo "<p style='color:green;'>$success</p>"; ?>
+            <?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
+            <form method="POST">
+                <div class="Feedback_content">
+                    <textarea class="comment" id="comment" name="comment" placeholder="Enter your feedback" required></textarea>
+                </div>
+                <button type="submit" name="Send_feedback" class="btn Send_feedback">Send</button>
+            </form>
         </div>
-    </div>
 
-    <script>
-        initDarkMode("userThemeToggle", "userDarkMode");
+        <div class="Feedback_section">
+            <h2>Recent Feedback</h2>
+            <?php if (!empty($feedbacks)): ?>
+                <ul style="list-style:none; padding:0;">
+                    <?php foreach ($feedbacks as $fb): ?>
+                        <li style="margin-bottom:1rem; padding:0.8rem; border-bottom:1px solid #ddd;">
+                            <strong class="Userfeed"><?= htmlspecialchars($fb['username']) ?></strong>
+                            <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small><br>
 
-        document.getElementById('hamburger').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('mainContent').classList.toggle('expanded');
-        });
+                            <p style="margin:0.5rem 0;"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-        // Toggle dropdown
-        const userIcon = document.getElementById("userIcon");
-        const userDropdown = document.getElementById("userDropdown");
+                            <?php if (!empty($fb['replies'])): ?>
+                                <div class="admin-replies">
+                                    <strong>Admin Replies:</strong>
+                                    <ul>
+                                        <?php foreach ($fb['replies'] as $r): ?>
+                                            <li>
+                                                <em><?= htmlspecialchars($r['admin_name']) ?></em>
+                                                (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):<br>
+                                                <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
 
-        userIcon.addEventListener("click", () => {
-            userDropdown.style.display =
-                userDropdown.style.display === "block" ? "none" : "block";
-        });
+                        </li>
+                    <?php endforeach; ?>
 
-        // Close dropdown if clicking outside
-        document.addEventListener("click", (e) => {
-            if (!userIcon.contains(e.target)) {
-                userDropdown.style.display = "none";
-            }
-        });
-    </script>
+                </ul>
+            <?php else: ?>
+                <p>No feedback yet.</p>
+            <?php endif; ?>
+        </div>
+
+
+        <script>
+            initDarkMode("userThemeToggle", "userDarkMode");
+
+            document.getElementById('hamburger').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+                document.getElementById('mainContent').classList.toggle('expanded');
+            });
+
+            // Toggle dropdown
+            const userIcon = document.getElementById("userIcon");
+            const userDropdown = document.getElementById("userDropdown");
+
+            userIcon.addEventListener("click", () => {
+                userDropdown.style.display =
+                    userDropdown.style.display === "block" ? "none" : "block";
+            });
+
+            // Close dropdown if clicking outside
+            document.addEventListener("click", (e) => {
+                if (!userIcon.contains(e.target)) {
+                    userDropdown.style.display = "none";
+                }
+            });
+        </script>
 </body>
 
 </html>
