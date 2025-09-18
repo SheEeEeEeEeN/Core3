@@ -371,7 +371,6 @@ $activityResult = $conn->query("SELECT * FROM admin_activity ORDER BY date DESC 
     <a href="CSM.php">Contract & SLA Monitoring</a>
     <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
     <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-    <a href="CPN.php">Customer Portal & Notification Hub</a>
     <a href="logout.php">Logout</a>
   </div>
 

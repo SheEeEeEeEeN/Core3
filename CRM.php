@@ -1,76 +1,40 @@
 <?php
 include("darkmode.php");
-include 'connection.php';
+include("connection.php");
 include('session.php');
-requireRole('admin'); // ✅ Only admins can manage accounts
+requireRole('admin');
 
-/* Add Account */
-if (isset($_POST['add'])) {
-    $username = $conn->real_escape_string($_POST['username']);
-    $email    = $conn->real_escape_string($_POST['email']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // ✅ secure hash
-    $role     = $conn->real_escape_string($_POST['role']);
+// Fetch feedback messages
+$unread = [];
+$read   = [];
 
-    $sql = "INSERT INTO accounts (username, email, password, role, created_at) 
-            VALUES ('$username', '$email', '$password', '$role', NOW())";
-
-    if ($conn->query($sql) === TRUE) {
-        $activity = "Added new account: $username ($role)";
-        $conn->query("INSERT INTO admin_activity (module, activity, status) 
-                      VALUES ('CRM', '$activity', 'Success')");
-        header("Location: CRM.php?success=1");
-        exit();
-    } else {
-        echo "Error: " . $conn->error;
+// Unread (all)
+$sqlUnread = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
+              FROM feedback f 
+              JOIN accounts a ON f.account_id = a.id 
+              WHERE f.status = 'unread'
+              ORDER BY f.created_at DESC";
+$resultUnread = $conn->query($sqlUnread);
+if ($resultUnread && $resultUnread->num_rows > 0) {
+    while ($row = $resultUnread->fetch_assoc()) {
+        $unread[] = $row;
     }
 }
 
-/* Update Account */
-if (isset($_POST['update'])) {
-    $id       = (int) $_POST['id'];
-    $username = $conn->real_escape_string($_POST['username']);
-    $email    = $conn->real_escape_string($_POST['email']);
-    $role     = $conn->real_escape_string($_POST['role']);
-
-    $sql = "UPDATE accounts 
-            SET username='$username', 
-                email='$email',
-                role='$role'
-            WHERE id=$id";
-
-    if ($conn->query($sql) === TRUE) {
-        $activity = "Updated account: $username ($role)";
-        $conn->query("INSERT INTO admin_activity (module, activity, status) 
-                      VALUES ('CRM', '$activity', 'Success')");
-        header("Location: CRM.php?updated=1");
-        exit();
-    } else {
-        echo "Error: " . $conn->error;
+// Read (limit 20 only)
+$sqlRead = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
+            FROM feedback f 
+            JOIN accounts a ON f.account_id = a.id 
+            WHERE f.status != 'unread'
+            ORDER BY f.created_at DESC
+            LIMIT 20";
+$resultRead = $conn->query($sqlRead);
+if ($resultRead && $resultRead->num_rows > 0) {
+    while ($row = $resultRead->fetch_assoc()) {
+        $read[] = $row;
     }
 }
-
-/* Delete Account */
-if (isset($_GET['delete'])) {
-    $id = (int) $_GET['delete'];
-
-    $res = $conn->query("SELECT username, role FROM accounts WHERE id=$id");
-    $row = $res->fetch_assoc();
-    $username = $row['username'];
-    $role     = $row['role'];
-
-    if ($conn->query("DELETE FROM accounts WHERE id=$id") === TRUE) {
-        $activity = "Deleted account: $username ($role)";
-        $conn->query("INSERT INTO admin_activity (module, activity, status) 
-                      VALUES ('CRM', '$activity', 'Success')");
-    }
-    header("Location: CRM.php?deleted=1");
-    exit;
-}
-
-/* Fetch Accounts */
-$result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -78,14 +42,11 @@ $result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --sidebar-width: 250px;
             --primary-color: #4e73df;
             --secondary-color: #f8f9fc;
-            --tertiary-color: #f43a3aff;
             --dark-bg: #1a1a2e;
             --dark-card: #16213e;
             --text-light: #f8f9fa;
@@ -170,21 +131,16 @@ $result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
             border-left: 3px solid white;
         }
 
-        .admin-feature {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Main Content */
         .content {
             margin-left: var(--sidebar-width);
             padding: 20px;
+            transition: all 0.3s ease;
         }
 
         .content.expanded {
             margin-left: 0;
         }
 
-        /* Header */
         .header {
             background-color: white;
             padding: 1rem;
@@ -207,253 +163,132 @@ $result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
             padding: 0.5rem;
         }
 
-        .system-title {
-            color: var(--primary-color);
-            font-size: 1rem;
-        }
-
-
-        /* Table Section */
-        .table-section {
+        .searchnotif-section {
             position: relative;
             background-color: white;
-            padding: 1.3rem;
+            padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-        }
-
-        .dark-mode .table-section {
-            background-color: var(--dark-card);
-            color: var(--text-light);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .dark-mode th,
-        .dark-mode td {
-            border-bottom-color: #3a4b6e;
-        }
-
-        thead {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .table-section1 {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .table-head input,
-        .table-head select {
-            width: 300px;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            margin-right: 1.5rem;
-            background-color: white;
-        }
-
-        .dark-mode .table-head input,
-        .dark-mode .table-head select {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
-        .table-button {
-            position: absolute;
-            right: 25px;
-        }
-
-        .btn {
-            padding: 0.5rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .toggle-table-btn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .toggle-table-btn:hover {
-            background-color: #3a5bc7;
-        }
-
-        /* The Modal */
-        .modal-section {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-content {
-            position: absolute;
-            right: 10rem;
-            background-color: white;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            width: 70%;
-        }
-
-        .dark-mode .modal-content {
-            background-color: var(--dark-card);
-            color: var(--text-light);
-        }
-
-        .add-form {
             margin-bottom: 1rem;
         }
 
-        .add-form label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
+        .dark-mode .searchnotif-section {
+            background-color: var(--dark-card);
+            color: var(--text-light);
         }
 
-        .add-form input,
-        .add-form select,
-        .add-form textarea {
+        .notif-section {
+            margin-top: 1rem;
+        }
+
+        .notif-section h2{
+            margin-bottom: 0.7rem;
+        }
+
+        .notif-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notif-item {
+            background: #fff;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+
+        body.dark-mode .notif-item {
+            background: #1e2b53ff;
+            color: var(--text-light);
+        }
+
+        .Ureply {
+            font-size: 1rem;
+            color: #2d7ff2ff;
+        }
+
+        .notif-item small {
+            font-size: 0.8rem;
+            color: gray;
+        }
+
+        .notif-comment {
+            margin: 0.5rem 0;
+        }
+
+        .reply-box {
+            margin-top: 0.5rem
+        }
+
+        .reply-box textarea {
             width: 100%;
+            min-height: 60px;
             padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
         }
 
-        .dark-mode .add-form input,
-        .dark-mode .add-form select {
-            background-color: #2a3a5a;
+        body.dark-mode .reply-box textarea {
+            background: #2a3a5a;
             border-color: #3a4b6e;
             color: var(--text-light);
         }
 
-        .btn-add {
-            background-color: var(--primary-color);
-            color: white;
+        .reply-box button {
+            margin-top: 0.5rem;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
-        .btn-add:hover {
-            background-color: #3a5bc7;
+        .reply-box button:hover {
+            background: #3c5ac2;
         }
 
-        .btn-cancel {
-            background-color: var(--tertiary-color);
-            color: white;
-        }
-
-        .btn-cancel:hover {
-            background-color: #e50d0dff;
-        }
-
-        .username,
-        .email,
-        .role {
-            width: 150px;
-            padding: 0.2rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .replies {
+            margin-top: 0.5rem;
+            padding: 0.5rem 0 0 1rem;
+            border-left: 3px solid var(--primary-color);
             font-size: 0.9rem;
-            background-color: white;
         }
 
-        .dark-mode td input,
-        .dark-mode td select {
-            background-color: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
+        .replies ul {
+            list-style: none;
+            padding-left: 0;
         }
 
+        .replies li {
+            margin-bottom: 0.3rem;
+        }
 
-        .Eupdate {
-            padding: 0.5rem;
-            border: none;
+        /* Scrollable containers */
+        .unread-container,
+        .read-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .unread-container::-webkit-scrollbar,
+        .read-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .unread-container::-webkit-scrollbar-thumb,
+        .read-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
             border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            background-color: #4fcbdeff;
-            color: white;
         }
 
-        .Eupdate:hover {
-            background-color: #15c8e3ff;
+        .unread-container::-webkit-scrollbar-track,
+        .read-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
-
-        .Ecancel,
-        .delete {
-            padding: 0.5rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            background-color: var(--tertiary-color);
-            color: white;
-            text-decoration-line: none;
-        }
-
-        .Ecancel,
-        .delete:hover {
-            background-color: #e50d0dff;
-        }
-
-        .edit {
-            padding: 0.5rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            background-color: #1a629dff;
-            color: white;
-            text-decoration-line: none;
-        }
-
-        .edit:hover {
-            background-color: #0476d3ff;
-        }
-
-        /* Make SweetAlert smaller */
-        .swal-small {
-            width: 400px !important;
-            /* shrink width */
-            font-size: 0.85rem !important;
-            /* smaller text */
-            padding: 0.5rem !important;
-        }
-
-        .swal-small .swal2-title {
-            font-size: 0.1rem !important;
-            /* smaller title */
-        }
-
-        .swal-small .swal2-html-container {
-            font-size: 0.85rem !important;
-            /* smaller body text */
-        }
-
-
 
         /* Theme Toggle */
         .theme-toggle-container {
@@ -526,16 +361,13 @@ $result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
 
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="logo">
-            <img src="rem.png" alt="SLATE Logo">
-        </div>
-        <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php" class="active">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php">Customer Portal & Notification Hub</a>
+        <div class="logo"> <img src="rem.png" alt="SLATE Logo"> </div>
+        <div class="system-name">CORE TRANSACTION 3</div> 
+        <a href="admin.php">Dashboard</a> 
+        <a href="CRM.php"  class="active">Customer Relationship Management</a> 
+        <a href="CSM.php">Contract & SLA Monitoring</a> 
+        <a href="E-Doc.php">E-Documentations & Compliance Manager</a> 
+        <a href="BIFA.php">Business Intelligence & Freight Analytics</a> 
         <a href="logout.php">Logout</a>
     </div>
 
@@ -543,7 +375,7 @@ $result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>Customer Relationship Management</h1>
+                <h1>Customer Relatioinship Management</h1>
             </div>
             <div class="theme-toggle-container">
                 <span class="theme-label">Dark Mode</span>
@@ -554,212 +386,89 @@ $result = $conn->query("SELECT * FROM accounts ORDER BY id DESC");
             </div>
         </div>
 
-        <div class="table-section">
-            <div class="table-section1">
-                <div class="table-head">
-                    <input type="search" class="control" id="searchInput" placeholder="Search username...">
-                </div>
+        <!-- Unread Notifications -->
+        <div class="searchnotif-section">
+            <div class="notif-section">
+                <h2>Unread Notifications</h2>
+                <?php if (!empty($unread)): ?>
+                    <div class="unread-container">
+                        <ul class="notif-list">
+                            <?php foreach ($unread as $fb): ?>
+                                <li class="notif-item">
+                                    <strong><?= htmlspecialchars($fb['username']) ?></strong>
+                                    <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
+                                    <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-                <div class="table-head">
-                    <select class="select" id="filterRole">
-                        <option value="">Filter by Role</option>
-                        <option value="admin">Admin</option>
-                        <option value="user">User</option>
-                    </select>
-                </div>
-
+                                    <form class="reply-box" method="post" action="reply.php">
+                                        <input type="hidden" name="feedback_id" value="<?= $fb['id'] ?>">
+                                        <textarea name="reply_message" placeholder="Write your reply..." required></textarea>
+                                        <button type="submit">Send Reply</button>
+                                    </form>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php else: ?>
+                    <p>No unread notifications.</p>
+                <?php endif; ?>
             </div>
+        </div>
 
-            <table id="AccountsTable">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="accountData">
-                    <?php while ($row = $result->fetch_assoc()): ?>
-                        <?php if (isset($_GET['edit']) && $_GET['edit'] == $row['id']): ?>
-                            <tr>
-                                <form method="POST">
-                                    <td><input class="username" type="text" name="username" value="<?= htmlspecialchars($row['username']); ?>" required></td>
-                                    <td><input class="email" type="email" name="email" value="<?= htmlspecialchars($row['email']); ?>" required></td>
-                                    <td>
-                                        <select class="role" name="role" required>
-                                            <option value="admin" <?= $row['role'] == 'admin' ? 'selected' : ''; ?>>Admin</option>
-                                            <option value="user" <?= $row['role'] == 'user' ? 'selected' : ''; ?>>User</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="hidden" name="id" value="<?= $row['id']; ?>">
-                                        <button type="submit" name="update" class="Eupdate">Save</button>
-                                        <a href="CRM.php" class="Ecancel">Cancel</a>
-                                    </td>
-                                </form>
-                            </tr>
-                        <?php else: ?>
-                            <tr>
-                                <td><?= htmlspecialchars($row['username']); ?></td>
-                                <td><?= htmlspecialchars($row['email']); ?></td>
-                                <td><?= htmlspecialchars($row['role']); ?></td>
-                                <td>
-                                    <a href="CRM.php?edit=<?= $row['id']; ?>" class="edit">Edit</a>
-                                    <a href="CRM.php?delete=<?= $row['id']; ?>" class="delete">Delete</a>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+        <!-- Read Notifications -->
+        <div class="searchnotif-section">
+            <div class="notif-section">
+                <h2>Read Notifications</h2>
+                <?php if (!empty($read)): ?>
+                    <div class="read-container">
+                        <ul class="notif-list">
+                            <?php foreach ($read as $fb): ?>
+                                <li class="notif-item">
+                                    <strong class="Ureply"><?= htmlspecialchars($fb['username']) ?></strong>
+                                    <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
+                                    <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
+                                    <?php
+                                    $sqlReplies = "SELECT r.reply_message, r.created_at, a.username AS admin_name
+                                       FROM replies r
+                                       JOIN accounts a ON r.admin_id = a.id
+                                       WHERE r.feedback_id = ?
+                                       ORDER BY r.created_at ASC";
+                                    $replyStmt = $conn->prepare($sqlReplies);
+                                    $replyStmt->bind_param("i", $fb['id']);
+                                    $replyStmt->execute();
+                                    $replyResult = $replyStmt->get_result();
 
-
-
-            <div class="modal-section" id="addmodal">
-                <div class="modal-content">
-                    <form method="POST">
-                        <div class="modal-header">
-                            <h3>Add New Account</h3>
-                        </div>
-                        <div class="modal-body">
-                            <div class="add-form">
-                                <label>Username</label>
-                                <input type="text" name="username" required>
-                            </div>
-                            <div class="add-form">
-                                <label>Email</label>
-                                <input type="email" name="email" required>
-                            </div>
-                            <div class="add-form">
-                                <label>Password</label>
-                                <input type="password" name="password" required>
-                            </div>
-                            <div class="add-form">
-                                <label>Role</label>
-                                <select name="role" required>
-                                    <option value="admin">Admin</option>
-                                    <option value="user">User</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" id="cancel" class="btn btn-cancel">Cancel</button>
-                            <button type="submit" name="add" class="btn btn-add">Add Account</button>
-                        </div>
-                    </form>
-                </div>
+                                    if ($replyResult->num_rows > 0): ?>
+                                        <div class="replies">
+                                            <strong>Replies:</strong>
+                                            <ul>
+                                                <?php while ($r = $replyResult->fetch_assoc()): ?>
+                                                    <li>
+                                                        <em><?= htmlspecialchars($r['admin_name']) ?></em>
+                                                        (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):
+                                                        <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
+                                                    </li>
+                                                <?php endwhile; ?>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php else: ?>
+                    <p>No read notifications yet.</p>
+                <?php endif; ?>
             </div>
+        </div>
 
-
-
-            <script>
-    initDarkMode("adminThemeToggle", "adminDarkMode");
-
-    document.getElementById('hamburger').addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('mainContent').classList.toggle('expanded');
-    });
-
-    /* modal */
-    var modal = document.getElementById("addmodal");
-    var btn = document.getElementById("openAddModal"); // ✅ fix id
-    var cancelBtn = document.getElementById("cancel"); // ✅ fix cancel
-
-    if (btn) {
-        btn.onclick = function() {
-            modal.style.display = "block";
-        }
-    }
-    cancelBtn.onclick = function() {
-        modal.style.display = "none";
-    }
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    /* search/filter */
-    const searchInput = document.getElementById('searchInput');
-    const filterRole = document.getElementById('filterRole');
-    const tbody = document.getElementById('accountData');
-
-    function getCellText(td) {
-        const input = td.querySelector('input, select');
-        return input ? input.value.toLowerCase() : td.textContent.toLowerCase();
-    }
-
-    function filterTable() {
-        const searchValue = searchInput.value.toLowerCase();
-        const roleValue = filterRole.value.toLowerCase();
-
-        Array.from(tbody.rows).forEach(row => {
-            const usernameText = getCellText(row.cells[0]); // Username
-            const roleText = getCellText(row.cells[2]);     // Role
-
-            const matchesSearch = usernameText.includes(searchValue);
-            const matchesRole = roleValue === "" || roleText === roleValue;
-
-            row.style.display = (matchesSearch && matchesRole) ? "" : "none";
-        });
-    }
-
-    searchInput.addEventListener('input', filterTable);
-    filterRole.addEventListener('change', filterTable);
-
-    // SweetAlert for delete confirmation
-    document.querySelectorAll('.delete').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = this.getAttribute('href');
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This account will be permanently deleted.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!',
-                customClass: { popup: 'swal-small' }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = url;
-                }
+        <script>
+            initDarkMode("adminThemeToggle", "adminDarkMode");
+            document.getElementById('hamburger').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+                document.getElementById('mainContent').classList.toggle('expanded');
             });
-        });
-    });
-
-    // ✅ Success alerts (Add, Update, Delete)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('success')) {
-        Swal.fire({
-            title: 'Added!',
-            text: 'Account has been added successfully.',
-            icon: 'success',
-            customClass: { popup: 'swal-small' }
-        });
-    }
-    if (urlParams.has('updated')) {
-        Swal.fire({
-            title: 'Updated!',
-            text: 'Account has been updated successfully.',
-            icon: 'success',
-            customClass: { popup: 'swal-small' }
-        });
-    }
-    if (urlParams.has('deleted')) {
-        Swal.fire({
-            title: 'Deleted!',
-            text: 'Account has been deleted successfully.',
-            icon: 'success',
-            customClass: { popup: 'swal-small' }
-        });
-    }
-</script>
-
+        </script>
+    </div>
 </body>
-
 </html>

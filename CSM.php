@@ -62,7 +62,8 @@ $totalCompliant = (int) $row['total_compliant'];
 $contract_limit = 100;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
     // read safely (no undefined index warnings) and trim
-    $contract_id = trim($_POST['contract_id'] ?? '');
+    // Auto-generate Contract ID: e.g., C-20250918-ABC123
+    $contract_id = "C-" . date("Ymd") . "-" . strtoupper(substr(md5(uniqid(rand(), true)), 0, 6));
     $client_name = trim($_POST['client_name'] ?? '');
     $start_date = trim($_POST['start_date'] ?? '');
     $end_date = trim($_POST['end_date'] ?? '');
@@ -592,7 +593,6 @@ include("darkmode.php");
         <a href="CSM.php" class="active">Contract & SLA Monitoring</a>
         <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
         <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php">Customer Portal & Notification Hub</a>
         <a href="logout.php">Logout</a>
     </div>
 
@@ -706,7 +706,7 @@ include("darkmode.php");
                     </tr>
                 </thead>
                 <tbody>
-                   
+
                 </tbody>
             </table>
         </div>

@@ -337,7 +337,7 @@ requireRole('user')
         <a href="trackship.php" class="active">Track Shipment</a>
         <a href="bookship.php">Book Shipment</a>
         <a href="shiphistory.php">Shipment History</a>
-        <a href="reports.php">Reports</a>
+        <a href="CPN.php">Customer Portal & Notification Hub</a>
         <a href="feedback.php">Feedback</a>
     </div>
 
@@ -348,7 +348,7 @@ requireRole('user')
                 <h1>Track Shipment <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
-                 <div class="user_icon" id="userIcon">
+                <div class="user_icon" id="userIcon">
                     <img src="user.png" alt="User">
                     <div class="user_dropdown" id="userDropdown">
                         <a href="profile.php">Profile</a>

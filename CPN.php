@@ -2,46 +2,17 @@
 include("darkmode.php");
 include("connection.php");
 include('session.php');
-requireRole('admin');
-
-// Fetch feedback messages
-$unread = [];
-$read   = [];
-
-// Unread (all)
-$sqlUnread = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
-              FROM feedback f 
-              JOIN accounts a ON f.account_id = a.id 
-              WHERE f.status = 'unread'
-              ORDER BY f.created_at DESC";
-$resultUnread = $conn->query($sqlUnread);
-if ($resultUnread && $resultUnread->num_rows > 0) {
-    while ($row = $resultUnread->fetch_assoc()) {
-        $unread[] = $row;
-    }
-}
-
-// Read (limit 20 only)
-$sqlRead = "SELECT f.id, f.comment, f.created_at, a.username, f.status 
-            FROM feedback f 
-            JOIN accounts a ON f.account_id = a.id 
-            WHERE f.status != 'unread'
-            ORDER BY f.created_at DESC
-            LIMIT 20";
-$resultRead = $conn->query($sqlRead);
-if ($resultRead && $resultRead->num_rows > 0) {
-    while ($row = $resultRead->fetch_assoc()) {
-        $read[] = $row;
-    }
-}
+requireRole('user');
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | CORE3 Customer Relationship & Business Control</title>
+    <title>User Dashboard | Core 3</title>
     <style>
         :root {
             --sidebar-width: 250px;
@@ -131,6 +102,11 @@ if ($resultRead && $resultRead->num_rows > 0) {
             border-left: 3px solid white;
         }
 
+        .admin-feature {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Content */
         .content {
             margin-left: var(--sidebar-width);
             padding: 20px;
@@ -141,6 +117,7 @@ if ($resultRead && $resultRead->num_rows > 0) {
             margin-left: 0;
         }
 
+        /* Header */
         .header {
             background-color: white;
             padding: 1rem;
@@ -163,131 +140,80 @@ if ($resultRead && $resultRead->num_rows > 0) {
             padding: 0.5rem;
         }
 
-        .searchnotif-section {
-            position: relative;
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 1rem;
+        .system-title {
+            color: var(--primary-color);
+            font-size: 1rem;
         }
 
-        .dark-mode .searchnotif-section {
+        /* User Icon */
+        .user_icon {
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .user_icon img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user_dropdown {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            min-width: 150px;
+            z-index: 2000;
+            overflow: hidden;
+        }
+
+        .user_dropdown a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .user_dropdown a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .dark-mode .user_dropdown {
             background-color: var(--dark-card);
             color: var(--text-light);
         }
 
-        .notif-section {
-            margin-top: 1rem;
+        .dark-mode .user_dropdown a {
+            color: var(--text-light);
         }
 
-        .notif-section h2{
-            margin-bottom: 0.7rem;
+        .dark-mode .user_dropdown a:hover {
+            background-color: #2a3a5a;
         }
 
-        .notif-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
 
-        .notif-item {
-            background: #fff;
-            padding: 1rem;
+        /* Table Section */
+        .History_section {
+            background-color: white;
+            padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            margin-bottom: 1rem;
+            text-align: center;
         }
 
-        body.dark-mode .notif-item {
-            background: #1e2b53ff;
+        .dark-mode .History_section {
+            background-color: var(--dark-card);
             color: var(--text-light);
-        }
-
-        .Ureply {
-            font-size: 1rem;
-            color: #2d7ff2ff;
-        }
-
-        .notif-item small {
-            font-size: 0.8rem;
-            color: gray;
-        }
-
-        .notif-comment {
-            margin: 0.5rem 0;
-        }
-
-        .reply-box {
-            margin-top: 0.5rem
-        }
-
-        .reply-box textarea {
-            width: 100%;
-            min-height: 60px;
-            padding: 0.5rem;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-
-        body.dark-mode .reply-box textarea {
-            background: #2a3a5a;
-            border-color: #3a4b6e;
-            color: var(--text-light);
-        }
-
-        .reply-box button {
-            margin-top: 0.5rem;
-            background: var(--primary-color);
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .reply-box button:hover {
-            background: #3c5ac2;
-        }
-
-        .replies {
-            margin-top: 0.5rem;
-            padding: 0.5rem 0 0 1rem;
-            border-left: 3px solid var(--primary-color);
-            font-size: 0.9rem;
-        }
-
-        .replies ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .replies li {
-            margin-bottom: 0.3rem;
-        }
-
-        /* Scrollable containers */
-        .unread-container,
-        .read-container {
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-
-        .unread-container::-webkit-scrollbar,
-        .read-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .unread-container::-webkit-scrollbar-thumb,
-        .read-container::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 4px;
-        }
-
-        .unread-container::-webkit-scrollbar-track,
-        .read-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
         }
 
         /* Theme Toggle */
@@ -361,115 +287,71 @@ if ($resultRead && $resultRead->num_rows > 0) {
 
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="logo"> <img src="rem.png" alt="SLATE Logo"> </div>
-        <div class="system-name">CORE TRANSACTION 3</div> 
-        <a href="admin.php">Dashboard</a> 
-        <a href="CRM.php">Customer Relationship Management</a> 
-        <a href="CSM.php">Contract & SLA Monitoring</a> 
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a> 
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a> 
-        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a> 
-        <a href="logout.php">Logout</a>
+        <div class="logo">
+            <img src="rem.png" alt="SLATE Logo">
+        </div>
+        <a href="user.php">Dashboard</a>
+        <a href="trackship.php">Track Shipment</a>
+        <a href="bookship.php">Book Shipment</a>
+        <a href="shiphistory.php">Shipment History</a>
+        <a href="CPN.php" class="active">Customer Portal & Notification Hub</a>
+        <a href="feedback.php">Feedback</a>
     </div>
 
     <div class="content" id="mainContent">
         <div class="header">
             <div class="hamburger" id="hamburger">☰</div>
             <div>
-                <h1>Customer Portal & Notification Hub</h1>
+                <h1>Customer Portal & Notification Hub <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
+                <div class="user_icon" id="userIcon">
+                    <img src="user.png" alt="User">
+                    <div class="user_dropdown" id="userDropdown">
+                        <a href="profile.php">Profile</a>
+                        <a href="logout.php">Logout</a>
+                    </div>
+                </div>
                 <span class="theme-label">Dark Mode</span>
                 <label class="theme-switch">
-                    <input type="checkbox" id="adminThemeToggle">
+                    <input type="checkbox" id="userThemeToggle">
                     <span class="slider"></span>
                 </label>
             </div>
         </div>
 
-        <!-- Unread Notifications -->
-        <div class="searchnotif-section">
-            <div class="notif-section">
-                <h2>Unread Notifications</h2>
-                <?php if (!empty($unread)): ?>
-                    <div class="unread-container">
-                        <ul class="notif-list">
-                            <?php foreach ($unread as $fb): ?>
-                                <li class="notif-item">
-                                    <strong><?= htmlspecialchars($fb['username']) ?></strong>
-                                    <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
-                                    <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
 
-                                    <form class="reply-box" method="post" action="reply.php">
-                                        <input type="hidden" name="feedback_id" value="<?= $fb['id'] ?>">
-                                        <textarea name="reply_message" placeholder="Write your reply..." required></textarea>
-                                        <button type="submit">Send Reply</button>
-                                    </form>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php else: ?>
-                    <p>No unread notifications.</p>
-                <?php endif; ?>
-            </div>
+
+        <div class="History_section">
+            <h2>??????????????????????</h2>
+        
         </div>
-
-        <!-- Read Notifications -->
-        <div class="searchnotif-section">
-            <div class="notif-section">
-                <h2>Read Notifications</h2>
-                <?php if (!empty($read)): ?>
-                    <div class="read-container">
-                        <ul class="notif-list">
-                            <?php foreach ($read as $fb): ?>
-                                <li class="notif-item">
-                                    <strong class="Ureply"><?= htmlspecialchars($fb['username']) ?></strong>
-                                    <small>(<?= date("M d, Y H:i", strtotime($fb['created_at'])) ?>)</small>
-                                    <p class="notif-comment"><?= nl2br(htmlspecialchars($fb['comment'])) ?></p>
-
-                                    <?php
-                                    $sqlReplies = "SELECT r.reply_message, r.created_at, a.username AS admin_name
-                                       FROM replies r
-                                       JOIN accounts a ON r.admin_id = a.id
-                                       WHERE r.feedback_id = ?
-                                       ORDER BY r.created_at ASC";
-                                    $replyStmt = $conn->prepare($sqlReplies);
-                                    $replyStmt->bind_param("i", $fb['id']);
-                                    $replyStmt->execute();
-                                    $replyResult = $replyStmt->get_result();
-
-                                    if ($replyResult->num_rows > 0): ?>
-                                        <div class="replies">
-                                            <strong>Replies:</strong>
-                                            <ul>
-                                                <?php while ($r = $replyResult->fetch_assoc()): ?>
-                                                    <li>
-                                                        <em><?= htmlspecialchars($r['admin_name']) ?></em>
-                                                        (<?= date("M d, Y H:i", strtotime($r['created_at'])) ?>):
-                                                        <?= nl2br(htmlspecialchars($r['reply_message'])) ?>
-                                                    </li>
-                                                <?php endwhile; ?>
-                                            </ul>
-                                        </div>
-                                    <?php endif; ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php else: ?>
-                    <p>No read notifications yet.</p>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <script>
-            initDarkMode("adminThemeToggle", "adminDarkMode");
-            document.getElementById('hamburger').addEventListener('click', function() {
-                document.getElementById('sidebar').classList.toggle('collapsed');
-                document.getElementById('mainContent').classList.toggle('expanded');
-            });
-        </script>
     </div>
+
+    <script>
+        initDarkMode("userThemeToggle", "userDarkMode");
+
+        document.getElementById('hamburger').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+
+        // Toggle dropdown
+        const userIcon = document.getElementById("userIcon");
+        const userDropdown = document.getElementById("userDropdown");
+
+        userIcon.addEventListener("click", () => {
+            userDropdown.style.display =
+                userDropdown.style.display === "block" ? "none" : "block";
+        });
+
+        // Close dropdown if clicking outside
+        document.addEventListener("click", (e) => {
+            if (!userIcon.contains(e.target)) {
+                userDropdown.style.display = "none";
+            }
+        });
+    </script>
 </body>
+
 </html>

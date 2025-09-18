@@ -359,7 +359,7 @@ if (isset($_POST['book_shipment'])) {
         <a href="trackship.php">Track Shipment</a>
         <a href="bookship.php" class="active">Book Shipment</a>
         <a href="shiphistory.php">Shipment History</a>
-        <a href="reports.php">Reports</a>
+        <a href="CPN.php">Customer Portal & Notification Hub</a>
         <a href="feedback.php">Feedback</a>
     </div>
 
@@ -370,7 +370,7 @@ if (isset($_POST['book_shipment'])) {
                 <h1>Book Shipment <span class="system-title"></span></h1>
             </div>
             <div class="theme-toggle-container">
-                 <div class="user_icon" id="userIcon">
+                <div class="user_icon" id="userIcon">
                     <img src="user.png" alt="User">
                     <div class="user_dropdown" id="userDropdown">
                         <a href="profile.php">Profile</a>
@@ -429,20 +429,20 @@ if (isset($_POST['book_shipment'])) {
         });
 
         // Toggle dropdown
-            const userIcon = document.getElementById("userIcon");
-            const userDropdown = document.getElementById("userDropdown");
+        const userIcon = document.getElementById("userIcon");
+        const userDropdown = document.getElementById("userDropdown");
 
-            userIcon.addEventListener("click", () => {
-                userDropdown.style.display =
-                    userDropdown.style.display === "block" ? "none" : "block";
-            });
+        userIcon.addEventListener("click", () => {
+            userDropdown.style.display =
+                userDropdown.style.display === "block" ? "none" : "block";
+        });
 
-            // Close dropdown if clicking outside
-            document.addEventListener("click", (e) => {
-                if (!userIcon.contains(e.target)) {
-                    userDropdown.style.display = "none";
-                }
-            });
+        // Close dropdown if clicking outside
+        document.addEventListener("click", (e) => {
+            if (!userIcon.contains(e.target)) {
+                userDropdown.style.display = "none";
+            }
+        });
     </script>
 </body>
 

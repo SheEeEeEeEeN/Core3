@@ -474,19 +474,19 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
         }
 
         /* Make SweetAlert smaller */
-    .swal-small {
-        width: 400px !important; /* shrink width */
-        font-size: 0.85rem !important; /* smaller text */
-        padding: 0.5rem !important;
-    }
+        .swal-small {
+            width: 400px !important;
+            font-size: 0.85rem !important;
+            padding: 0.5rem !important;
+        }
 
-    .swal-small .swal2-title {
-        font-size: 1rem !important; /* smaller title */
-    }
+        .swal-small .swal2-title {
+            font-size: 1rem !important;
+        }
 
-    .swal-small .swal2-html-container {
-        font-size: 0.85rem !important; /* smaller body text */
-    }
+        .swal-small .swal2-html-container {
+            font-size: 0.85rem !important;
+        }
 
 
         /* Theme Toggle */
@@ -569,7 +569,6 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
         <a href="CSM.php">Contract & SLA Monitoring</a>
         <a href="E-Doc.php" class="active">E-Documentations & Compliance Manager</a>
         <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="CPN.php">Customer Portal & Notification Hub</a>
         <a href="logout.php">Logout</a>
     </div>
 
@@ -737,46 +736,47 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
             });
 
             // SweetAlert Delete Confirmation
-    document.addEventListener("DOMContentLoaded", function() {
-        const deleteLinks = document.querySelectorAll(".delete");
+            document.addEventListener("DOMContentLoaded", function() {
+                const deleteLinks = document.querySelectorAll(".delete");
 
-        deleteLinks.forEach(link => {
-            link.addEventListener("click", function(e) {
-                e.preventDefault(); // stop default action
-                const url = this.getAttribute("href");
+                deleteLinks.forEach(link => {
+                    link.addEventListener("click", function(e) {
+                        e.preventDefault(); // stop default action
+                        const url = this.getAttribute("href");
 
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: "This document will be permanently deleted.",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#c03838ff',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Yes, delete it!',
+                            customClass: {
+                                popup: 'swal-small'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = url; // proceed with delete
+                            }
+                        });
+                    });
+                });
+            });
+
+            <?php if (isset($_SESSION['alert'])):
+                $alert = $_SESSION['alert'];
+                unset($_SESSION['alert']); ?>
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "This document will be permanently deleted.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#c03838ff',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, delete it!',
+                    title: '<?= $alert['title'] ?>',
+                    text: '<?= $alert['text'] ?>',
+                    icon: '<?= $alert['icon'] ?>',
+                    confirmButtonColor: '#4e73df',
                     customClass: {
                         popup: 'swal-small'
                     }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = url; // proceed with delete
-                    }
                 });
-            });
-        });
-    });
-
-    <?php if (isset($_SESSION['alert'])): 
-    $alert = $_SESSION['alert'];
-    unset($_SESSION['alert']); ?>
-    Swal.fire({
-        title: '<?= $alert['title'] ?>',
-        text: '<?= $alert['text'] ?>',
-        icon: '<?= $alert['icon'] ?>',
-        confirmButtonColor: '#4e73df',
-        customClass: { popup: 'swal-small' }
-    });
-<?php endif; ?>
-        
+            <?php endif; ?>
         </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     </div>
