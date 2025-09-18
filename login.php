@@ -488,7 +488,7 @@ if (isset($conn) && $conn instanceof mysqli) {
       </div>
       <div class="form-panel">
         <div class="form-box">
-          <img src="rem.png" alt="SLATE Logo">
+          <img src="Icons/rem.png" alt="SLATE Logo">
           <h2 id="formTitle">SLATE Login</h2>
 
           <!-- Login Form -->

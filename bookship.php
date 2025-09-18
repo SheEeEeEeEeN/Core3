@@ -107,12 +107,20 @@ if (isset($_POST['book_shipment'])) {
         }
 
         .sidebar a {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             color: rgba(255, 255, 255, 0.8);
             padding: 0.75rem 1.5rem;
             text-decoration: none;
             border-left: 3px solid transparent;
             transition: all 0.3s;
+        }
+
+        .sidebar a .icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
         }
 
         .sidebar a:hover,
@@ -353,13 +361,18 @@ if (isset($_POST['book_shipment'])) {
 <body>
     <div class="sidebar" id="sidebar">
         <div class="logo">
-            <img src="rem.png" alt="SLATE Logo">
+            <img src="Icons/rem.png" alt="SLATE Logo">
         </div>
-        <a href="user.php">Dashboard</a>
-        <a href="trackship.php">Track Shipment</a>
-        <a href="bookship.php" class="active">Book Shipment</a>
-        <a href="shiphistory.php">Shipment History</a>
-        <a href="CPN.php">Customer Portal & Notification Hub</a>
+        <a href="user.php">
+            <img src="Icons/usericon.png" alt="user" class="icon">Dashboard</a>
+        <a href="trackship.php">
+            <img src="Icons/track.png" alt="track" class="icon">Track Shipment</a>
+        <a href="bookship.php" class="active">
+            <img src="Icons/booking.png" alt="book" class="icon">Book Shipment</a>
+        <a href="shiphistory.php">
+            <img src="Icons/history.png" alt="history" class="icon">Shipment History</a>
+        <a href="CPN.php">
+            <img src="Icons/customer.png" alt="customer" class="icon">Customer Portal & Notification Hub</a>
     </div>
 
     <div class="content" id="mainContent">
@@ -370,7 +383,7 @@ if (isset($_POST['book_shipment'])) {
             </div>
             <div class="theme-toggle-container">
                 <div class="user_icon" id="userIcon">
-                    <img src="user.png" alt="User">
+                    <img src="Icons/user.png" alt="User">
                     <div class="user_dropdown" id="userDropdown">
                         <a href="profile.php">Profile</a>
                         <a href="logout.php">Logout</a>

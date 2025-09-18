@@ -86,12 +86,22 @@ requireRole('admin');
         }
 
         .sidebar a {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* space between icon and text */
             color: rgba(255, 255, 255, 0.8);
-            padding: .75rem 1.5rem;
+            padding: 0.75rem 1.5rem;
             text-decoration: none;
             border-left: 3px solid transparent;
             transition: all 0.3s;
+        }
+
+        .sidebar a .icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            /* keeps icon from squishing */
         }
 
         .sidebar a:hover,
@@ -166,6 +176,22 @@ requireRole('admin');
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
+        }
+
+        .Title {
+            margin-bottom: 0.5rem;
+        }
+
+        .Title h1 .icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 10px;
+            vertical-align: middle;
         }
 
         .chartarea {
@@ -285,14 +311,20 @@ requireRole('admin');
 
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="logo"><img src="rem.png" alt="SLATE Logo"></div>
+        <div class="logo"><img src="Icons/rem.png" alt="SLATE Logo"></div>
         <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php" class="active">Business Intelligence & Freight Analytics</a>
-        <a href="logout.php">Logout</a>
+        <a href="admin.php">
+            <img src="Icons/admin.png" alt="admin" class="icon">Dashboard</a>
+        <a href="CRM.php">
+            <img src="Icons/crm.png" alt="crm" class="icon">Customer Relationship Management</a>
+        <a href="CSM.php">
+            <img src="Icons/contract.png" alt="contract" class="icon">Contract & SLA Monitoring</a>
+        <a href="E-Doc.php">
+            <img src="Icons/e-doc.png" alt="e-doc" class="icon">E-Documentations & Compliance Manager</a>
+        <a href="BIFA.php" class="active">
+            <img src="Icons/bifa.png" alt="bifa" class="icon">Business Intelligence & Freight Analytics</a>
+        <a href="logout.php">
+            <img src="Icons/logout.png" alt="logout" class="icon">Logout</a>
     </div>
 
     <div class="content" id="mainContent">
@@ -306,6 +338,10 @@ requireRole('admin');
                     <span class="slider"></span>
                 </label>
             </div>
+        </div>
+
+        <div class="Title">
+            <h1><img src="Icons/monitoring.png" alt="monitoring" class="icon">Realtime Monitoring</h1>
         </div>
 
         <div class="dashboard-cards">
@@ -336,6 +372,10 @@ requireRole('admin');
                 <h3>Current Delay Reasons</h3>
                 <canvas id="Currentdelaychart" style="height:200px;width:550px;"></canvas>
             </div>
+        </div>
+
+        <div class="Title">
+            <h1><img src="Icons/analitical.png" alt="analitical" class="icon">Analytical Insight</h1>
         </div>
 
         <div class="chartarea">
@@ -415,7 +455,7 @@ requireRole('admin');
                     responsive: false,
                     maintainAspectRatio: false,
                     plugins: {
-                        
+
                     }
                 }
             });
@@ -433,7 +473,7 @@ requireRole('admin');
                 },
                 options: {
                     plugins: {
-                    
+
                     }
                 }
             });

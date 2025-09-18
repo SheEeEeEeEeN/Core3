@@ -175,12 +175,22 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
         }
 
         .sidebar a {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* space between icon and text */
             color: rgba(255, 255, 255, 0.8);
             padding: 0.75rem 1.5rem;
             text-decoration: none;
             border-left: 3px solid transparent;
             transition: all 0.3s;
+        }
+
+        .sidebar a .icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            /* keeps icon from squishing */
         }
 
         .sidebar a:hover,
@@ -561,15 +571,21 @@ $editId = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
 <body>
     <div class="sidebar" id="sidebar">
         <div class="logo">
-            <img src="rem.png" alt="SLATE Logo">
+            <img src="Icons/rem.png" alt="SLATE Logo">
         </div>
         <div class="system-name">CORE TRANSACTION 3</div>
-        <a href="admin.php">Dashboard</a>
-        <a href="CRM.php">Customer Relationship Management</a>
-        <a href="CSM.php">Contract & SLA Monitoring</a>
-        <a href="E-Doc.php" class="active">E-Documentations & Compliance Manager</a>
-        <a href="BIFA.php">Business Intelligence & Freight Analytics</a>
-        <a href="logout.php">Logout</a>
+        <a href="admin.php">
+            <img src="Icons/admin.png" alt="admin" class="icon">Dashboard</a>
+        <a href="CRM.php">
+            <img src="Icons/crm.png" alt="crm" class="icon">Customer Relationship Management</a>
+        <a href="CSM.php">
+            <img src="Icons/contract.png" alt="contract" class="icon">Contract & SLA Monitoring</a>
+        <a href="E-Doc.php" class="active">
+            <img src="Icons/e-doc.png" alt="e-doc" class="icon">E-Documentations & Compliance Manager</a>
+        <a href="BIFA.php">
+            <img src="Icons/bifa.png" alt="bifa" class="icon">Business Intelligence & Freight Analytics</a>
+        <a href="logout.php">
+            <img src="Icons/logout.png" alt="logout" class="icon">Logout</a>
     </div>
 
     <div class="content" id="mainContent">
