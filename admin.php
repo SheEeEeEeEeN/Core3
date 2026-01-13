@@ -95,7 +95,7 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
             <span><i class="bi bi-file-text"></i> Contract & SLA</span><i class="bi bi-chevron-down small"></i>
         </a>
         <div class="collapse" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
-            <a href="Admin_contracts.php" class="ps-4"><i class="bi bi-dot"></i> Manage Contracts</a>
+            <a href="admin_contracts.php" class="ps-4"><i class="bi bi-dot"></i> Manage Contracts</a>
             <a href="Admin_shipments.php" class="ps-4"><i class="bi bi-dot"></i> SLA Monitoring</a>
         </div>
 
