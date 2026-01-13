@@ -233,11 +233,11 @@ include("connection.php");
         <span><i class="bi bi-file-text"></i> Contract & SLA</span>
         <i class="bi bi-chevron-down" style="font-size: 0.8em;"></i>
     </a>
-    <div class="collapse <?php echo (basename($_SERVER['PHP_SELF']) == 'Admin_contracts.php' || basename($_SERVER['PHP_SELF']) == 'Admin_shipments.php') ? 'show' : ''; ?>" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
-        <a href="Admin_contracts.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'Admin_contracts.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
+    <div class="collapse <?php echo (basename($_SERVER['PHP_SELF']) == 'admin_contracts.php' || basename($_SERVER['PHP_SELF']) == 'admin_shipments.php') ? 'show' : ''; ?>" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
+        <a href="admin_contracts.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'admin_contracts.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
             <i class="bi bi-dot"></i> Manage Contracts
         </a>
-        <a href="Admin_shipments.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'Admin_shipments.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
+        <a href="admin_shipments.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'admin_shipments.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
             <i class="bi bi-dot"></i> SLA Monitoring
         </a>
     </div>

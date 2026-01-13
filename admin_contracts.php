@@ -81,8 +81,8 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email FROM contracts c LEFT JOI
                     <span><i class="bi bi-file-text"></i> Contract & SLA</span> <i class="bi bi-chevron-down" style="font-size: 0.8em;"></i>
                 </a>
                 <div class="collapse show" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
-                    <a href="Admin_contracts.php" class="ps-4 active"><i class="bi bi-dot"></i> Manage Contracts</a>
-                    <a href="Admin_shipments.php" class="ps-4"><i class="bi bi-dot"></i> SLA Monitoring</a>
+                    <a href="admin_contracts.php" class="ps-4 active"><i class="bi bi-dot"></i> Manage Contracts</a>
+                    <a href="admin_shipments.php" class="ps-4"><i class="bi bi-dot"></i> SLA Monitoring</a>
                 </div>
                 <a href="E-Doc.php"><i class="bi bi-folder2-open"></i> E-Docs</a>
                 <a href="BIFA.php"><i class="bi bi-graph-up"></i> BI & Freight Analytics</a>
