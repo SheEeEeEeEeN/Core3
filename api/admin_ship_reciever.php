@@ -7,13 +7,13 @@ error_reporting(E_ALL);
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *"); // Payagan ang ibang folder na kumuha ng data
 
-if (!file_exists('connection.php')) {
+if (!file_exists('../connection.php')) {
     echo json_encode(["status" => "error", "message" => "Missing connection.php"]);
     exit;
 }
 
-include("connection.php"); 
-include('mailer_function.php');
+include("../connection.php"); 
+include("../mailer_function.php"); // Para sa email function
 
 // TANGGAPIN ANG REQUEST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

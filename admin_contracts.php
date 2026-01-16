@@ -365,7 +365,7 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
                 const fd = new FormData();
                 fd.append('action', 'delete_rule');
                 fd.append('rule_id', id);
-                fetch('admin_contracts_api.php', { method: 'POST', body: fd })
+                fetch('api/admin_contracts_api.php', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(d => { if(d.success) location.reload(); });
             }

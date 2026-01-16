@@ -1100,7 +1100,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       bootstrap.Modal.getInstance(document.getElementById("inputPreviewModal")).hide();
 
       try {
-        const res = await fetch("bookshipment_api.php", {
+        const res = await fetch("api/bookshipment_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

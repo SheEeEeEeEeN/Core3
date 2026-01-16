@@ -1,93 +1,107 @@
 <?php
-include(__DIR__ . "/../connection.php");
+// bookshipment_api.php - FIXED VERSION (With Origin Island)
+include('../connection.php'); // Ang ../ ay "Go up one level"
+include('../session.php');
+header('Content-Type: application/json');
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-
-if ($_SERVER['REQUEST_METHOD'] === "OPTIONS") {
-    http_response_code(200);
-    exit();
-}
-
-// Read JSON input
-$input = file_get_contents("php://input");
-$data = json_decode($input, true);
-
-if (!$data) {
-    echo json_encode(["error" => "Invalid JSON input"]);
-    exit();
-}
-
-// Validate required fields
-// ADDED: origin_address and destination_address to validation
-$required = ["sender_name", "receiver_name", "origin_address", "destination_address", "address", "weight", "package", "payment_method"];
-foreach ($required as $field) {
-    if (empty($data[$field])) {
-        echo json_encode(["error" => "Missing field: $field"]);
-        exit();
+try {
+    // 1. Check User Session
+    if (!isset($_SESSION['email'])) {
+        throw new Exception("Unauthorized access. Please login.");
     }
-}
 
-$user_id = $_SESSION['user_id'] ?? ($data['user_id'] ?? 0);
-$sender_name = $conn->real_escape_string(trim($data['sender_name']));
-$receiver_name = $conn->real_escape_string(trim($data['receiver_name']));
+    $email = $_SESSION['email'];
+    
+    // Get User ID
+    $uQuery = mysqli_query($conn, "SELECT id FROM accounts WHERE email='$email'");
+    $uData = mysqli_fetch_assoc($uQuery);
+    $userId = $uData['id'];
 
-// --- NEW FIELDS: Capture Origin & Destination ---
-$origin_address = $conn->real_escape_string(trim($data['origin_address']));
-$destination_address = $conn->real_escape_string(trim($data['destination_address']));
-// ------------------------------------------------
+    // 2. Receive JSON Data
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!$input) {
+        throw new Exception("No data received.");
+    }
 
-$address = $conn->real_escape_string(trim($data['address']));
-$weight = floatval($data['weight']);
-$package_description = $conn->real_escape_string(trim($data['package']));
-$payment_method = $conn->real_escape_string(trim($data['payment_method']));
+    // 3. Sanitize Inputs
+    $contract_number = mysqli_real_escape_string($conn, $input['contract_number'] ?? '');
+    
+    $sender_name = mysqli_real_escape_string($conn, $input['sender_name']);
+    $sender_contact = mysqli_real_escape_string($conn, $input['sender_contact']);
+    
+    $receiver_name = mysqli_real_escape_string($conn, $input['receiver_name']);
+    $receiver_contact = mysqli_real_escape_string($conn, $input['receiver_contact']);
+    
+    $origin_address = mysqli_real_escape_string($conn, $input['origin_address']);
+    $destination_address = mysqli_real_escape_string($conn, $input['destination_address']);
+    
+    // --- ISLAND DATA (Mahalaga ito para sa SLA) ---
+    // Siguraduhin na nakuha natin ang value mula sa form
+    $origin_island = mysqli_real_escape_string($conn, $input['origin_island'] ?? 'Luzon');
+    $destination_island = mysqli_real_escape_string($conn, $input['destination_island'] ?? 'Luzon');
+    // ------------------------
 
-// --- Distance & Price Calculation ---
-$distance_km = floatval($data['distance_km'] ?? 0);
-$price_per_km = 24.0;
-$base_fee = 0;
+    $specific_address = mysqli_real_escape_string($conn, $input['address']);
+    $weight = floatval($input['weight']);
+    $package_type = mysqli_real_escape_string($conn, $input['package_type']);
+    $package_desc = mysqli_real_escape_string($conn, $input['package']);
+    
+    $payment_method = mysqli_real_escape_string($conn, $input['payment_method']);
+    $bank_name = mysqli_real_escape_string($conn, $input['bank_name']);
+    
+    $distance_km = floatval($input['distance_km']);
+    $price = floatval($input['price_php']);
+    
+    // AI & SLA Data
+    $ai_estimated = mysqli_real_escape_string($conn, $input['ai_estimated_time'] ?? 'Calculating...');
+    $target_date = mysqli_real_escape_string($conn, $input['target_date'] ?? NULL);
+    
+    // Handle Empty Target Date
+    $targetDateSql = empty($target_date) ? "NULL" : "'$target_date'";
 
-// You can rely on backend calc OR trust frontend 'price_php'. 
-// Using backend calc is safer, but ensure logic matches frontend.
-$price = ($distance_km * $price_per_km) + $base_fee; 
+    // 4. INSERT QUERY (FIXED)
+    // Idinagdag natin ang 'origin_island' sa parehong listahan
+    $sql = "INSERT INTO shipments (
+        user_id, contract_number, 
+        sender_name, sender_contact, 
+        receiver_name, receiver_contact, 
+        origin_address, 
+        origin_island, /* <--- ✅ ADDED COLUMN HERE */
+        destination_address, 
+        destination_island, 
+        specific_address, 
+        weight, package_type, package_description, 
+        distance_km, price, 
+        payment_method, bank_name, 
+        status, sla_status, 
+        ai_estimated_time, target_delivery_date, 
+        created_at
+    ) VALUES (
+        '$userId', '$contract_number',
+        '$sender_name', '$sender_contact',
+        '$receiver_name', '$receiver_contact',
+        '$origin_address', 
+        '$origin_island', /* <--- ✅ ADDED VALUE HERE */
+        '$destination_address',
+        '$destination_island', 
+        '$specific_address',
+        '$weight', '$package_type', '$package_desc',
+        '$distance_km', '$price',
+        '$payment_method', '$bank_name',
+        'Pending', 'Pending',
+        '$ai_estimated', $targetDateSql,
+        NOW()
+    )";
 
-// --- Insert Shipment ---
-// UPDATED SQL: Added origin_address and destination_address columns and values
-$sql = "INSERT INTO shipments 
-    (user_id, sender_name, receiver_name, origin_address, destination_address, address, weight, package_description, distance_km, price, payment_method, status, created_at)
-    VALUES
-    ('$user_id', '$sender_name', '$receiver_name', '$origin_address', '$destination_address', '$address', '$weight', '$package_description',
-     '$distance_km', '$price', '$payment_method', 'Pending', NOW())";
-
-if ($conn->query($sql) === TRUE) {
-    $shipment_id = $conn->insert_id;
-
-    // --- Insert into Payments table ---
-    $payment_sql = "INSERT INTO payments (user_id, amount, method, status, reference_no, payment_date)
-                    VALUES ('$user_id', '$price', '$payment_method', 'Pending', NULL, NOW())";
-
-    if ($conn->query($payment_sql) === TRUE) {
-        echo json_encode([
-            "success" => true,
-            "message" => "Shipment booked and payment record created successfully",
-            "shipment_id" => $shipment_id,
-            "price" => $price,
-            "payment_method" => $payment_method
-        ]);
+    if (mysqli_query($conn, $sql)) {
+        $shipmentId = mysqli_insert_id($conn);
+        echo json_encode(['success' => true, 'message' => 'Booking Successful!', 'shipment_id' => $shipmentId]);
     } else {
-        echo json_encode([
-            "success" => true,
-            "warning" => "Shipment saved but failed to create payment record",
-            "error" => $conn->error
-        ]);
+        throw new Exception("Database Error: " . mysqli_error($conn));
     }
-} else {
-    echo json_encode(["error" => $conn->error, "sql" => $sql]);
+
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 ?>

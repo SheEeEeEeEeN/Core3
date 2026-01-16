@@ -1,6 +1,8 @@
 <?php
 // admin_contracts_api.php - FIXED FOR YOUR TABLE STRUCTURE
-include("connection.php"); 
+include('../connection.php'); // Ang ../ ay "Go up one level"
+include('../session.php');
+
 header('Content-Type: application/json');
 
 // Patayin ang error display para hindi masira ang JSON response
