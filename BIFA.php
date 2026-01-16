@@ -9,44 +9,77 @@ include('loading.html');
 // 1. DATA FETCHING
 // ==========================================================
 
-// A. KPI TOTALS
-$sqlTotals = "SELECT 
-                COALESCE(SUM(price),0) as total_revenue, 
-                COUNT(*) as total_shipments,
-                COALESCE(AVG(NULLIF(rating,0)), 0) as avg_rating 
-              FROM shipments 
-              WHERE status != 'Cancelled'";
-$totals = $conn->query($sqlTotals)->fetch_assoc();
-$totalVolume = $totals['total_shipments']; // Need this for percentage calc
+// A. KPI TOTALS (Dito lang tayo magfi-filter para sa Revenue, pero sa SLA Chart isasama natin lahat)
+$totals = $conn->query("SELECT COUNT(*) as vol, COALESCE(SUM(price),0) as rev FROM shipments WHERE status != 'Cancelled'")->fetch_assoc();
+$totalVolume = $totals['vol'];
+$totalRevenue = $totals['rev'];
 
-// B. SLA PERFORMANCE
-$sqlSLA = "SELECT 
-            SUM(CASE WHEN sla_status = 'Met' THEN 1 ELSE 0 END) as met,
-            SUM(CASE WHEN sla_status = 'Breached' THEN 1 ELSE 0 END) as breached
-           FROM shipments WHERE status = 'Delivered'";
-$sla = $conn->query($sqlSLA)->fetch_assoc();
-$slaMet = $sla['met'] ?? 0;
-$slaBreached = $sla['breached'] ?? 0;
-$totalDelivered = $slaMet + $slaBreached;
-$onTimeRate = ($totalDelivered > 0) ? round(($slaMet / $totalDelivered) * 100, 1) : 0;
+// ------------------------------------------------------------------
+// B. SLA PERFORMANCE (UPDATED: EXACT MATCH SA ADMIN_SHIPMENTS.PHP)
+// ------------------------------------------------------------------
+$slaMet = 0;
+$slaBreached = 0;
+
+// 1. Kunin ang Rules (Master Template)
+$rulesArr = [];
+$rQ = $conn->query("SELECT * FROM sla_policies WHERE contract_id = 0");
+while($r = $rQ->fetch_assoc()) {
+    $rulesArr[$r['origin_group']][$r['destination_group']] = $r['max_days'];
+}
+
+// 2. QUERY NA WALANG FILTER (Gaya ng admin_shipments.php - SELECT ALL)
+$query = "SELECT * FROM shipments ORDER BY created_at DESC";
+$result = $conn->query($query);
+
+while($row = $result->fetch_assoc()) {
+    // BES, TINANGGAL KO NA YUNG 'CONTINUE IF CANCELLED'.
+    // Ngayon, bibilangin na niya lahat para mag-match sa Admin Page.
+
+    $origin = $row['origin_island'] ?? 'Metro Manila';
+    $dest = $row['destination_island'] ?? 'Visayas';
+    $days = $rulesArr[$origin][$dest] ?? 7; 
+    
+    $created = strtotime($row['created_at']);
+    $target = strtotime("+$days days", $created);
+    $now = time();
+    
+    $is_delivered = ($row['status'] == 'Delivered');
+    
+    // Logic galing admin_shipments.php
+    // Kung Cancelled siya, hindi siya delivered, so gagamitin niya ang NOW().
+    // Dahil luma na ang date, magiging > Target siya, so bibilangin siyang BREACHED/DELAYED.
+    $actual_end = $is_delivered ? strtotime($row['updated_at'] ?? $row['created_at']) : $now;
+    
+    if ($actual_end > $target) {
+        $slaBreached++; // BREACHED / DELAYED
+    } else {
+        $slaMet++; // ON TRACK / MET
+    }
+}
+
+// Compute Percentage
+$totalEvaluated = $slaMet + $slaBreached;
+$onTimeRate = ($totalEvaluated > 0) ? round(($slaMet / $totalEvaluated) * 100, 1) : 100;
+// ------------------------------------------------------------------
+
 
 // C. REVENUE & VOLUME TREND
 $months = []; $revData = []; $volData = [];
 for ($i = 5; $i >= 0; $i--) {
-    $monthStart = date('Y-m-01', strtotime("-$i months"));
-    $monthEnd   = date('Y-m-t', strtotime("-$i months"));
-    $months[]   = date('M', strtotime("-$i months")); 
+    $mStart = date('Y-m-01', strtotime("-$i months"));
+    $mEnd = date('Y-m-t', strtotime("-$i months"));
+    $months[] = date('M', strtotime("-$i months")); 
     
     $q = "SELECT SUM(price) as rev, COUNT(*) as vol 
           FROM shipments 
-          WHERE created_at BETWEEN '$monthStart 00:00:00' AND '$monthEnd 23:59:59' 
+          WHERE created_at BETWEEN '$mStart 00:00:00' AND '$mEnd 23:59:59' 
           AND status != 'Cancelled'";
     $res = $conn->query($q)->fetch_assoc();
     $revData[] = $res['rev'] ?? 0;
     $volData[] = $res['vol'] ?? 0;
 }
 
-// D. TOP DESTINATIONS (Enhanced Logic)
+// D. TOP DESTINATIONS
 $locLabels = [];
 $locCounts = [];
 $locColors = [];
@@ -60,22 +93,18 @@ $locSql = "SELECT destination_island, COUNT(*) as c
            ORDER BY c DESC";
 $locQ = $conn->query($locSql);
 
-$islandStats = []; // Array for the list view
+$islandStats = []; 
 
 while($r = $locQ->fetch_assoc()) {
     $label = $r['destination_island'];
     $count = $r['c'];
-    
-    // Calculate Percentage
     $percent = ($totalVolume > 0) ? round(($count / $totalVolume) * 100, 1) : 0;
     
-    // Assign Colors
-    $color = '#858796'; // Grey default
-    if($label == 'Luzon') $color = '#4e73df'; // Blue
-    if($label == 'Visayas') $color = '#f6c23e'; // Yellow
-    if($label == 'Mindanao') $color = '#e74a3b'; // Red
+    $color = '#858796'; 
+    if($label == 'Luzon') $color = '#4e73df'; 
+    if($label == 'Visayas') $color = '#f6c23e'; 
+    if($label == 'Mindanao') $color = '#e74a3b'; 
 
-    // Determine Top Region
     if($count > 0 && empty($locLabels)) {
         $topRegion = $label;
         $topPercent = $percent;
@@ -85,7 +114,6 @@ while($r = $locQ->fetch_assoc()) {
     $locCounts[] = $count;
     $locColors[] = $color;
 
-    // Save for List View
     $islandStats[] = [
         'name' => $label,
         'count' => $count,
@@ -193,13 +221,13 @@ $statusData = [$statPending, $statTransit, $statDelivered, $statCancelled];
       <div class="col-md-3">
         <div class="card h-100 border-start border-5 border-success py-2">
           <h6 class="text-secondary text-uppercase fw-bold small">Total Revenue</h6>
-          <div class="stat-value text-success">₱<?php echo number_format($totals['total_revenue']); ?></div>
+          <div class="stat-value text-success">₱<?php echo number_format($totalRevenue, 2); ?></div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="card h-100 border-start border-5 border-primary py-2">
           <h6 class="text-secondary text-uppercase fw-bold small">Total Volume</h6>
-          <div class="stat-value text-primary"><?php echo number_format($totals['total_shipments']); ?></div>
+          <div class="stat-value text-primary"><?php echo number_format($totalVolume); ?></div>
         </div>
       </div>
       <div class="col-md-3">
@@ -211,7 +239,7 @@ $statusData = [$statPending, $statTransit, $statDelivered, $statCancelled];
       <div class="col-md-3">
         <div class="card h-100 border-start border-5 border-warning py-2">
           <h6 class="text-secondary text-uppercase fw-bold small">Avg Rating</h6>
-          <div class="stat-value text-warning"><?php echo number_format($totals['avg_rating'], 1); ?> ⭐</div>
+          <div class="stat-value text-warning"><?php echo number_format($avgRating ?? 0, 1); ?> ⭐</div>
         </div>
       </div>
     </div>
@@ -326,6 +354,8 @@ $statusData = [$statPending, $statTransit, $statDelivered, $statCancelled];
     const locData = <?php echo json_encode($locCounts); ?>;
     const locColors = <?php echo json_encode($locColors); ?>;
     const statData = <?php echo json_encode($statusData); ?>;
+    
+    // UPDATED SLA DATA FOR PIE CHART
     const slaData = [<?php echo $slaMet; ?>, <?php echo $slaBreached; ?>];
 
     // 1. TREND CHART
@@ -390,12 +420,12 @@ $statusData = [$statPending, $statTransit, $statDelivered, $statCancelled];
         }
     });
 
-    // 4. SLA CHART
+    // 4. SLA CHART - ON TIME vs LATE
     new Chart("slaChart", {
         type: 'pie',
         data: {
             labels: ["On Time", "Late"],
-            datasets: [{ backgroundColor: ["#1cc88a", "#858796"], data: slaData }]
+            datasets: [{ backgroundColor: ["#1cc88a", "#e74a3b"], data: slaData }]
         },
         options: { maintainAspectRatio: false, legend: { position: 'right' } }
     });

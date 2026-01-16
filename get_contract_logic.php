@@ -1,58 +1,71 @@
 <?php
 // get_contract_logic.php
-session_start();
 include("connection.php");
+include("session.php");
+
 header('Content-Type: application/json');
 
-// 1. Check User
-if (!isset($_SESSION['email'])) {
-    echo json_encode(['success' => false, 'message' => 'Not logged in']);
+$origin = $_POST['origin_island'] ?? '';
+$dest = $_POST['dest_island'] ?? '';
+$user_email = $_SESSION['email'];
+
+$response = [
+    'success' => false,
+    'is_contracted' => false,
+    'contract_number' => 'STANDARD-RATE',
+    'sla_days' => 7, // Default standard
+    'target_date' => date('Y-m-d', strtotime('+7 days')),
+    'display_text' => 'Standard Shipping (5-7 Days)'
+];
+
+if (!$origin || !$dest) {
+    echo json_encode($response);
     exit;
 }
 
-$email = $_SESSION['email'];
-$originGroup = $_POST['origin_island'] ?? '';
-$destGroup = $_POST['dest_island'] ?? '';
+// 1. HANAPIN ANG USER ID
+$uQ = mysqli_query($conn, "SELECT id FROM accounts WHERE email='$user_email'");
+$uRow = mysqli_fetch_assoc($uQ);
+$user_id = $uRow['id'];
 
-// 2. Get User ID
-$u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id FROM accounts WHERE email='$email'"));
-$userId = $u['id'] ?? 0;
+// 2. HANAPIN ANG CONTRACT NG USER
+$cQ = mysqli_query($conn, "SELECT id, contract_number FROM contracts WHERE user_id='$user_id' AND status='Active' LIMIT 1");
 
-// 3. Find Active Contract
-$contractQ = mysqli_query($conn, "SELECT * FROM contracts WHERE user_id='$userId' AND status='Active' AND end_date >= CURDATE() LIMIT 1");
-$contract = mysqli_fetch_assoc($contractQ);
-
-if (!$contract) {
-    echo json_encode([
-        'success' => false, 
-        'message' => 'No Active Contract',
-        'is_contracted' => false
-    ]);
-    exit;
-}
-
-// 4. Find SLA Rule based on Route
-$slaDays = 7; // Default fallback (Standard)
-$slaFound = false;
-
-if (!empty($originGroup) && !empty($destGroup)) {
-    $slaQ = mysqli_query($conn, "SELECT max_days FROM sla_policies WHERE contract_id='{$contract['id']}' AND origin_group='$originGroup' AND destination_group='$destGroup'");
-    if ($row = mysqli_fetch_assoc($slaQ)) {
-        $slaDays = $row['max_days'];
-        $slaFound = true;
+if (mysqli_num_rows($cQ) > 0) {
+    $contract = mysqli_fetch_assoc($cQ);
+    $contract_id = $contract['id'];
+    
+    // UPDATE RESPONSE: May contract na siya!
+    $response['is_contracted'] = true;
+    $response['contract_number'] = $contract['contract_number']; // E.g., CNT-2026-0001
+    
+    // 3. HANAPIN ANG SLA RULE PARA SA ROUTE NA ITO
+    // (Example: Origin=Luzon, Dest=Visayas)
+    $ruleQ = mysqli_query($conn, "SELECT max_days FROM sla_policies 
+                                  WHERE contract_id='$contract_id' 
+                                  AND origin_group='$origin' 
+                                  AND destination_group='$dest'");
+                                  
+    if (mysqli_num_rows($ruleQ) > 0) {
+        // MERONG SPECIAL RULE (e.g., 3 Days)
+        $rule = mysqli_fetch_assoc($ruleQ);
+        $days = $rule['max_days'];
+        
+        $response['success'] = true;
+        $response['sla_days'] = $days;
+        $response['target_date'] = date('Y-m-d', strtotime("+$days days"));
+        $response['display_text'] = "Priority SLA ($days Days Guaranteed)";
+    } else {
+        // WALANG SPECIAL RULE, PERO MAY CONTRACT PA RIN
+        // Gamitin ang Standard days pero ilabas pa rin ang Contract Number
+        $response['success'] = true;
+        $response['display_text'] = "Standard Contract Terms (5-7 Days)";
+        // Note: Hindi natin babaguhin ang contract_number, mananatili siyang CNT-XXXX
     }
+} else {
+    // WALANG CONTRACT (Fallback)
+    $response['success'] = true; // Success query, pero walang contract logic
 }
 
-// 5. Calculate Target Date
-$targetDate = date('Y-m-d', strtotime("+$slaDays days"));
-$displayDate = date('M d, Y', strtotime($targetDate));
-
-echo json_encode([
-    'success' => true,
-    'is_contracted' => true,
-    'contract_number' => $contract['contract_number'],
-    'sla_days' => $slaDays,
-    'target_date' => $targetDate,
-    'display_text' => "Guaranteed by Contract: $slaDays Days ($displayDate)"
-]);
+echo json_encode($response);
 ?>

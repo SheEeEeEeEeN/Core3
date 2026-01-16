@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 12, 2026 at 03:40 PM
+-- Generation Time: Jan 15, 2026 at 04:26 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -48,8 +48,8 @@ CREATE TABLE `accounts` (
 --
 
 INSERT INTO `accounts` (`id`, `username`, `email`, `phone_number`, `gender`, `password`, `profile_image`, `role`, `created_at`, `otp_hash`, `otp_expires_at`, `otp_attempts`, `last_otp_sent_at`) VALUES
-(102, 'Admin', 'core3slate@gmail.com', '09499508447', 'Male', '$2y$10$YSW42GsrLP/QYn/e2/pPfuGa83qHXREPmp5/or7CBHgYjPOubjvGO', NULL, 'admin', '2025-10-20 13:27:26', '$2y$10$540LNUMrU.OqnQeZ2.p.RO41yqHesvya3y.jT33qM6KoVWo6YUDsa', '2026-01-12 13:16:21', 0, '2025-10-20 21:27:26'),
-(116, 'Valle Roy', 'royzxcasd@gmail.com', '09499508447', 'Male', '$2y$10$.3k99oF4Q6A7lDfj6ZfYG.UHdcbTv2ixz.5.p4L/wN9F4VXP7Xj/S', 'upload/1764165219_me.jpg', 'user', '2025-10-23 15:30:07', '$2y$10$uPYPjQ.tExq9bkTgWm9kzen/RQ6Eov3ct4wb8stfzzp1V1B4AomJi', '2026-01-11 15:27:31', 0, '2025-10-23 23:30:07'),
+(102, 'Admin', 'core3slate@gmail.com', '09499508447', 'Male', '$2y$10$YSW42GsrLP/QYn/e2/pPfuGa83qHXREPmp5/or7CBHgYjPOubjvGO', NULL, 'admin', '2025-10-20 13:27:26', '$2y$10$thfKbEtWotbMgrdSfxuUT.Kw6dgDA.7V9j594Ig7gFeuqbQoUbLjq', '2026-01-15 14:30:03', 0, '2025-10-20 21:27:26'),
+(116, 'Valle Roy', 'royzxcasd@gmail.com', '09499508447', 'Male', '$2y$10$.3k99oF4Q6A7lDfj6ZfYG.UHdcbTv2ixz.5.p4L/wN9F4VXP7Xj/S', 'upload/1764165219_me.jpg', 'user', '2025-10-23 15:30:07', '$2y$10$Zj8cSeZ1ZxDBYrtJbU/9WexbuurbPZTZQEoRSQ6llPrw8wS5FEOf.', '2026-01-13 06:37:17', 0, '2025-10-23 23:30:07'),
 (117, 'JustineL', 'justinelusung11@gmail.com', '09168207165', 'Male', '$2y$10$R.4NzLZPHzbYffh6LZN29eV8N4YuDBNfiwNooVc1IqjaAHvSK76LO', NULL, 'admin', '2025-10-24 11:10:04', '$2y$10$SruuWiIEcQERvuhs5o486.1fHDGuIsQl7/7S8FcXY2w2HTQWNcr6u', '2026-01-02 20:34:20', 0, '2025-10-24 19:10:04'),
 (118, 'Admin1', 'admin1@gmail.com', '09232131233', 'Male', '$2y$10$T6/.IQVU.RkLE4.c/Dz2QuxJLKlfDzOPUryPD5yzouEWKK9oHzmFG', NULL, 'user', '2025-10-26 12:59:05', '$2y$10$AXwY2X2jqu.tMEoMsUx0yuHUJEhvEmeCbiyjknftPHlIg/TLb/zqi', '2025-10-26 21:36:30', 0, '2025-10-26 20:59:05'),
 (119, 'Test1', 'koxemop140@dwakm.com', '0973564362', 'Male', '$2y$10$6KtD/nqCLm4U2GwgYXuE6.HxYrNQQydw.JZ2UEHT96QY.3Pa0Jnze', NULL, 'user', '2025-11-01 09:56:40', '$2y$10$bA.UTuNJH5HWbjkdn8ZNF./uwvxr7wRjAglP9SM6IIjYpK5P5bRe.', '2025-11-01 18:01:53', 0, '2025-11-01 17:56:40'),
@@ -58,7 +58,9 @@ INSERT INTO `accounts` (`id`, `username`, `email`, `phone_number`, `gender`, `pa
 (122, 'ASS', 'bathanjc23@gmail.com', '09232312321', 'Male', '$2y$10$xoCxTbs43APEpsqiSKUwI.ostxbfYW7jkYYsfuWQt2X6/q/ChQjv2', 'upload/1766132977_Capture.PNG', 'user', '2025-12-19 08:28:38', '$2y$10$EUmj/FWmOIrWuViJlLJNR.6Bl9hW6djcEwUYwLNemJHM1pDFDa9HO', '2025-12-19 16:33:50', 0, '2025-12-19 16:28:38'),
 (123, 'Joshuagarcia', 'gerrychogonzales1234+slate@gmail.com', '09913456789', 'Male', '$2y$10$5KiASna0i.Hkto4i6EXkSuiufVv.i4ibYbgTy5pFL5AqXPNPNCFyu', NULL, 'user', '2026-01-02 03:42:03', '$2y$10$0qBL6PyMr2vKyay73IBXMupzEFD0dk7nX4HNZdbaIPpCyFr8JM58K', '2026-01-02 12:33:55', 0, '2026-01-02 11:42:03'),
 (124, 'AGHIK', 'vacamil400@24faw.com', '09131322312', 'Male', '$2y$10$0oYRDKmX25PfAQZZUDG6TejcH7tg9NQjr2a.XQQJs18T7Z/DQC6OC', 'upload/1767593930_Capture.PNG', 'user', '2026-01-05 06:17:16', '$2y$10$9ZoL3lgrhstdGANO5wYdz./f4ugWH.micR4/fUcp0sGligJxuD2xS', '2026-01-05 14:22:45', 0, '2026-01-05 14:17:16'),
-(125, 'Olgab', 'olgabercasio18@gmail.com', '09612536291', 'Female', '$2y$10$MpEncw3mq5O.gq/NPJFCv.3DDu5Z..Hcbx4lrh/GDpoItQyzFfz4C', NULL, 'user', '2026-01-06 09:07:42', '$2y$10$eyO4rgJxYzqKMsLmf1p0quasWpt0tJ8O3yIrmq83.bu7UMwJ59F5q', '2026-01-06 17:14:35', 0, '2026-01-06 17:07:42');
+(125, 'Olgab', 'olgabercasio18@gmail.com', '09612536291', 'Female', '$2y$10$MpEncw3mq5O.gq/NPJFCv.3DDu5Z..Hcbx4lrh/GDpoItQyzFfz4C', NULL, 'user', '2026-01-06 09:07:42', '$2y$10$CROHJoLgJPQ1MZQFoVsV8.C2ZC7fD4qCWfXj3o9ffHDDyYkkFN1MK', '2026-01-13 07:08:15', 0, '2026-01-06 17:07:42'),
+(126, 'master', 'tangol@gmail.com', '09499503447', 'Male', 'cbf06754df2f70dd1f853bdccaec98cc6d8ba861a2a91d357540b9d561b6ceb7', NULL, '', '2026-01-14 11:18:09', NULL, NULL, 0, '2026-01-14 19:18:09'),
+(127, 'Valle', 'valleroy851@gmail.com', '09439508447', 'Male', '$2y$10$xutepoMUSSTy2qRYhq9oFec3pSg/3kRWdK0KvPtgYUGVlk/MH92OW', NULL, 'user', '2026-01-14 11:21:57', '$2y$10$ZQgA1JnrxBr7DAHIHzr3HeOKDTSWWLtWFGGcX1jIJcZc0MnD6mS2G', '2026-01-14 12:29:19', 0, '2026-01-14 19:21:57');
 
 -- --------------------------------------------------------
 
@@ -533,7 +535,18 @@ INSERT INTO `activity_log` (`id`, `user_id`, `username`, `login_time`, `ip_addre
 (486, 102, 'Admin', '2026-01-11 09:06:49', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
 (487, 102, 'Admin', '2026-01-11 14:21:39', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
 (488, 116, 'Valle Roy', '2026-01-11 15:22:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
-(489, 102, 'Admin', '2026-01-12 13:11:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36');
+(489, 102, 'Admin', '2026-01-12 13:11:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(490, 116, 'Valle Roy', '2026-01-13 03:13:47', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(491, 102, 'Admin', '2026-01-13 03:16:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(492, 116, 'Valle Roy', '2026-01-13 03:24:27', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(493, 102, 'Admin', '2026-01-13 06:27:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(494, 116, 'Valle Roy', '2026-01-13 06:32:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(495, 125, 'Olgab', '2026-01-13 07:01:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(496, 125, 'Olgab', '2026-01-13 07:01:50', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(497, 102, 'Admin', '2026-01-14 11:13:17', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(498, 127, 'Valle', '2026-01-14 12:24:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(499, 102, 'Admin', '2026-01-14 12:28:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(500, 102, 'Admin', '2026-01-15 14:25:02', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36');
 
 -- --------------------------------------------------------
 
@@ -791,7 +804,18 @@ INSERT INTO `contracts` (`id`, `contract_number`, `user_id`, `client_name`, `sta
 (3, 'CN-2026-B59BB', 116, 'lazada', '2026-01-09', '2026-01-19', 'Active', NULL, '2026-01-12 22:22:15'),
 (4, 'CN-2026-BBE96', 123, 'tiktok', '2026-01-11', '2026-02-11', 'Active', NULL, '2026-01-12 22:22:15'),
 (5, 'CNT-20260112-389', 117, 'lbc', '2026-01-12', '2026-02-02', 'Active', 'uploads/contracts/CNT-20260112-389.png', '2026-01-12 22:22:15'),
-(6, 'CNT-20260112-888', 118, 'one documents', '2026-01-12', '2026-02-02', 'Active', NULL, '2026-01-12 22:22:15');
+(6, 'CNT-20260112-888', 118, 'one documents', '2026-01-12', '2026-02-02', 'Active', NULL, '2026-01-12 22:22:15'),
+(7, 'CNT-20260112-342', 125, 'olga', '2026-01-12', '2026-01-26', 'Active', NULL, '2026-01-12 23:22:06'),
+(8, 'CNT-20260113-727', 118, 'jnt', '2026-01-13', '2026-02-03', 'Active', NULL, '2026-01-13 10:30:18'),
+(9, 'CNT-20260113-721', 116, 'facebook', '2026-01-13', '2026-01-20', 'Active', NULL, '2026-01-13 13:31:12'),
+(10, 'CNT-20260113-524', 125, 'fb', '2026-01-13', '2026-01-20', 'Active', NULL, '2026-01-13 14:31:06'),
+(11, 'MASTER-SLA', 0, 'STANDARD SERVICE AGREEMENT', '2026-01-14', '2036-01-14', '', NULL, '2026-01-14 18:33:45'),
+(12, 'CNT-2026-0119', 119, 'TEST1', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:25'),
+(13, 'CNT-2026-0120', 120, 'TESTTEST', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:25'),
+(14, 'CNT-2026-0121', 121, 'ASD', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:25'),
+(15, 'CNT-2026-0122', 122, 'ASS', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:25'),
+(16, 'CNT-2026-0124', 124, 'AGHIK', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:26'),
+(17, 'CNT-2026-0127', 127, 'VALLE', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 19:28:55');
 
 -- --------------------------------------------------------
 
@@ -1053,7 +1077,6 @@ INSERT INTO `shipments` (`id`, `contract_number`, `user_id`, `sender_name`, `sen
 (149, NULL, 116, 'royzxcasd@gmail.com', NULL, 'GG', NULL, NULL, NULL, NULL, 'Novaliches Proper, Quezon City, Metro Manila, NCR, Philippines', 5.00, NULL, 'BOOK', 175.11, 4202.69, NULL, 'cod', NULL, 'Cancelled', 'Pending', NULL, '2025-12-19 14:38:07', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
 (150, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ere', NULL, NULL, NULL, NULL, 'Cofradia', 4.00, NULL, 'ggasd', 40.01, 960.19, NULL, 'cod', NULL, 'Cancelled', 'Pending', NULL, '2025-12-20 02:33:34', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
 (151, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ako lang', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', 'Maliksi III, Bacoor, Cavite, CALABARZON, Philippines', NULL, 'maliksi', 12.00, NULL, 'bato', 28.73, 689.45, NULL, 'cod', NULL, 'Cancelled', 'Pending', NULL, '2025-12-20 13:19:35', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(152, NULL, 116, 'royzxcasd@gmail.com', NULL, 'bb', NULL, 'Malino, San Fernando, Pampanga, Central Luzon, Philippines', 'Molino I, Bacoor, Cavite, CALABARZON, Philippines', NULL, '54', 5.00, NULL, 'papers', 99.45, 2386.85, NULL, 'cod', NULL, 'Delivered', 'Pending', NULL, '2025-12-22 11:32:10', NULL, 'Calculating...', '2026-01-16 18:13:02', 5, 'hey', 'Luzon'),
 (153, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ROY EVERO VALLE', NULL, 'Bagong Silang, Caloocan, Metro Manila, NCR, Philippines', 'San Felipe, San Jose, Del Pilar, San Fernando, Pampanga, Central Luzon, 2000, Philippines', NULL, 'Jdhdh', 5.00, NULL, 'Hdh', 54.34, 1304.21, NULL, 'cod', NULL, 'Delivered', 'Pending', NULL, '2025-12-29 14:21:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 5, 'sdfaf', 'Luzon'),
 (154, NULL, 123, 'gerrychogonzales1234+slate@gmail.com', NULL, 'Diwata', NULL, 'Bagong Silangan, Quezon City, Metro Manila, NCR, Philippines', 'Bagong Silang, Caloocan, Metro Manila, NCR, Philippines', NULL, 'bcp mv campus', 2.00, NULL, 'asdasdasd', 14.65, 351.53, NULL, 'cod', NULL, 'Delivered', 'Met', 'POD_154_1768038490.jpg', '2026-01-02 03:55:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
 (155, NULL, 123, 'gerrychogonzales1234+slate@gmail.com', NULL, '<h1>Boy Dila</h1>', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', 'Bagong Silangan, Quezon City, Metro Manila, NCR, Philippines', NULL, '<h1>biringan city</h1>', 0.00, NULL, '<h1>Sample description</>', 21.10, 506.50, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2026-01-02 04:00:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
@@ -1092,7 +1115,13 @@ INSERT INTO `shipments` (`id`, `contract_number`, `user_id`, `sender_name`, `sen
 (188, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'mm', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Ateneo de Cagayan, Corral', NULL, 10.00, 'box', 'zzzx22', 1385.84, 20787.61, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_188_1768054246.jpg', '2026-01-10 14:08:23', NULL, 'Approximately 3.5 days - Light Traffic & Favorable Weather', '2026-01-18 00:00:00', 0, NULL, 'Mindanao'),
 (189, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'jr', '09071004815', 'Caloocan, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 25.00, 'crate', 'bigas', 1382.25, 20733.77, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_189_1768083769.jpg', '2026-01-10 22:18:50', NULL, '4-5 days - Light Traffic & Favorable Weather', '2026-01-20 00:00:00', 4, '/', 'Mindanao'),
 (190, NULL, 0, 'Jose Rizal', NULL, 'Andres Bonifacio', NULL, NULL, NULL, NULL, '456 Dapitan St.', 0.00, NULL, '', 0.00, 1200.50, NULL, 'Unspecified', NULL, 'In Transit', 'Pending', NULL, '2026-01-11 13:48:16', NULL, 'Calculating...', NULL, 0, NULL, 'Visayas'),
-(192, NULL, 0, 'Jose Rizal', NULL, 'Andres Bonifacio', NULL, NULL, NULL, NULL, '456 Dapitan St.', 0.00, NULL, '', 0.00, 1200.50, NULL, 'Unspecified', NULL, 'In Transit', 'Pending', NULL, '2026-01-11 13:57:25', NULL, 'Calculating...', NULL, 0, NULL, 'Visayas');
+(192, NULL, 0, 'Jose Rizal', NULL, 'Andres Bonifacio', NULL, NULL, NULL, NULL, '456 Dapitan St.', 0.00, NULL, '', 0.00, 1200.50, NULL, 'Unspecified', NULL, 'In Transit', 'Pending', NULL, '2026-01-11 13:57:25', NULL, 'Calculating...', NULL, 0, NULL, 'Visayas'),
+(193, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'valle', '0907100481', 'Manila, Metro Manila, Philippines', 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', 'davao', NULL, 15.00, 'furniture', 'll', 1480.34, 22205.16, NULL, 'online', 'Credit Card', 'Delivered', 'Met', 'POD_193_1768270991.jpg', '2026-01-13 02:21:22', NULL, 'Wednesday, January 14, 2026 by 2:00 PM - Moderate Traffic, Good Weather', '2026-01-23 00:00:00', 0, NULL, 'Mindanao'),
+(194, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'jus', '0907100481', 'Manila, Metro Manila, Philippines', 'Tagbilaran City Friendship Park, Tagbilaran, Bohol, Philippines', 'Tagbilaran City Friendship Park, Tagbilaran, Bohol, Philippines', NULL, 25.00, 'box', 'gamot', 1160.04, 17400.63, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_194_1768282963.jpg', '2026-01-13 05:34:16', NULL, '18-24 hours (Air Cargo, Moderate Manila Traffic)', '2026-01-18 00:00:00', 4, '', 'Visayas'),
+(195, 'CNT-20260112-342', 125, 'olgabercasio18@gmail.com', '09499508447', 'ako', '0907100481', 'Manila, Metro Manila, Philippines', 'Tagbilaran City Friendship Park, Tagbilaran, Bohol, Philippines', 'Manila', NULL, 25.00, 'box', 'kamote', 1160.04, 17400.63, NULL, 'cod', '', 'Pending', 'Pending', NULL, '2026-01-13 06:05:14', NULL, '8 - 10 hours - Moderate Traffic, Dry Season', '2026-01-20 00:00:00', 0, NULL, 'Visayas'),
+(196, 'CNT-20260112-342', 125, 'olgabercasio18@gmail.com', '09499508447', 'boy', '0907100481', 'Manila, Metro Manila, Philippines', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'manila', NULL, 2.00, 'box', 'box', 572.96, 8594.34, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_196_1768287815.jpg', '2026-01-13 06:36:36', NULL, '9-10 hours - Express Air Cargo (delivered late evening, Jan 13 or early morning, Jan 14)', '2026-01-20 00:00:00', 4, 'egerg', 'Visayas'),
+(197, 'CNT-20260112-342', 125, 'olgabercasio18@gmail.com', '09499508447', 'sdf', '0907100481', 'Quezon City, Metro Manila, Philippines', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', NULL, 12.00, 'box', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 583.39, 8750.90, NULL, 'online', 'GCash', 'In Transit', 'Pending', NULL, '2026-01-13 07:08:09', NULL, 'Approx. 19 hours (Next-Day Delivery) - Moderate Traffic for Initial Ground Transport, Favorable Air ', '2026-01-20 00:00:00', 0, NULL, 'Visayas'),
+(198, 'CNT-2026-0127', 127, 'valleroy851@gmail.com', '09499508447', 'klyde', '09071004815', 'Bacoor, Cavite, Philippines', 'Port of Dumaguete, Dumaguete, Negros Oriental, Philippines', 'Negros ', NULL, 5.00, 'box', 'bublee wrap', 1309.76, 19646.40, NULL, 'online', 'GCash', 'Delivered', 'Pending', 'uploads/proofs/proof_198_1768401442.jpg', '2026-01-14 14:36:14', NULL, '', '2026-01-21 00:00:00', 0, NULL, 'Visayas');
 
 -- --------------------------------------------------------
 
@@ -1120,7 +1149,15 @@ INSERT INTO `shipment_documents` (`id`, `tracking_number`, `doc_type`, `file_nam
 (3, '101', 'Commercial Invoice', '101_CommercialInvoice_1768139328.docx', 'uploads/101_CommercialInvoice_1768139328.docx', 'API User (Sales Dept)', '2026-01-11 21:48:48'),
 (4, '101', 'Commercial Invoice', '101_CommercialInvoice_1768139437.docx', 'uploads/101_CommercialInvoice_1768139437.docx', 'API User (Sales Dept)', '2026-01-11 21:50:37'),
 (5, '101', 'Commercial Invoice', '101_CommercialInvoice_1768139733.docx', 'uploads/101_CommercialInvoice_1768139733.docx', 'API User (Sales Dept)', '2026-01-11 21:55:33'),
-(6, '102', 'Commercial Invoice', '102_CommercialInvoice_1768139863.docx', 'uploads/102_CommercialInvoice_1768139863.docx', 'API User (Sales Dept)', '2026-01-11 21:57:43');
+(6, '102', 'Commercial Invoice', '102_CommercialInvoice_1768139863.docx', 'uploads/102_CommercialInvoice_1768139863.docx', 'API User (Sales Dept)', '2026-01-11 21:57:43'),
+(7, '101', 'Commercial Invoice', '101_CommercialInvoice_1768229354.docx', 'uploads/101_CommercialInvoice_1768229354.docx', 'API User (Sales Dept)', '2026-01-12 22:49:14'),
+(8, '162', 'Commercial Invoice', '162_CommercialInvoice_1768230342.docx', 'uploads/162_CommercialInvoice_1768230342.docx', 'API User (Sales Dept)', '2026-01-12 23:05:42'),
+(9, '193', 'Proof of Delivery', '193_ProofofDelivery_1768271360.docx', 'uploads/193_ProofofDelivery_1768271360.docx', 'Admin', '2026-01-13 10:29:20'),
+(10, '193', 'Proof of Delivery', '193_ProofofDelivery_1768271532.docx', 'uploads/193_ProofofDelivery_1768271532.docx', 'Admin', '2026-01-13 10:32:12'),
+(11, '193', 'Proof of Delivery', '193_ProofofDelivery_1768271726.pdf', 'uploads/193_ProofofDelivery_1768271726.pdf', 'Admin', '2026-01-13 10:35:26'),
+(12, '101', 'Commercial Invoice', '101_CommercialInvoice_1768272557.jpg', 'uploads/101_CommercialInvoice_1768272557.jpg', 'API User (Sales Dept)', '2026-01-13 10:49:17'),
+(13, '101', 'Commercial Invoice', '101_CommercialInvoice_1768283257.jpg', 'uploads/101_CommercialInvoice_1768283257.jpg', 'API User (Sales Dept)', '2026-01-13 13:47:37'),
+(14, '101', 'Commercial Invoice', '101_CommercialInvoice_1768287866.pdf', 'uploads/101_CommercialInvoice_1768287866.pdf', 'API User (Sales Dept)', '2026-01-13 15:04:26');
 
 -- --------------------------------------------------------
 
@@ -1141,19 +1178,62 @@ CREATE TABLE `sla_policies` (
 --
 
 INSERT INTO `sla_policies` (`id`, `contract_id`, `origin_group`, `destination_group`, `max_days`) VALUES
-(4, 2, 'Luzon', 'Luzon', 3),
-(5, 2, 'Luzon', 'Visayas', 5),
-(6, 1, 'Luzon', 'Luzon', 3),
-(7, 1, 'Luzon', 'Visayas', 5),
-(8, 1, 'Luzon', 'Mindanao', 10),
-(9, 3, 'Luzon', 'Luzon', 4),
-(10, 3, 'Luzon', 'Visayas', 5),
-(11, 3, 'Luzon', 'Mindanao', 10),
-(12, 3, 'Visayas', 'Mindanao', 5),
-(13, 4, 'Luzon', 'Luzon', 10),
-(14, 4, 'Luzon', 'Visayas', 5),
-(15, 4, 'Metro Manila', 'Visayas', 4),
-(16, 5, 'Luzon', 'Visayas', 5);
+(81, 14, 'Luzon', 'Visayas', 7),
+(82, 14, 'Luzon', 'Visayas', 7),
+(83, 14, 'Luzon', 'Visayas', 7),
+(84, 14, 'Luzon', 'Visayas', 7),
+(85, 14, 'Luzon', 'Visayas', 7),
+(86, 14, 'Luzon', 'Mindanao', 7),
+(87, 14, 'Luzon', 'Mindanao', 7),
+(88, 14, 'Luzon', 'Mindanao', 7),
+(89, 14, 'Metro Manila', 'Metro Manila', 3),
+(90, 14, 'Metro Manila', 'Metro Manila', 3),
+(91, 14, 'Metro Manila', 'Visayas', 5),
+(92, 14, 'Metro Manila', 'Visayas', 5),
+(93, 15, 'Luzon', 'Visayas', 7),
+(94, 15, 'Luzon', 'Visayas', 7),
+(95, 15, 'Luzon', 'Visayas', 7),
+(96, 15, 'Luzon', 'Visayas', 7),
+(97, 15, 'Luzon', 'Visayas', 7),
+(98, 15, 'Luzon', 'Visayas', 7),
+(99, 15, 'Luzon', 'Visayas', 7),
+(100, 15, 'Luzon', 'Visayas', 7),
+(101, 15, 'Luzon', 'Visayas', 7),
+(102, 15, 'Luzon', 'Visayas', 7),
+(103, 15, 'Luzon', 'Visayas', 7),
+(104, 15, 'Luzon', 'Mindanao', 7),
+(105, 15, 'Luzon', 'Mindanao', 7),
+(106, 15, 'Luzon', 'Mindanao', 7),
+(107, 15, 'Metro Manila', 'Metro Manila', 3),
+(108, 15, 'Metro Manila', 'Metro Manila', 3),
+(109, 15, 'Metro Manila', 'Visayas', 5),
+(110, 15, 'Metro Manila', 'Visayas', 5),
+(111, 16, 'Luzon', 'Visayas', 7),
+(112, 16, 'Luzon', 'Visayas', 7),
+(113, 16, 'Luzon', 'Visayas', 7),
+(114, 16, 'Luzon', 'Visayas', 7),
+(115, 16, 'Luzon', 'Visayas', 7),
+(116, 16, 'Luzon', 'Visayas', 7),
+(117, 16, 'Luzon', 'Visayas', 7),
+(118, 16, 'Luzon', 'Visayas', 7),
+(119, 16, 'Luzon', 'Visayas', 7),
+(120, 16, 'Luzon', 'Visayas', 7),
+(121, 16, 'Luzon', 'Visayas', 7),
+(122, 16, 'Luzon', 'Mindanao', 7),
+(123, 16, 'Luzon', 'Mindanao', 7),
+(124, 16, 'Luzon', 'Mindanao', 7),
+(125, 16, 'Metro Manila', 'Metro Manila', 3),
+(126, 16, 'Metro Manila', 'Metro Manila', 3),
+(127, 16, 'Metro Manila', 'Visayas', 5),
+(128, 16, 'Metro Manila', 'Visayas', 5),
+(129, 0, 'Metro Manila', 'Metro Manila', 3),
+(130, 0, 'Luzon', 'Visayas', 7),
+(131, 0, 'Luzon', 'Mindanao', 10),
+(132, 0, 'Visayas', 'Mindanao', 7),
+(133, 17, 'Metro Manila', 'Metro Manila', 3),
+(134, 17, 'Luzon', 'Visayas', 7),
+(135, 17, 'Luzon', 'Mindanao', 10),
+(136, 17, 'Visayas', 'Mindanao', 7);
 
 -- --------------------------------------------------------
 
@@ -1303,13 +1383,13 @@ ALTER TABLE `user_data`
 -- AUTO_INCREMENT for table `accounts`
 --
 ALTER TABLE `accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
 
 --
 -- AUTO_INCREMENT for table `activity_log`
 --
 ALTER TABLE `activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=490;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=501;
 
 --
 -- AUTO_INCREMENT for table `admin_activity`
@@ -1333,7 +1413,7 @@ ALTER TABLE `archive_doc`
 -- AUTO_INCREMENT for table `contracts`
 --
 ALTER TABLE `contracts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `crm`
@@ -1387,19 +1467,19 @@ ALTER TABLE `replies`
 -- AUTO_INCREMENT for table `shipments`
 --
 ALTER TABLE `shipments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=193;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=199;
 
 --
 -- AUTO_INCREMENT for table `shipment_documents`
 --
 ALTER TABLE `shipment_documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `sla_policies`
 --
 ALTER TABLE `sla_policies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
 
 --
 -- AUTO_INCREMENT for table `user_data`

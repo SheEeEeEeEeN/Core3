@@ -1,32 +1,18 @@
 <?php
 // mailer_function.php
-
-// 1. TIGAS NA PATH (Dahil sabi mo nasa vendor folder)
 $autoloadPath = __DIR__ . '/vendor/autoload.php';
-
-if (file_exists($autoloadPath)) {
-    require_once $autoloadPath;
-} else {
-    // Pag wala, stop na agad para di mag 500 Error
-    error_log("CRITICAL: Vendor folder not found at: " . $autoloadPath);
-    return;
-}
+if (file_exists($autoloadPath)) { require_once $autoloadPath; } 
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 if (!function_exists('sendStatusEmail')) {
     function sendStatusEmail($toEmail, $clientName, $trackingNo, $newStatus) {
-        
-        // Safety Check: Kung hindi nag-load ang library
-        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-            return false;
-        }
+        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) { return false; }
 
         $mail = new PHPMailer(true);
-
         try {
-            // Server settings
+            // SMTP SETTINGS (Palitan mo ng credentials mo)
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
@@ -34,135 +20,116 @@ if (!function_exists('sendStatusEmail')) {
             $mail->Password   = 'wgdfjpgdphkdziab'; 
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
-            
-            // TIMEOUT (Importante para iwas Error 500 pag mabagal net)
-            $mail->Timeout    = 10; 
-            $mail->SMTPDebug  = 0; // Off debug output
+            $mail->Timeout    = 10;
+            $mail->SMTPDebug  = 0;
 
-            // Recipients
             $mail->setFrom('royzxcasd@gmail.com', 'SLATE Logistics');
             $mail->addAddress($toEmail, $clientName);
 
-            // --- 1. PREPARE DYNAMIC COLORS & CONTENT ---
-            $statusColor = '#4e73df'; // Default Blue (In Transit/Processed)
-            $statusMessage = 'Your shipment is moving to the next stage.';
-            $icon = '📦';
+            // COLORS
+            $color = '#4e73df';
+            if ($newStatus == 'Delivered') $color = '#1cc88a';
+            if ($newStatus == 'Cancelled') $color = '#e74a3b';
 
-            if ($newStatus == 'Delivered') {
-                $statusColor = '#1cc88a'; // Green
-                $statusMessage = 'Great news! Your package has been successfully delivered.';
-                $icon = '✅';
-            } elseif ($newStatus == 'Cancelled') {
-                $statusColor = '#e74a3b'; // Red
-                $statusMessage = 'We regret to inform you that this shipment has been cancelled.';
-                $icon = '❌';
-            } elseif ($newStatus == 'Pending') {
-                $statusColor = '#f6c23e'; // Yellow
-                $statusMessage = 'We have received your booking request.';
-                $icon = '📝';
-            }
-
-            // Get Current Date/Time
-            date_default_timezone_set('Asia/Manila');
-            $updateTime = date("F j, Y | g:i A");
-
-            // --- 2. BUILD THE HTML EMAIL (Professional Layout) ---
             $mail->isHTML(true);
-            $mail->Subject = "Update: Shipment #$trackingNo is $newStatus $icon";
+            $mail->Subject = "Update: Shipment #$trackingNo is $newStatus";
             
-            $bodyContent = "
+        // --- PROFESSIONAL HTML EMAIL TEMPLATE (PH TIME) ---
+            
+            // 1. Set Timezone to Philippines
+            date_default_timezone_set('Asia/Manila');
+            
+            // 2. Get Current Date & Time (Format: January 16, 2026, 2:30 PM)
+            $dateToday = date('F j, Y, g:i A');
+
+            // 3. Set Header Color (Slate Dark Blue)
+            $headerColor = '#2c3e50'; 
+
+            $mail->Body = "
             <!DOCTYPE html>
             <html>
             <head>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-                    .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-                    .header { background-color: #2c3e50; padding: 20px; text-align: center; color: #ffffff; }
-                    .header h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
-                    .content { padding: 30px; color: #333333; line-height: 1.6; }
-                    .status-badge { 
-                        background-color: $statusColor; 
-                        color: #ffffff; 
-                        padding: 10px 20px; 
-                        border-radius: 50px; 
-                        font-weight: bold; 
-                        display: inline-block; 
-                        font-size: 18px;
-                        margin: 10px 0;
-                    }
-                    .details-table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #f9f9f9; border-radius: 5px; }
-                    .details-table td { padding: 12px; border-bottom: 1px solid #eeeeee; }
-                    .details-table td:first-child { font-weight: bold; color: #555; width: 40%; }
-                    .btn-track {
-                        display: block;
-                        width: 200px;
-                        margin: 30px auto;
-                        padding: 12px;
-                        background-color: #4e73df;
-                        color: #ffffff !important;
-                        text-align: center;
-                        text-decoration: none;
-                        border-radius: 5px;
-                        font-weight: bold;
-                    }
-                    .footer { background-color: #eeeeee; padding: 20px; text-align: center; font-size: 12px; color: #888888; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
+                    .email-wrapper { padding: 40px 10px; }
+                    .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
+                    
+                    /* HEADER */
+                    .header { background-color: $headerColor; padding: 30px; text-align: center; }
+                    .brand-name { color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 2px; font-style: italic; }
+                    
+                    /* CONTENT */
+                    .content { padding: 40px 30px; color: #444444; line-height: 1.6; }
+                    .greeting { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; }
+                    
+                    /* STATUS CARD */
+                    .status-box { background-color: #f8f9fa; border-left: 6px solid $color; padding: 20px; margin: 25px 0; border-radius: 4px; }
+                    .status-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; font-weight: bold; }
+                    .status-value { font-size: 22px; font-weight: bold; color: $color; margin-top: 5px; }
+                    
+                    /* TABLE DETAILS */
+                    .details-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    .details-table td { padding: 12px 0; border-bottom: 1px solid #eeeeee; }
+                    .details-label { font-size: 12px; color: #999; text-transform: uppercase; }
+                    .details-data { font-size: 14px; font-weight: bold; color: #333; text-align: right; }
+                    
+                    /* BUTTON */
+                    .btn-track { display: inline-block; background-color: $color; color: #ffffff !important; padding: 14px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 14px; margin-top: 30px; }
+                    
+                    /* FOOTER */
+                    .footer { background-color: #f1f3f5; padding: 20px; text-align: center; font-size: 12px; color: #999; }
                 </style>
             </head>
             <body>
-                <div class='email-container'>
-                    <div class='header'>
-                        <h1>SLATE CORE3</h1>
-                    </div>
-
-                    <div class='content'>
-                        <p>Hi <strong>$clientName</strong>,</p>
-                        <p>$statusMessage</p>
+                <div class='email-wrapper'>
+                    <div class='email-container'>
                         
-                        <div style='text-align: center;'>
-                            <span class='status-badge'>$newStatus</span>
+                        <div class='header'>
+                            <div class='brand-name'>SLATE LOGISTICS</div>
                         </div>
 
-                        <table class='details-table'>
-                            <tr>
-                                <td>Tracking Number:</td>
-                                <td style='font-family: monospace; font-size: 16px; color: #333;'>$trackingNo</td>
-                            </tr>
-                            <tr>
-                                <td>Date Updated:</td>
-                                <td>$updateTime</td>
-                            </tr>
-                            <tr>
-                                <td>Service Type:</td>
-                                <td>Freight Standard</td>
-                            </tr>
-                        </table>
+                        <div class='content'>
+                            <div class='greeting'>Hi $clientName,</div>
+                            <p>This is an automated notification regarding the status of your shipment.</p>
 
-                        <a href='http://localhost/last/user.php' class='btn-track'>Track Shipment</a>
-                        
-                        <p style='font-size: 13px; color: #666;'>If you have questions, reply to this email or contact support.</p>
-                    </div>
+                            <div class='status-box'>
+                                <div class='status-label'>Current Status</div>
+                                <div class='status-value'>$newStatus</div>
+                            </div>
 
-                    <div class='footer'>
-                        &copy; " . date("Y") . " Slate Freight Logistics. All rights reserved.<br>
-                        This is an automated system message.
+                            <table class='details-table'>
+                                <tr>
+                                    <td class='details-label'>Tracking Number</td>
+                                    <td class='details-data'>$trackingNo</td>
+                                </tr>
+                                <tr>
+                                    <td class='details-label'>Update Time</td>
+                                    <td class='details-data'>$dateToday</td>
+                                </tr>
+                                <tr>
+                                    <td class='details-label'>Service Type</td>
+                                    <td class='details-data'>Express Freight</td>
+                                </tr>
+                            </table>
+
+                            <div style='text-align: center;'>
+                                <a href='#' class='btn-track'>Track Package</a>
+                            </div>
+                        </div>
+
+                        <div class='footer'>
+                            <p>&copy; " . date('Y') . " Slate Logistics. All rights reserved.</p>
+                            <p>Please do not reply to this automated message.</p>
+                        </div>
+
                     </div>
                 </div>
             </body>
             </html>";
 
-            $mail->Body = $bodyContent;
-            
-            // Plain Text Version (Fallback)
-            $mail->AltBody = "Shipment Update for Tracking #$trackingNo. Status: $newStatus. Check your dashboard for details.";
-
             $mail->send();
             return true;
-
-        } catch (Exception $e) {
-            // Log error sa file lang
-            error_log("Mailer Error: " . $mail->ErrorInfo);
-            return false;
-        }
+        } catch (Exception $e) { return false; }
     }
 }
 ?>
