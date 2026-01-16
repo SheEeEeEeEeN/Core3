@@ -1,114 +1,135 @@
 <?php
-// contract_print.php - GENERATOR NG KONTRATA
+// contract_print.php - FIXED VERSION (No fullname error)
 include("connection.php");
+include('session.php'); 
 
-if(!isset($_GET['id'])){ die("No Contract ID provided."); }
+if (!isset($_GET['id'])) { die("Contract ID missing."); }
 
-$id = $_GET['id'];
+$contract_id = intval($_GET['id']);
 
-// 1. KUNIN ANG CONTRACT DETAILS + ACCOUNT EMAIL
-$sql = "SELECT c.*, a.email 
-        FROM contracts c 
-        LEFT JOIN accounts a ON c.user_id = a.id 
-        WHERE c.id = '$id'";
-$res = mysqli_query($conn, $sql);
-$contract = mysqli_fetch_assoc($res);
+// 1. GET CONTRACT & CLIENT DETAILS (Fixed Query)
+// Tinanggal natin ang 'a.fullname', 'a.phone', etc. para iwas error.
+// Umaasa tayo sa c.* (contracts table) para sa client_name.
+$contractQ = mysqli_query($conn, "
+    SELECT c.*, a.email, a.username 
+    FROM contracts c 
+    LEFT JOIN accounts a ON c.user_id = a.id 
+    WHERE c.id = '$contract_id'
+");
 
-if(!$contract){ die("Contract not found."); }
+if (!$contractQ) {
+    die("Database Error: " . mysqli_error($conn));
+}
 
-// 2. KUNIN ANG SLA RULES NG KONTRATANG ITO
-$sla_sql = "SELECT * FROM sla_policies WHERE contract_id = '$id'";
-$sla_res = mysqli_query($conn, $sla_sql);
+$contract = mysqli_fetch_assoc($contractQ);
 
-// Calculate Duration
-$date1 = new DateTime($contract['start_date']);
-$date2 = new DateTime($contract['end_date']);
-$interval = $date1->diff($date2);
-$duration = $interval->m + ($interval->y * 12); // Total months
+if (!$contract) { die("Contract not found."); }
+
+// 2. GET SLA RULES
+$rulesQ = mysqli_query($conn, "SELECT * FROM sla_policies WHERE contract_id = '$contract_id'");
+if (mysqli_num_rows($rulesQ) == 0) {
+    $rulesQ = mysqli_query($conn, "SELECT * FROM sla_policies WHERE contract_id = 0");
+}
+
+// 3. DEFINE DISPLAY VARIABLES (Para hindi mag-error kung walang laman)
+// Kung may 'client_name' sa contracts table, yun ang gagamitin. Kung wala, username.
+$displayName = !empty($contract['client_name']) ? $contract['client_name'] : $contract['username'];
+
+// Address Logic: Kung may 'address' column sa contracts, yun gagamitin.
+$displayAddress = isset($contract['address']) && !empty($contract['address']) ? $contract['address'] : "Address on File";
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Contract - <?php echo $contract['contract_number']; ?></title>
+    <title>Contract <?php echo $contract['contract_number']; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background: #525659; font-family: 'Times New Roman', serif; }
-        .page {
-            background: white;
-            width: 21cm;
-            min-height: 29.7cm;
-            display: block;
-            margin: 0 auto;
-            margin-bottom: 0.5cm;
-            box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
-            padding: 2.5cm;
-        }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header img { width: 80px; }
-        .contract-title { text-align: center; font-weight: bold; font-size: 24px; text-decoration: underline; margin-bottom: 30px; }
-        .section-title { font-weight: bold; margin-top: 20px; font-size: 16px; text-transform: uppercase; }
-        p { text-align: justify; line-height: 1.6; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; font-size: 14px; }
-        th { background: #f0f0f0; }
-        .signature-section { margin-top: 100px; display: flex; justify-content: space-between; }
-        .sign-line { width: 200px; border-top: 1px solid black; text-align: center; padding-top: 5px; }
-
+        .page { background: white; width: 210mm; min-height: 297mm; display: block; margin: 20px auto; padding: 25mm; box-shadow: 0 0 10px rgba(0,0,0,0.3); position: relative; }
+        
         @media print {
-            body, .page { margin: 0; box-shadow: none; background: white; }
-            .no-print { display: none; }
+            body { background: white; margin: 0; }
+            .page { margin: 0; box-shadow: none; width: 100%; height: auto; padding: 20mm; }
+            .no-print { display: none !important; }
         }
+
+        .header-logo { width: 120px; }
+        .title { font-size: 24px; font-weight: bold; text-transform: uppercase; text-align: center; margin-bottom: 5px; color: #1a1a2e; }
+        .subtitle { text-align: center; font-size: 14px; margin-bottom: 30px; color: #555; }
+        
+        .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #333; margin-top: 25px; margin-bottom: 10px; padding-bottom: 5px; }
+        
+        p { font-size: 12pt; line-height: 1.5; text-align: justify; margin-bottom: 10px; }
+        
+        .info-table td { padding: 4px 10px; font-size: 12pt; }
+        .fw-bold { font-weight: bold; }
+
+        .sla-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11pt; }
+        .sla-table th, .sla-table td { border: 1px solid #333; padding: 8px; text-align: center; }
+        .sla-table th { background-color: #f0f0f0; }
+        .sla-table td:first-child, .sla-table td:nth-child(2) { text-align: left; }
+
+        .signature-box { margin-top: 50px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-line { border-top: 1px solid black; width: 200px; margin-top: 40px; text-align: center; padding-top: 5px; font-size: 12pt; }
     </style>
 </head>
 <body>
 
-    <div class="no-print text-center p-3">
-        <button onclick="window.print()" class="btn btn-primary">Print / Save as PDF</button>
+    <div class="text-center no-print py-3">
+        <button onclick="window.print()" class="btn btn-primary fw-bold">🖨️ Print / Save as PDF</button>
         <button onclick="window.close()" class="btn btn-secondary">Close</button>
     </div>
 
     <div class="page">
-        <div class="header">
-            <img src="Remorig.png" alt="Company Logo"><br>
-            <strong>CORE TRANSACTION 3 LOGISTICS</strong><br>
-            <small>123 Shipping Lane, Metro Manila, Philippines</small>
+        
+        <div class="text-center mb-4">
+            <img src="Remorig.png" alt="SLATE Logo" class="header-logo mb-2">
+            <div class="title">Service Level Agreement</div>
+            <div class="subtitle">Contract Reference: <strong><?php echo $contract['contract_number']; ?></strong></div>
         </div>
 
-        <div class="contract-title">SERVICE LEVEL AGREEMENT (SLA) CONTRACT</div>
-
-        <p>This Agreement is made and entered into this <strong><?php echo date('F d, Y'); ?></strong>, by and between:</p>
-
-        <p>
-            <strong>CORE TRANSACTION 3 LOGISTICS</strong>, a logistics service provider with principal office at Metro Manila (hereinafter referred to as the "PROVIDER");
-        </p>
-        <p style="text-align: center;">- AND -</p>
-        <p>
-            <strong><?php echo strtoupper($contract['client_name']); ?></strong>, with registered account email <u><?php echo $contract['email']; ?></u> (hereinafter referred to as the "CLIENT").
-        </p>
-
-        <div class="section-title">1. EFFECTIVITY AND DURATION</div>
-        <p>
-            This Contract shall be effective from <strong><?php echo date('F d, Y', strtotime($contract['start_date'])); ?></strong> 
-            to <strong><?php echo date('F d, Y', strtotime($contract['end_date'])); ?></strong>.
-            This agreement covers a period of approximately <?php echo $duration; ?> months unless terminated earlier by either party.
-        </p>
-
-        <div class="section-title">2. SERVICE LEVEL STANDARDS (SLA)</div>
-        <p>The PROVIDER agrees to deliver goods within the following committed lead times. Failure to meet these timelines will result in the penalties described in Section 3.</p>
+        <div class="section-title">1. Contracting Parties</div>
+        <p>This agreement is made and entered into on <strong><?php echo date('F d, Y', strtotime($contract['start_date'])); ?></strong> by and between:</p>
         
-        <table>
+        <table class="info-table w-100 mb-3">
+            <tr>
+                <td width="15%" class="fw-bold align-top">PROVIDER:</td>
+                <td>
+                    <strong>SLATE LOGISTICS INC.</strong><br>
+                    123 Cargo Avenue, Port Area, Manila<br>
+                    support@slatelogistics.com
+                </td>
+            </tr>
+            <tr><td colspan="2">&nbsp;</td></tr> <tr>
+                <td class="fw-bold align-top">CLIENT:</td>
+                <td>
+                    <strong><?php echo strtoupper($displayName); ?></strong><br>
+                    <?php echo $displayAddress; ?><br>
+                    <?php echo $contract['email']; ?>
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-title">2. Agreement Period</div>
+        <p>This contract is valid from <strong><?php echo date('F d, Y', strtotime($contract['start_date'])); ?></strong> to <strong><?php echo date('F d, Y', strtotime($contract['end_date'])); ?></strong>, unless earlier terminated in accordance with the provisions hereof.</p>
+
+        <div class="section-title">3. Service Commitments (Lead Time)</div>
+        <p>The Provider commits to deliver shipments within the following maximum lead times based on origin and destination:</p>
+
+        <table class="sla-table">
             <thead>
                 <tr>
-                    <th>Origin</th>
-                    <th>Destination</th>
-                    <th>Committed Lead Time (Max Days)</th>
+                    <th width="30%">Origin Group</th>
+                    <th width="30%">Destination Group</th>
+                    <th width="40%">Committed Lead Time (SLA)</th>
                 </tr>
             </thead>
             <tbody>
-                <?php if(mysqli_num_rows($sla_res) > 0): ?>
-                    <?php while($rule = mysqli_fetch_assoc($sla_res)): ?>
+                <?php if(mysqli_num_rows($rulesQ) > 0): ?>
+                    <?php while($rule = mysqli_fetch_assoc($rulesQ)): ?>
                     <tr>
                         <td><?php echo $rule['origin_group']; ?></td>
                         <td><?php echo $rule['destination_group']; ?></td>
@@ -116,41 +137,40 @@ $duration = $interval->m + ($interval->y * 12); // Total months
                     </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
-                    <tr><td colspan="3">No specific SLA rules defined. Standard shipping applies.</td></tr>
+                    <tr>
+                        <td colspan="3" style="text-align: center; font-style: italic; padding: 20px;">
+                            Standard Shipping Rates and Times apply as per general terms.
+                        </td>
+                    </tr>
                 <?php endif; ?>
             </tbody>
         </table>
 
-        <div class="section-title">3. BREACH OF SLA & PENALTIES</div>
-        <p>
-            In the event that the PROVIDER fails to deliver within the agreed Max Days (SLA Breach), the following terms shall apply:
-        </p>
-        <ul>
-            <li><strong>Minor Delay (1-2 Days Late):</strong> The PROVIDER shall issue a refund of <strong>10%</strong> of the shipping fee for the affected tracking number.</li>
-            <li><strong>Major Delay (3+ Days Late):</strong> The PROVIDER shall issue a refund of <strong>50%</strong> of the shipping fee.</li>
-            <li><strong>Lost/Damaged Items:</strong> Full refund plus insurance coverage value as declared.</li>
-        </ul>
-        <p>
-            All incidents must be reported via the <strong>Incident Report Module</strong> within the System Dashboard.
-        </p>
+        <div class="section-title">4. Penalties for Breach</div>
+        <p>In the event of delayed deliveries exceeding the Committed Lead Time, the Provider agrees to a penalty refund of <strong>10% of the shipping fee</strong> per delayed shipment, provided the delay is not caused by Force Majeure.</p>
 
-        <div class="section-title">4. CONFIDENTIALITY & TERMINATION</div>
-        <p>Both parties agree to keep all transaction data confidential. This contract may be terminated by either party with a 30-day written notice.</p>
+        <div class="section-title">5. Signatures</div>
+        <p>IN WITNESS WHEREOF, the parties have executed this Agreement as of the day and year first above written.</p>
 
-        <div class="signature-section">
-            <div class="sign-line">
-                <strong>Core Logistics Rep.</strong><br>
-                Service Provider
+        <div class="signature-box">
+            <div>
+                <div class="sig-line">
+                    <strong>SLATE LOGISTICS INC.</strong><br>
+                    <small>Service Provider</small>
+                </div>
             </div>
-            <div class="sign-line">
-                <strong><?php echo $contract['client_name']; ?></strong><br>
-                Client Representative
+            <div>
+                <div class="sig-line">
+                    <strong><?php echo strtoupper($displayName); ?></strong><br>
+                    <small>Client / Representative</small>
+                </div>
             </div>
         </div>
 
-        <div style="margin-top: 50px; font-size: 10px; color: gray; text-align: center;">
-            System Generated Contract ID: <?php echo $contract['contract_number']; ?> | Date Generated: <?php echo date('Y-m-d H:i:s'); ?>
+        <div style="margin-top: 50px; font-size: 9pt; color: #888; text-align: center; border-top: 1px solid #ccc; padding-top: 10px;">
+            System Generated Contract • ID: <?php echo $contract['id']; ?> • Date Printed: <?php echo date('Y-m-d H:i:s'); ?>
         </div>
+
     </div>
 
 </body>

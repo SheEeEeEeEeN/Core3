@@ -1,5 +1,5 @@
 <?php
-// bookshipment_api.php
+// bookshipment_api.php - FIXED VERSION (With Origin Island)
 include("connection.php");
 include('session.php');
 
@@ -37,7 +37,8 @@ try {
     $origin_address = mysqli_real_escape_string($conn, $input['origin_address']);
     $destination_address = mysqli_real_escape_string($conn, $input['destination_address']);
     
-    // --- NEW: ISLAND DATA ---
+    // --- ISLAND DATA (Mahalaga ito para sa SLA) ---
+    // Siguraduhin na nakuha natin ang value mula sa form
     $origin_island = mysqli_real_escape_string($conn, $input['origin_island'] ?? 'Luzon');
     $destination_island = mysqli_real_escape_string($conn, $input['destination_island'] ?? 'Luzon');
     // ------------------------
@@ -60,13 +61,16 @@ try {
     // Handle Empty Target Date
     $targetDateSql = empty($target_date) ? "NULL" : "'$target_date'";
 
-    // 4. INSERT QUERY
+    // 4. INSERT QUERY (FIXED)
+    // Idinagdag natin ang 'origin_island' sa parehong listahan
     $sql = "INSERT INTO shipments (
         user_id, contract_number, 
         sender_name, sender_contact, 
         receiver_name, receiver_contact, 
-        origin_address, destination_address, 
-        destination_island, /* <-- NEW COLUMN SAVED HERE */
+        origin_address, 
+        origin_island, /* <--- ✅ ADDED COLUMN HERE */
+        destination_address, 
+        destination_island, 
         specific_address, 
         weight, package_type, package_description, 
         distance_km, price, 
@@ -78,8 +82,10 @@ try {
         '$userId', '$contract_number',
         '$sender_name', '$sender_contact',
         '$receiver_name', '$receiver_contact',
-        '$origin_address', '$destination_address',
-        '$destination_island', /* <-- VALUE SAVED HERE */
+        '$origin_address', 
+        '$origin_island', /* <--- ✅ ADDED VALUE HERE */
+        '$destination_address',
+        '$destination_island', 
         '$specific_address',
         '$weight', '$package_type', '$package_desc',
         '$distance_km', '$price',

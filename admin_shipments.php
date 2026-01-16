@@ -203,6 +203,7 @@ $total_penalty = 0;
                         <?php while($row = mysqli_fetch_assoc($result)): 
                             $total_shipments++;
                             
+                            
                             // CALCULATE SLA
                             $origin = $row['origin_island'] ?? 'Metro Manila';
                             $dest = $row['destination_island'] ?? 'Visayas';

@@ -1,5 +1,5 @@
 <?php
-// admin_contracts.php - PROFESSIONAL UI VERSION
+// admin_contracts.php - PROFESSIONAL UI VERSION (UPDATED SIDEBAR)
 include("connection.php");
 include("darkmode.php");
 include('session.php');
@@ -27,53 +27,48 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
+        /* --- ADMIN TEMPLATE STYLES --- */
         :root {
-            --sidebar-width: 260px;
-            --freight-navy: #0f172a;
+            --primary: #4e73df; --secondary: #f8f9fc; --dark-bg: #1e1e2f; --dark-card: #2b2b40;
+            --light-text: #f8f9fa; --radius: 1rem; --shadow: 0 0.35rem 1.2rem rgba(0, 0, 0, 0.15);
+            --sidebar-width: 250px;
+            
+            /* CONTRACT SPECIFIC */
             --freight-blue: #2563eb;
             --freight-bg: #f8fafc;
             --freight-card: #ffffff;
-            --text-primary: #334155;
-            --text-secondary: #64748b;
             --border-color: #e2e8f0;
-            --dark-bg: #0f172a;
-            --dark-card: #1e293b;
-            --dark-text: #f8fafc;
-            --dark-border: #334155;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--freight-bg); color: var(--text-primary); overflow-x: hidden; }
-
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--secondary); transition: all 0.3s ease; }
+        
         /* DARK MODE */
-        body.dark-mode { background-color: var(--dark-bg); color: var(--dark-text); }
-        body.dark-mode .card, body.dark-mode .header, body.dark-mode .nav-tabs .nav-link.active { background-color: var(--dark-card); border-color: var(--dark-border); color: white; }
-        body.dark-mode .table { color: var(--dark-text); border-color: var(--dark-border); }
-        body.dark-mode .table thead th { background-color: #0f172a; color: #94a3b8; border-bottom: 1px solid var(--dark-border); }
-        body.dark-mode td { border-bottom: 1px solid var(--dark-border); }
-        body.dark-mode .nav-tabs { border-bottom-color: var(--dark-border); }
+        body.dark-mode { background-color: var(--dark-bg); color: var(--light-text); }
+        body.dark-mode .card, body.dark-mode .header, body.dark-mode .nav-tabs .nav-link.active { background-color: var(--dark-card); border-color: #444; color: white; }
+        body.dark-mode .table { color: var(--light-text); border-color: #444; }
+        body.dark-mode .table thead th { background-color: #1e1e2f; color: #ccc; border-bottom: 1px solid #444; }
+        body.dark-mode td { border-bottom: 1px solid #444; }
+        body.dark-mode .nav-tabs { border-bottom-color: #444; }
         body.dark-mode .nav-link { color: #94a3b8; }
         body.dark-mode .nav-link:hover { color: white; }
         body.dark-mode .form-control, body.dark-mode .form-select { background-color: #334155; border-color: #475569; color: white; }
 
-        /* SIDEBAR */
-        .sidebar { width: var(--sidebar-width); height: 100vh; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); color: white; position: fixed; top: 0; left: 0; z-index: 1000; transition: 0.3s; border-right: 1px solid rgba(255,255,255,0.05); }
-        .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
-        .sidebar .logo { padding: 1.5rem; background: rgba(0,0,0,0.2); text-align: center; }
-        .sidebar .logo img { width: 120px; }
-        .sidebar a { padding: 0.85rem 1.5rem; color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 12px; font-weight: 500; transition: 0.2s; border-left: 3px solid transparent; }
-        .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.05); color: white; border-left-color: var(--freight-blue); }
-
-        /* CONTENT */
+        /* SIDEBAR STYLES (MATCHING OTHER PAGES) */
+        .sidebar { width: var(--sidebar-width); height: 100vh; background: #2c3e50; color: white; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
+        .sidebar.collapsed { transform: translateX(-100%); }
         .content { margin-left: var(--sidebar-width); padding: 2rem; transition: 0.3s; }
         .content.expanded { margin-left: 0; }
+        
+        .sidebar a { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.2rem; text-decoration: none; color: rgba(255,255,255,0.9); }
+        .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.2); border-left: 4px solid #fff; color: white; }
 
         /* COMPONENTS */
-        .header { background: var(--freight-card); padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
-        .card { background: var(--freight-card); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .header { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .card { border: none; border-radius: var(--radius); padding: 1.5rem; background: white; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
         
         /* TABS Styling */
         .nav-tabs { border-bottom: 2px solid var(--border-color); margin-bottom: 1.5rem; }
-        .nav-link { color: var(--text-secondary); font-weight: 600; padding: 10px 20px; border: none; border-bottom: 3px solid transparent; }
+        .nav-link { color: #64748b; font-weight: 600; padding: 10px 20px; border: none; border-bottom: 3px solid transparent; }
         .nav-link.active { color: var(--freight-blue); background: transparent; border-bottom-color: var(--freight-blue); }
         .nav-link:hover { border-color: transparent; color: var(--freight-blue); }
 
@@ -82,21 +77,15 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
         thead th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; padding: 1rem; border-bottom: 2px solid var(--border-color); }
         tbody td { padding: 1rem; vertical-align: middle; font-size: 0.95rem; }
         
-        .client-avatar { width: 35px; height: 35px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--text-secondary); }
+        .client-avatar { width: 35px; height: 35px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #64748b; }
 
         /* Toggle */
-        .theme-switch { position: relative; width: 44px; height: 22px; }
+        .theme-switch { position: relative; width: 44px; height: 22px; display: inline-block; }
         .theme-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
-        input:checked+.slider { background-color: var(--freight-blue); }
-        input:checked+.slider:before { transform: translateX(22px); }
-        
-        /* Dropdown */
-        .dropdown-container .dropdown-toggle { cursor: pointer; justify-content: space-between; }
-        .dropdown-content { display: none; background: rgba(0,0,0,0.2); padding: 5px 0; }
-        .dropdown-content.show { display: block; }
-        .dropdown-content a { padding-left: 3rem; font-size: 0.9em; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 2px; background-color: white; border-radius: 50%; transition: .4s; }
+        input:checked+.slider { background-color: var(--primary); }
+        input:checked+.slider:before { transform: translateX(20px); }
     </style>
 </head>
 
@@ -104,26 +93,33 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
 
     <div class="sidebar" id="sidebar">
         <div>
-            <div class="logo">
-                <img src="Remorig.png" alt="Logo">
-                <h6 class="mt-2 mb-0 text-light fw-normal small text-uppercase ls-1">Core Transaction 3</h6>
+            <div class="text-center p-3 border-bottom border-secondary">
+                <img src="Remorig.png" alt="Logo" style="width: 100px;">
+                <h6 class="mt-2 mb-0 text-light">CORE ADMIN</h6>
             </div>
             <nav class="mt-3">
                 <a href="admin.php"><i class="bi bi-speedometer2"></i> Dashboard</a>
                 
-                <div class="dropdown-container">
-                  <a class="dropdown-toggle"><i class="bi bi-people-fill"></i> CRM <i class="bi bi-chevron-down small"></i></a>
-                  <div class="dropdown-content">
-                    <a href="CRM.php">Overview</a>
-                    <a href="customer_feedback.php">Feedback</a>
-                  </div>
+                <a href="#crmSubmenu" data-bs-toggle="collapse" class="d-flex justify-content-between">
+                    <span><i class="bi bi-people"></i> CRM</span><i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse" id="crmSubmenu" style="background: rgba(0,0,0,0.2);">
+                    <a href="CRM.php" class="ps-4"><i class="bi bi-dot"></i> CRM Dashboard</a>
+                    <a href="customer_feedback.php" class="ps-4"><i class="bi bi-dot"></i> Customer Feedback</a>
                 </div>
 
-                <a href="admin_contracts.php" class="active"><i class="bi bi-file-text"></i> Contracts & SLA</a>
-                <a href="admin_shipments.php"><i class="bi bi-truck"></i> SLA Monitoring</a>
+                <a href="#csmSubmenu" data-bs-toggle="collapse" class="d-flex justify-content-between active" aria-expanded="true">
+                    <span><i class="bi bi-file-text"></i> Contract & SLA</span><i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse show" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
+                    <a href="admin_contracts.php" class="ps-4 active"><i class="bi bi-dot"></i> Manage Contracts</a>
+                    <a href="Admin_shipments.php" class="ps-4"><i class="bi bi-dot"></i> SLA Monitoring</a>
+                </div>
+
                 <a href="E-Doc.php"><i class="bi bi-folder2-open"></i> E-Docs</a>
-                <a href="BIFA.php"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
-                <a href="activity-log.php"><i class="bi bi-clock-history"></i> Activity Logs</a>
+                <a href="BIFA.php"><i class="bi bi-graph-up"></i> BI & Analytics</a>
+                <a href="admin_reports.php"><i class="bi bi-file-earmark-bar-graph"></i> Reports Generation</a>
+                <a href="activity-log.php"><i class="bi bi-clock-history"></i> Activity Log</a>
                 <a href="Archive.php"><i class="bi bi-archive"></i> Archives</a>
                 <a href="logout.php" class="border-top mt-3"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </nav>
@@ -137,18 +133,16 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
                 <i class="bi bi-list fs-4" id="hamburger" style="cursor: pointer;"></i>
                 <h4 class="fw-bold m-0">Contract Registry</h4>
             </div>
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center gap-2">
-                    <small class="fw-bold" style="font-size: 0.75rem;">DARK MODE</small>
-                    <label class="theme-switch">
-                        <input type="checkbox" id="adminThemeToggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
+            <div class="d-flex align-items-center gap-2">
+                <small class="fw-bold" style="font-size: 0.75rem;">DARK MODE</small>
+                <label class="theme-switch">
+                    <input type="checkbox" id="adminThemeToggle">
+                    <span class="slider"></span>
+                </label>
             </div>
         </div>
 
-        <div class="card border-0 shadow-none bg-transparent">
+        <div class="card border-0 shadow-none bg-transparent p-0">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="contracts-tab" data-bs-toggle="tab" data-bs-target="#contracts-pane" type="button" role="tab">
@@ -328,19 +322,13 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
         // Init UI
         if (typeof initDarkMode === 'function') initDarkMode("adminThemeToggle", "adminDarkMode");
         
+        // Sidebar Toggle
         document.getElementById('hamburger').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('collapsed');
             document.getElementById('mainContent').classList.toggle('expanded');
         });
 
-        // Dropdown Logic
-        document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-            toggle.addEventListener('click', (e) => {
-                const parent = toggle.parentElement;
-                parent.querySelector('.dropdown-content').classList.toggle('show');
-            });
-        });
-
+        // Rules Logic
         const rulesModal = new bootstrap.Modal(document.getElementById('rulesModal'));
 
         function openRulesModal() { rulesModal.show(); }
