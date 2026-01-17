@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $contract_num = "CNT-" . date('Y') . "-" . str_pad($uid, 4, '0', STR_PAD_LEFT);
                 $start = date('Y-m-d');
-                $end = date('Y-m-d', strtotime('+5 years')); 
+                $end = date('Y-m-d', strtotime('+1 years')); 
                 
                 // Insert Contract
                 $sql_ins = "INSERT INTO contracts (contract_number, user_id, client_name, start_date, end_date, status) 

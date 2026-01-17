@@ -351,7 +351,7 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
             if(confirm("Generate contracts for ALL new users based on Master Rules?")) {
                 const fd = new FormData();
                 fd.append('action', 'sync_all_users');
-                fetch('admin_contracts_api.php', { method: 'POST', body: fd })
+                fetch('api/admin_contracts_api.php', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(d => {
                     alert(d.message);

@@ -489,10 +489,10 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                 <textarea class="form-control" name="address" required rows="2"></textarea>
               </div>
 
-              <div class="row g-2 mb-2">
+           <div class="row g-2 mb-2">
                 <div class="col-6">
-                  <label class="form-label small">Weight (kg)</label>
-                  <input type="number" step="0.01" class="form-control" name="weight" required>
+                  <label class="form-label small">Actual Weight (kg)</label>
+                  <input type="number" step="0.01" class="form-control" name="weight" id="actualWeight" required placeholder="0.0">
                 </div>
                 <div class="col-6">
                   <label class="form-label small">Package Type</label>
@@ -505,6 +505,21 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                     <option value="pallet">Palletized Cargo</option>
                   </select>
                 </div>
+              </div>
+
+              <div class="mb-2">
+                  <label class="form-label small text-muted">Dimensions (L x W x H in cm)</label>
+                  <div class="input-group input-group-sm">
+                    <input type="number" class="form-control" id="dimL" name="length" placeholder="L">
+                    <span class="input-group-text">x</span>
+                    <input type="number" class="form-control" id="dimW" name="width" placeholder="W">
+                    <span class="input-group-text">x</span>
+                    <input type="number" class="form-control" id="dimH" name="height" placeholder="H">
+                  </div>
+                  <div class="d-flex justify-content-between small text-muted mt-1">
+                     <span>Volumetric: <strong id="volWeightDisplay">0.00</strong> kg</span>
+                     <span class="text-success">Chargeable: <strong id="chargeableWeightDisplay">0.00</strong> kg</span>
+                  </div>
               </div>
 
               <div class="mb-2">
@@ -867,12 +882,13 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
         }
       }
     }).addTo(map);
-
+// ito
     routingControl.on('routesfound', function(e) {
       const routes = e.routes;
       if (routes && routes.length > 0) {
         const km = routes[0].summary.totalDistance / 1000.0;
-        updateDistanceAndPrice(km);
+        // updateDistanceAndPrice(km);
+        document.getElementById('distance_km').value = km.toFixed(2); document.getElementById('distanceKmDisplay').textContent = km.toFixed(2); calculateTotal();
         const wp = routingControl.getWaypoints();
         if (wp[0].name) document.getElementById('originField').value = wp[0].name;
         if (wp[1].name) document.getElementById('destinationField').value = wp[1].name;
@@ -975,27 +991,79 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
     });
 
     // 4. PRICING LOGIC
-    const baseRates = {
-      parcel: 30,
-      box: 50,
-      crate: 100,
-      furniture: 200,
-      pallet: 500
-    };
+    // const baseRates = {
+    //   parcel: 30,
+    //   box: 50,
+    //   crate: 100,
+    //   furniture: 200,
+    //   pallet: 500
+    // };
 
-    function calculateWeightPrice() {
-      const weightInput = document.querySelector('input[name="weight"]');
-      const packageType = document.getElementById("packageType").value;
-      let weight = parseFloat(weightInput.value) || 0;
-      if (weight <= 0 || !packageType) return;
-      let rate = baseRates[packageType] || 50;
-      let price = weight * rate;
-      price = Math.round(price);
-      document.getElementById('priceDisplaySmall').textContent = '₱' + price.toLocaleString() + '.00 (weight)';
+    // function calculateWeightPrice() {
+    //   const weightInput = document.querySelector('input[name="weight"]');
+    //   const packageType = document.getElementById("packageType").value;
+    //   let weight = parseFloat(weightInput.value) || 0;
+    //   if (weight <= 0 || !packageType) return;
+    //   let rate = baseRates[packageType] || 50;
+    //   let price = weight * rate;
+    //   price = Math.round(price);
+    //   document.getElementById('priceDisplaySmall').textContent = '₱' + price.toLocaleString() + '.00 (weight)';
+    // }
+
+    // 4. NEW PRICING LOGIC (Chargeable Weight)
+    const baseRates = { parcel: 30, box: 50, crate: 100, furniture: 200, pallet: 500 };
+
+    // Pinalitan natin yung pangalan from 'calculateWeightPrice' to 'calculateTotal'
+    function calculateTotal() {
+        // A. Distance Cost
+        const distKm = parseFloat(document.getElementById('distance_km').value) || 0;
+        const ratePerKm = 15; 
+        const distCost = distKm * ratePerKm;
+
+        // B. Weight Cost (Actual vs Volumetric)
+        // Note: Naglagay ako ng id="actualWeight" sa HTML mo kanina, siguraduhin mong meron yun
+        const actualW = parseFloat(document.querySelector('input[name="weight"]').value) || 0;
+        
+        // Compute Volumetric: (L x W x H) / 3500
+        const L = parseFloat(document.getElementById('dimL').value) || 0;
+        const W = parseFloat(document.getElementById('dimW').value) || 0;
+        const H = parseFloat(document.getElementById('dimH').value) || 0;
+        const volW = (L * W * H) / 3500;
+
+        // Compare: Whichever is HIGHER is the Chargeable Weight
+        const chargeableW = Math.max(actualW, volW);
+
+        // Update Display
+        if(document.getElementById('volWeightDisplay')) document.getElementById('volWeightDisplay').innerText = volW.toFixed(2);
+        if(document.getElementById('chargeableWeightDisplay')) document.getElementById('chargeableWeightDisplay').innerText = chargeableW.toFixed(2);
+
+        // Get Rate based on Type
+        const pkgType = document.getElementById('packageType').value;
+        const baseRate = baseRates[pkgType] || 50; 
+
+        const weightCost = chargeableW * baseRate;
+
+        // C. Final Total
+        let totalPrice = distCost + weightCost;
+        if(totalPrice < 100 && totalPrice > 0) totalPrice = 100; // Minimum fare
+
+        // UI Updates
+        document.getElementById('priceDisplay').innerText = '₱' + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('priceDisplaySmall').innerText = '₱' + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('price_php').value = totalPrice.toFixed(2);
     }
-    const weightInputEl = document.querySelector('input[name="weight"]');
-    if (weightInputEl) weightInputEl.addEventListener('input', calculateWeightPrice);
-    document.getElementById('packageType').addEventListener('change', calculateWeightPrice);
+
+   // D. LISTENERS (Para automatic mag-calculate habang nagta-type)
+    // Listahan ng lahat ng inputs na nakaka-apekto sa presyo
+    const inputIds = ['actualWeight', 'dimL', 'dimW', 'dimH', 'packageType'];
+    
+    inputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.addEventListener('input', calculateTotal);
+            el.addEventListener('change', calculateTotal); // Para sa dropdown
+        }
+    });
 
     function updateDistanceAndPrice(km) {
       const rate = 15.00;
