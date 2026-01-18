@@ -294,7 +294,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       <li class="nav-item mb-2"><a href="user.php" class="nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded-3 hover-link"><i class="bi bi-house-door-fill fs-5"></i><span>Dashboard</span></a></li>
       <li class="nav-item mb-2"><a href="bookshipment.php" class="active nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded-3 hover-link"><i class="bi bi-truck fs-5"></i><span>Book Shipment</span></a></li>
       <ul class="nav nav-pills flex-column mb-auto">
-       
+
       </ul>
       <li class="nav-item mb-2"><a href="My_shipment.php" class="nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded-3 hover-link"><i class="bi bi-truck fs-5"></i><span>My Shipments</span></a></li>
       <li class="nav-item mb-2"><a href="shiphistory.php" class="nav-link text-white d-flex align-items-center gap-2 px-3 py-2 rounded-3 hover-link"><i class="bi bi-clock-history fs-5"></i><span>Shipment History</span></a></li>
@@ -312,7 +312,23 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       </div>
 
       <div class="d-flex align-items-center gap-3">
+          <div class="dropdown me-3">
+            <a href="#" class="text-dark position-relative" id="notifDropdown" data-bs-toggle="dropdown" onclick="markRead()">
+              <i class="bi bi-bell fs-4"></i>
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display: none;">
+                0
+              </span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 300px; max-height: 400px; overflow-y: auto;">
+              <li class="p-2 border-bottom fw-bold bg-light">Notifications</li>
+              <div id="notifList">
+                <li class="text-center p-3 text-muted small">No new notifications</li>
+              </div>
+              <li><a class="dropdown-item text-center small text-primary p-2 border-top" href="feedback.php">View All</a></li>
+            </ul>
+          </div>
         <div class="dropdown">
+        
           <a href="#" class="d-flex align-items-center text-decoration-none text-dark dropdown-toggle" data-bs-toggle="dropdown">
             <img src="<?php echo $profileImage ?? 'default-avatar.png'; ?>" alt="Profile" class="rounded-circle" width="40" height="40" style="object-fit:cover;">
           </a>
@@ -489,7 +505,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                 <textarea class="form-control" name="address" required rows="2"></textarea>
               </div>
 
-           <div class="row g-2 mb-2">
+              <div class="row g-2 mb-2">
                 <div class="col-6">
                   <label class="form-label small">Actual Weight (kg)</label>
                   <input type="number" step="0.01" class="form-control" name="weight" id="actualWeight" required placeholder="0.0">
@@ -507,19 +523,53 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                 </div>
               </div>
 
+              <div class="mb-3 p-2 bg-primary bg-opacity-10 border border-primary rounded">
+                <label class="form-label small text-primary fw-bold mb-1">
+                  <i class="bi bi-box-seam-fill"></i> Quick Select (Standard Sizes):
+                </label>
+                <select class="form-select form-select-sm" id="itemHelper">
+                  <option value="" selected>-- Select Package Size --</option>
+
+                  <option value="xs_parcel" data-l="30" data-w="21" data-h="2" data-k="0.5" data-type="parcel">
+                    📄 Extra Small (Documents / Pouch)
+                  </option>
+                  <option value="s_box" data-l="30" data-w="30" data-h="20" data-k="3" data-type="box">
+                    📦 Small Box (Shoe Box Size)
+                  </option>
+
+                  <option value="m_box" data-l="50" data-w="40" data-h="40" data-k="10" data-type="box">
+                    📦 Medium Box (Microwave Size)
+                  </option>
+                  <option value="l_box" data-l="60" data-w="60" data-h="60" data-k="20" data-type="box">
+                    📦 Large Box (Standard Balikbayan)
+                  </option>
+
+                  <option value="xl_cargo" data-l="100" data-w="60" data-h="60" data-k="40" data-type="crate">
+                    🚛 XL Cargo (Appliance / Equipment)
+                  </option>
+                  <option value="xxl_bulk" data-l="150" data-w="80" data-h="100" data-k="80" data-type="furniture">
+                    🛋️ Bulky Item (Furniture / Oversized)
+                  </option>
+
+                  <option value="pallet" data-l="120" data-w="100" data-h="150" data-k="200" data-type="pallet">
+                    🏭 Standard Pallet (Commercial)
+                  </option>
+                </select>
+              </div>
+
               <div class="mb-2">
-                  <label class="form-label small text-muted">Dimensions (L x W x H in cm)</label>
-                  <div class="input-group input-group-sm">
-                    <input type="number" class="form-control" id="dimL" name="length" placeholder="L">
-                    <span class="input-group-text">x</span>
-                    <input type="number" class="form-control" id="dimW" name="width" placeholder="W">
-                    <span class="input-group-text">x</span>
-                    <input type="number" class="form-control" id="dimH" name="height" placeholder="H">
-                  </div>
-                  <div class="d-flex justify-content-between small text-muted mt-1">
-                     <span>Volumetric: <strong id="volWeightDisplay">0.00</strong> kg</span>
-                     <span class="text-success">Chargeable: <strong id="chargeableWeightDisplay">0.00</strong> kg</span>
-                  </div>
+                <label class="form-label small text-muted">Dimensions (L x W x H in cm)</label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control" id="dimL" name="length" placeholder="L">
+                  <span class="input-group-text">x</span>
+                  <input type="number" class="form-control" id="dimW" name="width" placeholder="W">
+                  <span class="input-group-text">x</span>
+                  <input type="number" class="form-control" id="dimH" name="height" placeholder="H">
+                </div>
+                <div class="d-flex justify-content-between small text-muted mt-1">
+                  <span>Volumetric: <strong id="volWeightDisplay">0.00</strong> kg</span>
+                  <span class="text-success">Chargeable: <strong id="chargeableWeightDisplay">0.00</strong> kg</span>
+                </div>
               </div>
 
               <div class="mb-2">
@@ -608,21 +658,55 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
             <h5 class="modal-title">📑 Terms and Conditions</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
-            <div class="border p-4 rounded bg-light shadow-sm" style="max-height: 400px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6;">
-              <h5 class="fw-bold text-center mb-4">TERMS AND CONDITIONS OF CARRIAGE</h5>
-              <h6 class="fw-bold text-primary">1. AGREEMENT</h6>
-              <p>By booking, you agree to these Terms with Slate Freight.</p>
-              <h6 class="fw-bold text-primary mt-3">2. LIABILITY</h6>
-              <p>Carrier is not liable for delays due to traffic or Acts of God.</p>
-            </div>
-            <div class="mt-3 text-end">
-              <div class="form-check d-inline-block text-start">
-                <input class="form-check-input" type="checkbox" id="readConfirm">
-                <label class="form-check-label small text-muted" for="readConfirm">I have read the terms.</label>
-              </div>
-            </div>
-          </div>
+        <div class="modal-body">
+    <div class="border p-4 rounded bg-light shadow-sm" style="max-height: 400px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; color: #333;">
+        
+        <div class="text-center mb-4">
+            <h5 class="fw-bold mb-1">STANDARD TRADING CONDITIONS</h5>
+        </div>
+
+        <h6 class="fw-bold text-primary mt-3">1. DEFINITIONS</h6>
+        <p class="mb-2">"Carrier" refers to Slate Freight and its authorized logistics partners (Core 2 Providers). "Shipper" refers to the person booking the shipment. "Consignee" refers to the receiver of the goods.</p>
+
+        <h6 class="fw-bold text-primary mt-3">2. PROHIBITED ITEMS</h6>
+        <p class="mb-1">The Shipper warrants that the package does NOT contain any of the following:</p>
+        <ul class="mb-2 ps-3">
+            <li>Dangerous goods (Explosives, Flammables, Toxic substances)</li>
+            <li>Illegal drugs or narcotics</li>
+            <li>Live animals or human remains</li>
+            <li>Cash, jewelry, and high-value negotiable instruments</li>
+            <li>Firearms and ammunition</li>
+        </ul>
+        <p class="fst-italic text-danger small">The Carrier reserves the right to inspect and refuse packages suspected of containing prohibited items.</p>
+
+        <h6 class="fw-bold text-primary mt-3">3. SHIPPER'S RESPONSIBILITY (PACKAGING)</h6>
+        <p class="mb-2">The Shipper is solely responsible for proper packaging. Items must be packed in a way that withstands the rigors of transportation. The Carrier is <strong>NOT liable</strong> for damage caused by improper or insufficient packaging (e.g., glass without bubble wrap).</p>
+
+        <h6 class="fw-bold text-primary mt-3">4. LIMITATION OF LIABILITY</h6>
+        <p class="mb-1">Unless the Shipper declares a higher value and pays the corresponding valuation charge (Insurance), the Carrier's liability for loss or damage is limited to:</p>
+        <ul class="mb-2 ps-3">
+            <li>The actual value of the item; or</li>
+            <li><strong>PHP 2,000.00</strong> (Philippine Peso);</li>
+        </ul>
+        <p class="mb-2">Whichever is lower. The Carrier is not liable for indirect or consequential damages (e.g., lost profits due to delay).</p>
+
+        <h6 class="fw-bold text-primary mt-3">5. DELIVERY TIMEFRAME & DELAYS</h6>
+        <p class="mb-2">Delivery dates provided by the AI Prediction are <strong>estimates only</strong> and are not guaranteed. The Carrier is not liable for delays caused by traffic congestion, checkpoint delays, or incorrect addresses provided by the Shipper.</p>
+
+        <h6 class="fw-bold text-primary mt-3">6. FORCE MAJEURE</h6>
+        <p class="mb-2">The Carrier shall not be liable for loss, damage, or delay arising from acts of God (typhoons, floods, earthquakes), strikes, civil commotion, or government acts.</p>
+
+        <h6 class="fw-bold text-primary mt-3">7. CLAIMS</h6>
+        <p class="mb-0">Any claim for damage or loss must be filed within <strong>twenty-four (24) hours</strong> from the time of delivery. Failure to report within this period shall be deemed a waiver of the claim.</p>
+    </div>
+
+    <div class="mt-3 text-end">
+        <div class="form-check d-inline-block text-start">
+            <input class="form-check-input" type="checkbox" id="readConfirm">
+            <label class="form-check-label small text-muted" for="readConfirm">I have read and understood the Terms and Conditions.</label>
+        </div>
+    </div>
+</div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="button" id="acceptContract" class="btn btn-success fw-bold">I Agree & Accept</button>
@@ -882,13 +966,15 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
         }
       }
     }).addTo(map);
-// ito
+    // ito
     routingControl.on('routesfound', function(e) {
       const routes = e.routes;
       if (routes && routes.length > 0) {
         const km = routes[0].summary.totalDistance / 1000.0;
         // updateDistanceAndPrice(km);
-        document.getElementById('distance_km').value = km.toFixed(2); document.getElementById('distanceKmDisplay').textContent = km.toFixed(2); calculateTotal();
+        document.getElementById('distance_km').value = km.toFixed(2);
+        document.getElementById('distanceKmDisplay').textContent = km.toFixed(2);
+        calculateTotal();
         const wp = routingControl.getWaypoints();
         if (wp[0].name) document.getElementById('originField').value = wp[0].name;
         if (wp[1].name) document.getElementById('destinationField').value = wp[1].name;
@@ -1011,58 +1097,95 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
     // }
 
     // 4. NEW PRICING LOGIC (Chargeable Weight)
-    const baseRates = { parcel: 30, box: 50, crate: 100, furniture: 200, pallet: 500 };
+    const baseRates = {
+      parcel: 30,
+      box: 50,
+      crate: 100,
+      furniture: 200,
+      pallet: 500
+    };
 
     // Pinalitan natin yung pangalan from 'calculateWeightPrice' to 'calculateTotal'
     function calculateTotal() {
-        // A. Distance Cost
-        const distKm = parseFloat(document.getElementById('distance_km').value) || 0;
-        const ratePerKm = 15; 
-        const distCost = distKm * ratePerKm;
+      // A. Distance Cost
+      const distKm = parseFloat(document.getElementById('distance_km').value) || 0;
+      const ratePerKm = 15;
+      const distCost = distKm * ratePerKm;
 
-        // B. Weight Cost (Actual vs Volumetric)
-        // Note: Naglagay ako ng id="actualWeight" sa HTML mo kanina, siguraduhin mong meron yun
-        const actualW = parseFloat(document.querySelector('input[name="weight"]').value) || 0;
-        
-        // Compute Volumetric: (L x W x H) / 3500
-        const L = parseFloat(document.getElementById('dimL').value) || 0;
-        const W = parseFloat(document.getElementById('dimW').value) || 0;
-        const H = parseFloat(document.getElementById('dimH').value) || 0;
-        const volW = (L * W * H) / 3500;
+      // B. Weight Cost (Actual vs Volumetric)
+      // Note: Naglagay ako ng id="actualWeight" sa HTML mo kanina, siguraduhin mong meron yun
+      const actualW = parseFloat(document.querySelector('input[name="weight"]').value) || 0;
 
-        // Compare: Whichever is HIGHER is the Chargeable Weight
-        const chargeableW = Math.max(actualW, volW);
+      // Compute Volumetric: (L x W x H) / 3500
+      const L = parseFloat(document.getElementById('dimL').value) || 0;
+      const W = parseFloat(document.getElementById('dimW').value) || 0;
+      const H = parseFloat(document.getElementById('dimH').value) || 0;
+      const volW = (L * W * H) / 3500;
 
-        // Update Display
-        if(document.getElementById('volWeightDisplay')) document.getElementById('volWeightDisplay').innerText = volW.toFixed(2);
-        if(document.getElementById('chargeableWeightDisplay')) document.getElementById('chargeableWeightDisplay').innerText = chargeableW.toFixed(2);
+      // Compare: Whichever is HIGHER is the Chargeable Weight
+      const chargeableW = Math.max(actualW, volW);
 
-        // Get Rate based on Type
-        const pkgType = document.getElementById('packageType').value;
-        const baseRate = baseRates[pkgType] || 50; 
+      // Update Display
+      if (document.getElementById('volWeightDisplay')) document.getElementById('volWeightDisplay').innerText = volW.toFixed(2);
+      if (document.getElementById('chargeableWeightDisplay')) document.getElementById('chargeableWeightDisplay').innerText = chargeableW.toFixed(2);
 
-        const weightCost = chargeableW * baseRate;
+      // Get Rate based on Type
+      const pkgType = document.getElementById('packageType').value;
+      const baseRate = baseRates[pkgType] || 50;
 
-        // C. Final Total
-        let totalPrice = distCost + weightCost;
-        if(totalPrice < 100 && totalPrice > 0) totalPrice = 100; // Minimum fare
+      const weightCost = chargeableW * baseRate;
 
-        // UI Updates
-        document.getElementById('priceDisplay').innerText = '₱' + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
-        document.getElementById('priceDisplaySmall').innerText = '₱' + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
-        document.getElementById('price_php').value = totalPrice.toFixed(2);
+      // C. Final Total
+      let totalPrice = distCost + weightCost;
+      if (totalPrice < 100 && totalPrice > 0) totalPrice = 100; // Minimum fare
+
+      // UI Updates
+      document.getElementById('priceDisplay').innerText = '₱' + totalPrice.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+      });
+      document.getElementById('priceDisplaySmall').innerText = '₱' + totalPrice.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+      });
+      document.getElementById('price_php').value = totalPrice.toFixed(2);
     }
 
-   // D. LISTENERS (Para automatic mag-calculate habang nagta-type)
+    // D. LISTENERS (Para automatic mag-calculate habang nagta-type)
     // Listahan ng lahat ng inputs na nakaka-apekto sa presyo
     const inputIds = ['actualWeight', 'dimL', 'dimW', 'dimH', 'packageType'];
-    
+
     inputIds.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) {
-            el.addEventListener('input', calculateTotal);
-            el.addEventListener('change', calculateTotal); // Para sa dropdown
-        }
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', calculateTotal);
+        el.addEventListener('change', calculateTotal); // Para sa dropdown
+      }
+    });
+
+    // E. ITEM HELPER LOGIC (Auto-Fill)
+    document.getElementById('itemHelper').addEventListener('change', function() {
+      const selected = this.options[this.selectedIndex];
+
+      if (selected.value !== "") {
+        // 1. Kunin ang values
+        const l = selected.getAttribute('data-l');
+        const w = selected.getAttribute('data-w');
+        const h = selected.getAttribute('data-h');
+        const k = selected.getAttribute('data-k');
+        const t = selected.getAttribute('data-type'); // Ito yung mahalaga
+
+        // 2. Ipasok sa inputs
+        document.getElementById('dimL').value = l;
+        document.getElementById('dimW').value = w;
+        document.getElementById('dimH').value = h;
+        document.getElementById('actualWeight').value = k;
+
+        // 3. I-update din ang Package Type dropdown
+        const typeSelect = document.getElementById('packageType');
+        if (typeSelect) typeSelect.value = t;
+
+        // 4. Trigger calculation
+        calculateTotal();
+      }
     });
 
     function updateDistanceAndPrice(km) {
@@ -1132,6 +1255,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       } else {
         showPreviewModal();
       }
+
     });
 
     function showPreviewModal() {
@@ -1232,6 +1356,71 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
         })
         .catch(err => console.error(err));
     }
+  </script>
+
+  <script>
+    // AUTO-CHECK NOTIFICATIONS EVERY 5 SECONDS
+    function fetchNotifications() {
+      fetch('api/get_notifications.php')
+        .then(response => response.json())
+        .then(data => {
+          const badge = document.getElementById('notifBadge');
+          const list = document.getElementById('notifList');
+
+          // 1. Update Badge Count
+          if (data.count > 0) {
+            badge.innerText = data.count;
+            badge.style.display = 'inline-block';
+          } else {
+            badge.style.display = 'none';
+          }
+
+          // 2. Update Dropdown List
+          let html = '';
+          if (data.data.length > 0) {
+            data.data.forEach(notif => {
+              // Check if read or unread styling
+              let bgClass = notif.is_read == 0 ? 'bg-light' : '';
+              let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-circle text-muted';
+
+              html += `
+                    <li>
+                        <a class="dropdown-item ${bgClass} p-2 border-bottom" href="${notif.link}">
+                            <div class="d-flex align-items-start">
+                                <i class="bi ${icon} me-2 mt-1" style="font-size: 10px;"></i>
+                                <div>
+                                    <small class="fw-bold d-block">${notif.title}</small>
+                                    <small class="text-muted text-wrap">${notif.message}</small>
+                                    <br>
+                                    <small class="text-secondary" style="font-size: 0.7rem;">${new Date(notif.created_at).toLocaleString()}</small>
+                                </div>
+                            </div>
+                        </a>
+                    </li>`;
+            });
+          } else {
+            html = '<li class="text-center p-3 text-muted small">No notifications</li>';
+          }
+          list.innerHTML = html;
+        });
+    }
+
+    // Mark as Read when clicked
+    function markRead() {
+      fetch('api/get_notifications.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'action=read_all'
+      }).then(() => {
+        document.getElementById('notifBadge').style.display = 'none';
+      });
+    }
+
+    // Initial Call + Interval
+    fetchNotifications();
+    setInterval(fetchNotifications, 5000); // Check every 5 seconds
   </script>
 </body>
 

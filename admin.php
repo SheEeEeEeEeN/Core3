@@ -115,10 +115,27 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
     
     <div class="header">
       <div class="d-flex align-items-center gap-3">
+      
         <i class="bi bi-list fs-4" id="hamburger" style="cursor: pointer;"></i>
         <h4 class="fw-bold mb-0">Executive Dashboard</h4>
       </div>
+      
       <div class="d-flex align-items-center gap-2">
+          <div class="dropdown me-3">
+    <a href="#" class="text-dark position-relative" id="notifDropdown" data-bs-toggle="dropdown" onclick="markRead()">
+        <i class="bi bi-bell fs-4"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display: none;">
+            0
+        </span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 300px; max-height: 400px; overflow-y: auto;">
+        <li class="p-2 border-bottom fw-bold bg-light">Notifications</li>
+        <div id="notifList">
+            <li class="text-center p-3 text-muted small">Checking...</li>
+        </div>
+        <li><a class="dropdown-item text-center small text-primary p-2 border-top" href="feedback.php">View All</a></li>
+    </ul>
+</div>
         <small>Dark Mode</small>
         <label class="theme-switch">
           <input type="checkbox" id="adminThemeToggle"><span class="slider"></span>
@@ -215,5 +232,71 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
       options: { legend: { position: 'bottom' }, cutoutPercentage: 70 }
     });
   </script>
+  <script>
+    // --- GLOBAL NOTIFICATION SCRIPT ---
+    function fetchNotifications() {
+        // Siguraduhing tama ang path ng API mo relative sa file location
+        // Kung nasa root folder ka (gaya ng user.php), gamitin ang 'api/get_notifications.php'
+        fetch('api/get_notifications.php')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notifBadge');
+            const list = document.getElementById('notifList');
+
+            // 1. Update Badge Count
+            if (data.count > 0) {
+                badge.innerText = data.count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            // 2. Update Dropdown List
+            let html = '';
+            if (data.data.length > 0) {
+                data.data.forEach(notif => {
+                    let bgClass = notif.is_read == 0 ? 'bg-light' : '';
+                    let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-circle text-muted';
+                    
+                    // Adjust link if needed based on user role
+                    let link = notif.link ? notif.link : '#';
+
+                    html += `
+                    <li>
+                        <a class="dropdown-item ${bgClass} p-2 border-bottom" href="${link}">
+                            <div class="d-flex align-items-start">
+                                <i class="bi ${icon} me-2 mt-1" style="font-size: 10px;"></i>
+                                <div>
+                                    <small class="fw-bold d-block">${notif.title}</small>
+                                    <small class="text-muted text-wrap">${notif.message}</small>
+                                    <br>
+                                    <small class="text-secondary" style="font-size: 0.7rem;">${new Date(notif.created_at).toLocaleString()}</small>
+                                </div>
+                            </div>
+                        </a>
+                    </li>`;
+                });
+            } else {
+                html = '<li class="text-center p-3 text-muted small">No new notifications</li>';
+            }
+            list.innerHTML = html;
+        })
+        .catch(err => console.error("Notif Error:", err));
+    }
+
+    function markRead() {
+        fetch('api/get_notifications.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=read_all'
+        }).then(() => {
+            document.getElementById('notifBadge').style.display = 'none';
+        });
+    }
+
+    // Run immediately and every 5 seconds
+    fetchNotifications();
+    setInterval(fetchNotifications, 5000);
+</script>
 </body>
 </html>

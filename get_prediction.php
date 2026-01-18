@@ -3,10 +3,10 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); 
 
-// Set timezone to Philippines
+// Set timezone
 date_default_timezone_set('Asia/Manila');
-$currentDate = date("l, F j, Y"); // e.g., Friday, December 19, 2025
-$currentTime = date("g:i A");     // e.g., 5:30 PM
+$currentDate = date("l, F j, Y"); 
+$currentTime = date("g:i A");     
 
 // 1. Receive Data
 $input = json_decode(file_get_contents('php://input'), true);
@@ -14,10 +14,12 @@ $origin = $input['origin'] ?? 'Unknown';
 $destination = $input['destination'] ?? 'Unknown';
 $distance = $input['distance_km'] ?? 0;
 
-// 2. API KEY SETUP
-$apiKey = "AIzaSyBqbf4jgzucpaHLK3y7upcZcyvuaGq8-Z4"; 
+// ---------------------------------------------------------
+// 🚨 ILAGAY MO DITO YUNG API KEY MO 🚨
+// ---------------------------------------------------------
+$apiKey = "AIzaSyArsHtI21_Lk59Xt4kUvYQWAIO67zUxmRo1"; // <--- DOUBLE CHECK MO KUNG TAMA TO -> AIzaSyArsHtI21_Lk59Xt4kUvYQWAIO67zUxmRo
 
-// 3. Prepare AI Prompt with TIME & DATE Context
+// 2. Prepare Prompt
 $prompt = "
 You are a logistics expert in the Philippines.
 Current Date/Time: $currentDate at $currentTime.
@@ -25,68 +27,81 @@ Route: From $origin to $destination.
 Distance: $distance km.
 
 TASK:
-1. Analyze Traffic: Based on the current time ($currentTime) and day ($currentDate), predict if it is rush hour or light traffic.
-2. Analyze Weather: Based on the current month, predict typical weather patterns and calendar events and calculate the distance if destination is need a airplane or sea cargo (e.g. Typhoon season vs Dry season).
-3. Estimate Time: Combine distance + predicted traffic + predicted weather to give a realistic delivery time.
+1. Analyze Traffic: Predict congestion based on time/location.
+2. Analyze Logistics: Is this inter-island (requires ferry/RORO)?
+3. Estimate Time: Calculate total travel time.
 
-Return ONLY raw JSON:
+Return ONLY raw JSON (no markdown):
 {
-    \"prediction\": \"Estimated time (e.g. 3 hours - Heavy Traffic)\",
-    \"confidence\": \"Confidence score number only (e.g. 85)\",
-    \"reasoning\": \"Summarize the traffic and weather impact in one sentence based on the current time and season.\"
+    \"prediction\": \"e.g. 4 hrs 30 mins\",
+    \"confidence\": \"e.g. 90\",
+    \"reasoning\": \"Short sentence summarizing traffic/route.\"
 }";
 
-// Use Gemini 2.5 Flash
-$url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
-
-$data = [
-    "contents" => [
-        [ "parts" => [ ["text" => $prompt] ] ]
-    ]
-    // Removed 'tools' section to prevent API errors
+$requestData = [
+    "contents" => [ [ "parts" => [ ["text" => $prompt] ] ] ]
 ];
 
-// 4. Send Request
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+// 3. THE "TANK MODE" LOADER (UPDATED WITH YOUR MODELS)
+$modelsToTry = [
+    "gemini-2.5-flash",      // Priority 1: Pinaka-bago mo
+    "gemini-2.0-flash",      // Priority 2: Stable v2
+    "gemini-exp-1206"        // Priority 3: Experimental
+];
 
-$response = curl_exec($ch);
+$finalResponse = null;
+$lastError = "No attempts made.";
+$usedModel = "None";
 
-if(curl_errno($ch)) {
-    echo json_encode(['error' => 'Connection Error: ' . curl_error($ch)]);
-    exit;
-}
-curl_close($ch);
-
-// 5. Process Response
-$decoded = json_decode($response, true);
-
-if (isset($decoded['error'])) {
-    // If model version error, fallback to gemini-1.5-flash
-    $fallbackUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
-    // (Logic for fallback could go here, but for now just showing the error to debug)
-    echo json_encode(['error' => 'Gemini API Error: ' . $decoded['error']['message']]);
-    exit;
-}
-
-if (isset($decoded['candidates'][0]['content']['parts'][0]['text'])) {
-    $rawText = $decoded['candidates'][0]['content']['parts'][0]['text'];
-    $cleanJson = str_replace(['```json', '```', 'json'], '', $rawText);
-    $finalData = json_decode($cleanJson, true);
+foreach ($modelsToTry as $model) {
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=" . $apiKey;
     
-    if ($finalData) {
-        echo json_encode($finalData);
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    
+    // SSL FIX (Para sa XAMPP/Localhost)
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch); 
+    curl_close($ch);
+
+    if ($httpCode == 200) {
+        $finalResponse = $response;
+        $usedModel = $model;
+        break; // Success! Stop loop.
     } else {
-        echo json_encode([
-            'prediction' => 'Estimate Unavailable',
-            'confidence' => '0',
-            'reasoning' => 'AI returned text but not valid JSON format.'
-        ]);
+        $jsonErr = json_decode($response, true);
+        $apiMsg = $jsonErr['error']['message'] ?? "HTTP $httpCode";
+        $lastError = "Model $model failed: " . ($curlErr ? $curlErr : $apiMsg);
     }
-} else {
-    echo json_encode(['error' => 'No text returned from AI. Response was empty.']);
 }
+
+// 4. PROCESS RESULT
+if ($finalResponse) {
+    $decoded = json_decode($finalResponse, true);
+    if (isset($decoded['candidates'][0]['content']['parts'][0]['text'])) {
+        $rawText = $decoded['candidates'][0]['content']['parts'][0]['text'];
+        
+        // Clean JSON using Regex
+        if (preg_match('/\{.*\}/s', $rawText, $matches)) {
+            echo $matches[0]; // SUCCESS!
+            exit;
+        }
+    }
+}
+
+// 5. FALLBACK
+$fallbackTime = round($distance / 40, 1) . " hrs"; 
+
+echo json_encode([
+    'prediction' => "Est. $fallbackTime",
+    'confidence' => '50',
+    'reasoning' => "Offline. Error: $lastError" 
+]);
 ?>
