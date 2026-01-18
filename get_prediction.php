@@ -17,7 +17,7 @@ $distance = $input['distance_km'] ?? 0;
 // ---------------------------------------------------------
 // 🚨 ILAGAY MO DITO YUNG API KEY MO 🚨
 // ---------------------------------------------------------
-$apiKey = "AIzaSyArsHtI21_Lk59Xt4kUvYQWAIO67zUxmRo1"; // <--- DOUBLE CHECK MO KUNG TAMA TO -> AIzaSyArsHtI21_Lk59Xt4kUvYQWAIO67zUxmRo
+$apiKey = "AIzaSyArsHtI21_Lk59Xt4kUvYQWAIO67zUxmRo1"; // <--- DOUBLE CHECK MO KUNG TAMA TO -> 
 
 // 2. Prepare Prompt
 $prompt = "
