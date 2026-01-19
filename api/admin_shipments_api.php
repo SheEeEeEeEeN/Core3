@@ -1,9 +1,10 @@
 <?php
 // admin_shipments_api.php
+// FINAL VERSION: With 'Paid' Auto-Update + Email Fix
 
-// 1. Silent Mode (Para walang text errors na sisira sa JSON)
-error_reporting(0);
-ini_set('display_errors', 0);
+// 1. Error Reporting (Para makita sa network tab kung may crash)
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Keep 0 to output JSON only
 
 header('Content-Type: application/json');
 
@@ -12,11 +13,13 @@ try {
     include("connection.php");
     session_start();
 
-    // 2. Check Mailer
+    // 2. Load Mailer (Without suppressing errors)
     $mailerActive = false;
     if (file_exists("mailer_function.php")) {
         include("mailer_function.php");
         $mailerActive = true;
+    } else {
+        error_log("⚠️ Warning: mailer_function.php not found.");
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -26,7 +29,7 @@ try {
             $id = intval($_POST['id']);
             $newStatus = mysqli_real_escape_string($conn, $_POST['status']);
             
-            // --- QUERY FIX: User info na lang ang kunin (no fullname) ---
+            // Get Info
             $query = "SELECT s.*, a.email, a.username 
                       FROM shipments s 
                       LEFT JOIN accounts a ON s.user_id = a.id 
@@ -38,9 +41,17 @@ try {
             $row = mysqli_fetch_assoc($q);
             if (!$row) throw new Exception("Shipment ID not found");
 
-            // SLA Logic
+            // --- ✨ THE FIX: PAYMENT & SLA LOGIC ✨ ---
+            
             $slaStatusUpdate = "";
+            $paymentUpdate = ""; // Variable para sa Payment Status
+
             if ($newStatus === 'Delivered') {
+                
+                // 1. GAWING 'PAID' ANG PAYMENT (Ito ang kulang mo kanina)
+                $paymentUpdate = ", payment_status = 'Paid'";
+
+                // 2. SLA Check
                 $targetVal = $row['target_delivery_date'];
                 if (!empty($targetVal) && $targetVal != '0000-00-00 00:00:00') {
                     $actualDate = date('Y-m-d');
@@ -50,30 +61,37 @@ try {
                 }
             }
 
-            // --- SQL FIX: TINANGGAL KO NA ANG 'updated_at = NOW()' ---
-            $sql = "UPDATE shipments SET status = '$newStatus' $slaStatusUpdate WHERE id = '$id'";
+            // --- SQL UPDATE COMMAND ---
+            // Idinagdag natin ang variable na $paymentUpdate dito
+            $sql = "UPDATE shipments 
+                    SET status = '$newStatus' $slaStatusUpdate $paymentUpdate 
+                    WHERE id = '$id'";
             
             if (mysqli_query($conn, $sql)) {
                 
-                // SEND EMAIL
-                $emailStatus = "Not Sent";
+                // --- EMAIL LOGIC (FIXED) ---
+                $emailStatus = "Not Sent (No Email or Mailer Off)";
+                
                 if ($mailerActive && !empty($row['email'])) {
-                    
-                    // Name Logic: Sender Name -> Username -> Default
                     $clientName = !empty($row['sender_name']) ? $row['sender_name'] : ($row['username'] ?? 'Valued Client');
-                    
                     $trackingNo = "TRK-" . str_pad($id, 6, "0", STR_PAD_LEFT);
                     
                     if (function_exists('sendStatusEmail')) {
-                        // Suppress errors with @
-                        $sent = @sendStatusEmail($row['email'], $clientName, $trackingNo, $newStatus);
-                        $emailStatus = $sent ? "Sent" : "Failed";
+                        // Tinanggal ko ang '@' para mahuli kung may error ang mailer
+                        try {
+                            $sent = sendStatusEmail($row['email'], $clientName, $trackingNo, $newStatus);
+                            $emailStatus = $sent ? "Sent Successfully" : "Mailer Failed";
+                        } catch (Exception $mailEx) {
+                            $emailStatus = "Mailer Error: " . $mailEx->getMessage();
+                        }
+                    } else {
+                        $emailStatus = "Function sendStatusEmail not found";
                     }
                 }
 
                 echo json_encode([
                     'success' => true, 
-                    'message' => 'Updated Successfully', 
+                    'message' => 'Status Updated to ' . $newStatus . ($newStatus == 'Delivered' ? ' (Marked as Paid)' : ''), 
                     'sla' => $slaResult ?? 'Pending',
                     'email_status' => $emailStatus
                 ]);

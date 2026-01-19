@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 15, 2026 at 04:26 PM
+-- Generation Time: Jan 19, 2026 at 01:55 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -48,8 +48,8 @@ CREATE TABLE `accounts` (
 --
 
 INSERT INTO `accounts` (`id`, `username`, `email`, `phone_number`, `gender`, `password`, `profile_image`, `role`, `created_at`, `otp_hash`, `otp_expires_at`, `otp_attempts`, `last_otp_sent_at`) VALUES
-(102, 'Admin', 'core3slate@gmail.com', '09499508447', 'Male', '$2y$10$YSW42GsrLP/QYn/e2/pPfuGa83qHXREPmp5/or7CBHgYjPOubjvGO', NULL, 'admin', '2025-10-20 13:27:26', '$2y$10$thfKbEtWotbMgrdSfxuUT.Kw6dgDA.7V9j594Ig7gFeuqbQoUbLjq', '2026-01-15 14:30:03', 0, '2025-10-20 21:27:26'),
-(116, 'Valle Roy', 'royzxcasd@gmail.com', '09499508447', 'Male', '$2y$10$.3k99oF4Q6A7lDfj6ZfYG.UHdcbTv2ixz.5.p4L/wN9F4VXP7Xj/S', 'upload/1764165219_me.jpg', 'user', '2025-10-23 15:30:07', '$2y$10$Zj8cSeZ1ZxDBYrtJbU/9WexbuurbPZTZQEoRSQ6llPrw8wS5FEOf.', '2026-01-13 06:37:17', 0, '2025-10-23 23:30:07'),
+(102, 'Admin', 'core3slate@gmail.com', '09499508447', 'Male', '$2y$10$YSW42GsrLP/QYn/e2/pPfuGa83qHXREPmp5/or7CBHgYjPOubjvGO', NULL, 'admin', '2025-10-20 13:27:26', '$2y$10$GseG8QPEAVpxa6vaZUhege26GYfwo6JENOQaZmU8jWBOJWwwjslLS', '2026-01-18 03:07:47', 0, '2025-10-20 21:27:26'),
+(116, 'Valle Roy', 'royzxcasd@gmail.com', '09499508447', 'Male', '$2y$10$.3k99oF4Q6A7lDfj6ZfYG.UHdcbTv2ixz.5.p4L/wN9F4VXP7Xj/S', 'upload/1764165219_me.jpg', 'user', '2025-10-23 15:30:07', '$2y$10$zsjaq8bvYwanOOreVfGPReP4qEDWqYO9iX0U3OiZ72eWTMuAAXWxi', '2026-01-17 01:51:48', 0, '2025-10-23 23:30:07'),
 (117, 'JustineL', 'justinelusung11@gmail.com', '09168207165', 'Male', '$2y$10$R.4NzLZPHzbYffh6LZN29eV8N4YuDBNfiwNooVc1IqjaAHvSK76LO', NULL, 'admin', '2025-10-24 11:10:04', '$2y$10$SruuWiIEcQERvuhs5o486.1fHDGuIsQl7/7S8FcXY2w2HTQWNcr6u', '2026-01-02 20:34:20', 0, '2025-10-24 19:10:04'),
 (118, 'Admin1', 'admin1@gmail.com', '09232131233', 'Male', '$2y$10$T6/.IQVU.RkLE4.c/Dz2QuxJLKlfDzOPUryPD5yzouEWKK9oHzmFG', NULL, 'user', '2025-10-26 12:59:05', '$2y$10$AXwY2X2jqu.tMEoMsUx0yuHUJEhvEmeCbiyjknftPHlIg/TLb/zqi', '2025-10-26 21:36:30', 0, '2025-10-26 20:59:05'),
 (119, 'Test1', 'koxemop140@dwakm.com', '0973564362', 'Male', '$2y$10$6KtD/nqCLm4U2GwgYXuE6.HxYrNQQydw.JZ2UEHT96QY.3Pa0Jnze', NULL, 'user', '2025-11-01 09:56:40', '$2y$10$bA.UTuNJH5HWbjkdn8ZNF./uwvxr7wRjAglP9SM6IIjYpK5P5bRe.', '2025-11-01 18:01:53', 0, '2025-11-01 17:56:40'),
@@ -60,7 +60,8 @@ INSERT INTO `accounts` (`id`, `username`, `email`, `phone_number`, `gender`, `pa
 (124, 'AGHIK', 'vacamil400@24faw.com', '09131322312', 'Male', '$2y$10$0oYRDKmX25PfAQZZUDG6TejcH7tg9NQjr2a.XQQJs18T7Z/DQC6OC', 'upload/1767593930_Capture.PNG', 'user', '2026-01-05 06:17:16', '$2y$10$9ZoL3lgrhstdGANO5wYdz./f4ugWH.micR4/fUcp0sGligJxuD2xS', '2026-01-05 14:22:45', 0, '2026-01-05 14:17:16'),
 (125, 'Olgab', 'olgabercasio18@gmail.com', '09612536291', 'Female', '$2y$10$MpEncw3mq5O.gq/NPJFCv.3DDu5Z..Hcbx4lrh/GDpoItQyzFfz4C', NULL, 'user', '2026-01-06 09:07:42', '$2y$10$CROHJoLgJPQ1MZQFoVsV8.C2ZC7fD4qCWfXj3o9ffHDDyYkkFN1MK', '2026-01-13 07:08:15', 0, '2026-01-06 17:07:42'),
 (126, 'master', 'tangol@gmail.com', '09499503447', 'Male', 'cbf06754df2f70dd1f853bdccaec98cc6d8ba861a2a91d357540b9d561b6ceb7', NULL, '', '2026-01-14 11:18:09', NULL, NULL, 0, '2026-01-14 19:18:09'),
-(127, 'Valle', 'valleroy851@gmail.com', '09439508447', 'Male', '$2y$10$xutepoMUSSTy2qRYhq9oFec3pSg/3kRWdK0KvPtgYUGVlk/MH92OW', NULL, 'user', '2026-01-14 11:21:57', '$2y$10$ZQgA1JnrxBr7DAHIHzr3HeOKDTSWWLtWFGGcX1jIJcZc0MnD6mS2G', '2026-01-14 12:29:19', 0, '2026-01-14 19:21:57');
+(127, 'Valle', 'valleroy851@gmail.com', '09439508447', 'Male', '$2y$10$xutepoMUSSTy2qRYhq9oFec3pSg/3kRWdK0KvPtgYUGVlk/MH92OW', NULL, 'user', '2026-01-14 11:21:57', '$2y$10$ZQgA1JnrxBr7DAHIHzr3HeOKDTSWWLtWFGGcX1jIJcZc0MnD6mS2G', '2026-01-14 12:29:19', 0, '2026-01-14 19:21:57'),
+(128, 'Mae', 'cheriemaelabanza@gmail.com', '09077100481', 'Female', '$2y$10$CfzYXvlr2wRKeT.F4CAwIONmEO/K.BhZyDt8VDeWF4UfUFrSQ3A.6', NULL, 'user', '2026-01-17 02:18:45', '$2y$10$9eJ0ktzE1QqiQnttWvRVk.8sYDq7KpjBJSgV56Pb9gpJ6VBG3Kcrq', '2026-01-17 03:24:02', 0, '2026-01-17 10:18:45');
 
 -- --------------------------------------------------------
 
@@ -546,7 +547,19 @@ INSERT INTO `activity_log` (`id`, `user_id`, `username`, `login_time`, `ip_addre
 (497, 102, 'Admin', '2026-01-14 11:13:17', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
 (498, 127, 'Valle', '2026-01-14 12:24:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
 (499, 102, 'Admin', '2026-01-14 12:28:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
-(500, 102, 'Admin', '2026-01-15 14:25:02', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36');
+(500, 102, 'Admin', '2026-01-15 14:25:02', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(501, 102, 'Admin', '2026-01-16 05:45:44', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(502, 116, 'Valle Roy', '2026-01-16 05:49:08', '192.168.1.21', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36'),
+(503, 116, 'Valle Roy', '2026-01-16 07:12:10', '192.168.1.21', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36'),
+(504, 116, 'Valle Roy', '2026-01-16 08:19:21', '192.168.1.21', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36'),
+(505, 116, 'Valle Roy', '2026-01-16 11:11:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(506, 116, 'Valle Roy', '2026-01-16 13:47:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(507, 116, 'Valle Roy', '2026-01-16 16:41:11', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'),
+(508, 102, 'Admin', '2026-01-17 01:43:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(509, 116, 'Valle Roy', '2026-01-17 01:46:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'),
+(510, 128, 'Mae', '2026-01-17 03:18:58', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'),
+(511, 102, 'Admin', '2026-01-18 02:07:43', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'),
+(512, 102, 'Admin', '2026-01-18 03:02:46', '192.168.1.21', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36');
 
 -- --------------------------------------------------------
 
@@ -815,7 +828,8 @@ INSERT INTO `contracts` (`id`, `contract_number`, `user_id`, `client_name`, `sta
 (14, 'CNT-2026-0121', 121, 'ASD', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:25'),
 (15, 'CNT-2026-0122', 122, 'ASS', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:25'),
 (16, 'CNT-2026-0124', 124, 'AGHIK', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 18:50:26'),
-(17, 'CNT-2026-0127', 127, 'VALLE', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 19:28:55');
+(17, 'CNT-2026-0127', 127, 'VALLE', '2026-01-14', '2031-01-14', 'Active', NULL, '2026-01-14 19:28:55'),
+(18, 'CNT-2026-0128', 128, 'MAE', '2026-01-17', '2027-01-17', 'Active', NULL, '2026-01-17 10:20:41');
 
 -- --------------------------------------------------------
 
@@ -906,19 +920,34 @@ CREATE TABLE `feedback` (
   `comment` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` enum('unread','read') DEFAULT 'unread',
-  `reply` text DEFAULT NULL
+  `reply` text DEFAULT NULL,
+  `attachment` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `feedback`
 --
 
-INSERT INTO `feedback` (`id`, `account_id`, `comment`, `created_at`, `status`, `reply`) VALUES
-(44, 116, 'OK', '2025-10-26 02:39:16', 'unread', NULL),
-(45, 120, 'cat /etc/psswrd', '2025-11-11 06:47:02', 'unread', NULL),
-(46, 123, 'From saudi with love', '2026-01-02 04:18:49', 'unread', NULL),
-(47, 116, 'hello', '2026-01-04 13:18:12', 'read', NULL),
-(48, 116, 'ayos', '2026-01-10 11:24:16', 'unread', NULL);
+INSERT INTO `feedback` (`id`, `account_id`, `comment`, `created_at`, `status`, `reply`, `attachment`) VALUES
+(44, 116, 'OK', '2025-10-26 02:39:16', 'unread', NULL, NULL),
+(45, 120, 'cat /etc/psswrd', '2025-11-11 06:47:02', 'unread', NULL, NULL),
+(46, 123, 'From saudi with love', '2026-01-02 04:18:49', 'unread', NULL, NULL),
+(47, 116, 'hello', '2026-01-04 13:18:12', 'read', NULL, NULL),
+(48, 116, 'ayos', '2026-01-10 11:24:16', 'unread', NULL, NULL),
+(49, 128, 'hello', '2026-01-18 01:07:57', 'unread', NULL, NULL),
+(50, 128, 'hello', '2026-01-18 01:12:58', 'unread', NULL, NULL),
+(51, 128, 'check', '2026-01-18 01:19:19', 'unread', NULL, 'ticket_1768699159_922.jpg'),
+(52, 128, 'notif', '2026-01-18 01:31:09', 'unread', NULL, NULL),
+(53, 128, 'm', '2026-01-18 02:15:53', 'unread', NULL, NULL),
+(54, 128, '2', '2026-01-18 02:21:54', 'unread', NULL, NULL),
+(55, 128, '122', '2026-01-18 02:37:57', 'unread', NULL, NULL),
+(56, 128, '5', '2026-01-18 02:39:12', 'unread', NULL, NULL),
+(57, 128, '3', '2026-01-18 02:41:59', 'unread', NULL, NULL),
+(58, 128, '6', '2026-01-18 02:42:38', 'unread', NULL, NULL),
+(59, 128, '23', '2026-01-18 02:43:20', 'unread', NULL, NULL),
+(60, 128, 'b', '2026-01-18 03:01:23', 'unread', NULL, NULL),
+(61, 128, 'ty', '2026-01-18 03:12:04', 'unread', NULL, 'ticket_1768705924_615.jpg'),
+(62, 128, 'try', '2026-01-18 03:22:29', 'unread', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -929,22 +958,65 @@ INSERT INTO `feedback` (`id`, `account_id`, `comment`, `created_at`, `status`, `
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `message` varchar(255) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `message` text NOT NULL,
+  `link` varchar(255) DEFAULT '#',
+  `is_read` tinyint(1) DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `link`, `is_read`, `created_at`) VALUES
+(1, 128, 'Support Ticket Update', 'Admin replied to your ticket #52.', 'feedback.php', 1, '2026-01-18 09:35:23'),
+(2, 128, 'Support Ticket Update', 'Admin replied to your ticket #52.', 'feedback.php', 1, '2026-01-18 09:36:04'),
+(3, 128, 'Support Ticket Update', 'Admin replied to your ticket #52.', 'feedback.php', 1, '2026-01-18 09:54:41'),
+(4, 128, 'Support Ticket Update', 'Admin replied to your ticket #52.', 'feedback.php', 1, '2026-01-18 10:06:28'),
+(5, 128, 'Support Ticket Update', 'Admin replied to your ticket #52.', 'feedback.php', 1, '2026-01-18 10:06:46'),
+(6, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 10:15:53'),
+(7, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 10:15:53'),
+(8, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 10:21:54'),
+(9, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 10:21:54'),
+(10, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 10:37:57'),
+(11, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 10:37:57'),
+(12, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 10:39:12'),
+(13, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 10:39:12'),
+(14, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 10:41:59'),
+(15, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 10:41:59'),
+(16, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 10:42:38'),
+(17, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 10:42:38'),
+(18, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 10:43:20'),
+(19, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 10:43:20'),
+(20, 102, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 1, '2026-01-18 11:01:24'),
+(21, 117, 'New Support Ticket', 'User root submitted a new concern.', 'customer_feedback.php', 0, '2026-01-18 11:01:24'),
+(22, 128, 'Support Update', 'Admin replied to ticket #60', 'feedback.php', 1, '2026-01-18 11:11:21'),
+(23, 102, 'New Support Ticket', 'User submitted a concern.', 'customer_feedback.php', 1, '2026-01-18 11:12:04'),
+(24, 117, 'New Support Ticket', 'User submitted a concern.', 'customer_feedback.php', 0, '2026-01-18 11:12:04'),
+(25, 102, 'New Support Ticket', 'User submitted a concern.', 'customer_feedback.php', 1, '2026-01-18 11:22:29'),
+(26, 117, 'New Support Ticket', 'User submitted a concern.', 'customer_feedback.php', 0, '2026-01-18 11:22:29'),
+(27, 128, 'Support Update', 'Admin replied to ticket #62', 'feedback.php', 1, '2026-01-18 11:22:51');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `password_resets`
+-- Table structure for table `password_reset`
 --
 
-CREATE TABLE `password_resets` (
+CREATE TABLE `password_reset` (
   `id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
   `expiry` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `password_reset`
+--
+
+INSERT INTO `password_reset` (`id`, `email`, `token`, `expiry`) VALUES
+(1, 'royzxcasd@gmail.com', 'c671bd36ebe53b6e031eb32bfef58e1a9aa824540e1a507547afdd5928abcfb5', '2026-01-16 12:56:40');
 
 -- --------------------------------------------------------
 
@@ -998,7 +1070,15 @@ CREATE TABLE `replies` (
 --
 
 INSERT INTO `replies` (`id`, `feedback_id`, `admin_id`, `reply_message`, `created_at`) VALUES
-(24, 47, 102, 'gg', '2026-01-04 13:18:58');
+(24, 47, 102, 'gg', '2026-01-04 13:18:58'),
+(25, 49, 102, 'yiw', '2026-01-18 01:12:51'),
+(26, 52, 102, '..', '2026-01-18 01:35:23'),
+(27, 52, 102, '12', '2026-01-18 01:36:04'),
+(28, 52, 102, '22', '2026-01-18 01:54:41'),
+(29, 52, 102, '1', '2026-01-18 02:06:28'),
+(30, 52, 102, '1', '2026-01-18 02:06:46'),
+(31, 60, 102, 'try', '2026-01-18 03:11:21'),
+(32, 62, 102, 'try', '2026-01-18 03:22:51');
 
 -- --------------------------------------------------------
 
@@ -1039,6 +1119,7 @@ CREATE TABLE `shipments` (
   `receiver_contact` varchar(50) DEFAULT NULL,
   `origin_address` varchar(255) DEFAULT NULL,
   `destination_address` varchar(255) DEFAULT NULL,
+  `origin_island` varchar(50) DEFAULT NULL,
   `specific_address` text DEFAULT NULL,
   `address` varchar(255) DEFAULT NULL,
   `weight` decimal(10,2) NOT NULL,
@@ -1050,6 +1131,7 @@ CREATE TABLE `shipments` (
   `payment_method` varchar(50) DEFAULT 'Unspecified',
   `bank_name` varchar(50) DEFAULT NULL,
   `status` varchar(50) DEFAULT 'Pending',
+  `payment_status` varchar(50) DEFAULT 'Pending',
   `sla_status` enum('Met','Breached','Pending') DEFAULT 'Pending',
   `proof_image` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -1058,70 +1140,85 @@ CREATE TABLE `shipments` (
   `target_delivery_date` datetime DEFAULT NULL,
   `rating` int(11) DEFAULT 0,
   `feedback_text` text DEFAULT NULL,
-  `destination_island` varchar(50) DEFAULT 'Luzon'
+  `destination_island` varchar(50) DEFAULT 'Luzon',
+  `sender_email` varchar(255) DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `shipments`
 --
 
-INSERT INTO `shipments` (`id`, `contract_number`, `user_id`, `sender_name`, `sender_contact`, `receiver_name`, `receiver_contact`, `origin_address`, `destination_address`, `specific_address`, `address`, `weight`, `package_type`, `package_description`, `distance_km`, `price`, `sla_agreement`, `payment_method`, `bank_name`, `status`, `sla_status`, `proof_image`, `created_at`, `ip_address`, `ai_estimated_time`, `target_delivery_date`, `rating`, `feedback_text`, `destination_island`) VALUES
-(101, NULL, 0, 'Juan Dela Cruz', NULL, 'Maria Clara', NULL, NULL, NULL, NULL, '123 Rizal St. Manila', 0.00, NULL, '', 0.00, 500.00, NULL, 'Unspecified', NULL, 'Pending', 'Pending', NULL, '2026-01-11 13:48:16', NULL, 'Calculating...', NULL, 0, NULL, 'Luzon'),
-(102, NULL, 0, 'roy Dela Cruz', NULL, 'Maria Clara', NULL, NULL, NULL, NULL, '123 Rizal St. Manila', 0.00, NULL, '', 0.00, 500.00, NULL, 'Unspecified', NULL, 'Pending', 'Pending', NULL, '2026-01-11 13:57:25', NULL, 'Calculating...', NULL, 0, NULL, 'Luzon'),
-(143, NULL, 116, 'Roy valle', NULL, 'Justine', NULL, NULL, NULL, NULL, 'F. B. Harrison Street, Barangay 70, Zone 9, District 1, Pasay, Southern Manila District, Metro Manila, 1302, Philippines', 8.00, NULL, 'electronics', 14.76, 354.19, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2025-10-25 11:54:49', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(144, NULL, 116, 'justine', NULL, 'roy', NULL, NULL, NULL, NULL, 'Quezon city', 20.00, NULL, 'ok', 8.13, 195.12, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2025-10-26 02:38:10', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(145, NULL, 0, 'Roy', NULL, 'ako lang', NULL, NULL, NULL, NULL, 'Barangay 3, Calamba, Laguna, CALABARZON, Philippines', 5.00, NULL, 'asfaf', 55.40, 1329.48, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2025-10-28 14:07:03', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(146, NULL, 116, 'roy', NULL, 'asf', NULL, NULL, NULL, NULL, 'sdfasf', 4.00, NULL, 'affs', 25.93, 622.37, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2025-10-28 14:08:55', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(147, NULL, 0, 'resr', NULL, 'test', NULL, NULL, NULL, NULL, 'dfadfadsf', 155.00, NULL, 'fadsf', 15.37, 368.78, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2025-11-11 06:52:27', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(148, NULL, 0, 'dfadsf', NULL, 'dfasdfasdf', NULL, NULL, NULL, NULL, 'fdsadfasdf', 222.00, NULL, 'dfad', 15.37, 368.78, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2025-11-11 07:26:18', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(149, NULL, 116, 'royzxcasd@gmail.com', NULL, 'GG', NULL, NULL, NULL, NULL, 'Novaliches Proper, Quezon City, Metro Manila, NCR, Philippines', 5.00, NULL, 'BOOK', 175.11, 4202.69, NULL, 'cod', NULL, 'Cancelled', 'Pending', NULL, '2025-12-19 14:38:07', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(150, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ere', NULL, NULL, NULL, NULL, 'Cofradia', 4.00, NULL, 'ggasd', 40.01, 960.19, NULL, 'cod', NULL, 'Cancelled', 'Pending', NULL, '2025-12-20 02:33:34', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(151, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ako lang', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', 'Maliksi III, Bacoor, Cavite, CALABARZON, Philippines', NULL, 'maliksi', 12.00, NULL, 'bato', 28.73, 689.45, NULL, 'cod', NULL, 'Cancelled', 'Pending', NULL, '2025-12-20 13:19:35', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(153, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ROY EVERO VALLE', NULL, 'Bagong Silang, Caloocan, Metro Manila, NCR, Philippines', 'San Felipe, San Jose, Del Pilar, San Fernando, Pampanga, Central Luzon, 2000, Philippines', NULL, 'Jdhdh', 5.00, NULL, 'Hdh', 54.34, 1304.21, NULL, 'cod', NULL, 'Delivered', 'Pending', NULL, '2025-12-29 14:21:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 5, 'sdfaf', 'Luzon'),
-(154, NULL, 123, 'gerrychogonzales1234+slate@gmail.com', NULL, 'Diwata', NULL, 'Bagong Silangan, Quezon City, Metro Manila, NCR, Philippines', 'Bagong Silang, Caloocan, Metro Manila, NCR, Philippines', NULL, 'bcp mv campus', 2.00, NULL, 'asdasdasd', 14.65, 351.53, NULL, 'cod', NULL, 'Delivered', 'Met', 'POD_154_1768038490.jpg', '2026-01-02 03:55:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(155, NULL, 123, 'gerrychogonzales1234+slate@gmail.com', NULL, '<h1>Boy Dila</h1>', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', 'Bagong Silangan, Quezon City, Metro Manila, NCR, Philippines', NULL, '<h1>biringan city</h1>', 0.00, NULL, '<h1>Sample description</>', 21.10, 506.50, NULL, 'cod', NULL, 'Pending', 'Pending', NULL, '2026-01-02 04:00:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(156, NULL, 116, 'royzxcasd@gmail.com', NULL, 'asdsad', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', '207, Molino Road, T. Kalugdan Compound, Ligas II, Bacoor, Cavite, Calabarzon, 4102, Philippines', NULL, 'asda', 3.00, NULL, 'werewr', 24.55, 589.20, NULL, 'cod', NULL, 'Cancelled', 'Pending', NULL, '2026-01-03 15:35:45', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(157, 'CN-20260103-705631', 116, 'royzxcasd@gmail.com', NULL, 'ararsdfs', NULL, 'Botocan, Quezon City, Metro Manila, Philippines', 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'sfs', NULL, 5.00, 'standard', 'GG', 19.30, 463.30, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Force Majeure', 'cod', '', 'Cancelled', 'Pending', NULL, '2026-01-03 17:10:43', NULL, '35-45 minutes - Light Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(158, 'CN-20260103-926822', 116, 'royzxcasd@gmail.com', NULL, 'daryl', NULL, 'San Roque, Quezon City, Metro Manila, Philippines', 'Mambog Road, Springside Villas, Mambog II, Mambog, Bacoor, Cavite, Calabarzon, 4102, Philippines', 'Mambog Road, Springside Villas, Mambog II, Mambog, Bacoor, Cavite, Calabarzon, 4102, Philippines', NULL, 1.00, 'standard', 'fragile', 30.01, 720.28, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'Cancelled', 'Pending', NULL, '2026-01-03 17:16:01', NULL, '50 minutes - Very Light Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(159, 'CN-20260103-212954', 116, 'royzxcasd@gmail.com', NULL, 'ian', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Catmon, Malolos, Bulacan, Philippines', 'Catmon, Malolos, Bulacan, Philippines', NULL, 7.00, 'standard', 'POP', 30.77, 738.37, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Force Majeure', 'cod', '', 'Cancelled', 'Pending', NULL, '2026-01-03 17:22:28', NULL, '1 hour - Light Traffic', '2026-01-16 18:13:02', 0, 'Booked by mistake', 'Luzon'),
-(160, 'CN-20260104-806604', 116, 'royzxcasd@gmail.com', NULL, 'cherie mae', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 8.00, 'standard', 'bag', 278.41, 6681.82, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'Delivered', 'Pending', NULL, '2026-01-04 02:54:56', NULL, '7 to 8 hours - Moderate to Heavy Traffic', '2026-01-16 18:13:02', 5, '', 'Luzon'),
-(161, 'CN-20260104-806604', 116, 'royzxcasd@gmail.com', NULL, 'cherie mae', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 8.00, 'standard', 'bag', 278.41, 6681.82, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'Cancelled', 'Pending', NULL, '2026-01-04 02:55:41', NULL, '7 to 8 hours - Moderate to Heavy Traffic', '2026-01-16 18:13:02', 0, 'aray', 'Luzon'),
-(162, 'CN-20260104-264066', 116, 'royzxcasd@gmail.com', NULL, 'moy', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Dalumpinas Road, Bangcusay, San Fernando, La Union, Ilocos Region, 2500, Philippines', 'Dalumpinas Road, Bangcusay, San Fernando, La Union, Ilocos Region, 2500, Philippines', NULL, 10.00, 'standard', 'kamote', 261.99, 6287.79, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'Delivered', 'Pending', NULL, '2026-01-04 04:29:34', NULL, '5 hours - Moderate Traffic', '2026-01-16 18:13:02', 5, 'hjgojg', 'Luzon'),
-(163, 'CN-20260104-739020', 116, 'royzxcasd@gmail.com', NULL, 'valle', NULL, 'Caloocan, Metro Manila, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 5.00, 'standard', 'baso', 278.41, 4176.14, 'Shipment Handling Policy, Delay Policy', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-04 12:17:56', NULL, '7 hours 15 minutes - Moderate Traffic with Potential Fog', '2026-01-16 18:13:02', 5, 'nc', 'Luzon'),
-(164, 'CN-20260104-194405', 116, 'royzxcasd@gmail.com', NULL, 'rhey', NULL, 'Adsia Logistics Johnstown, Elisco Road, Uyvico Compound, Kalawaan, Pasig First District, Pasig, Eastern Manila District, Metro Manila, 1638, Philippines', 'A. Consunji Street, Santo Rosario, San Jose, Del Pilar, San Fernando, Pampanga, Central Luzon, 2000, Philippines', 'Consunji Street', NULL, 10.00, 'box', 'box', 74.90, 1123.48, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-04 12:54:13', NULL, '1 hour 35 minutes to 1 hour 50 minutes - Light Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(165, 'CN-20260104-434976', 116, 'royzxcasd@gmail.com', NULL, 'mae', NULL, 'Caloocan, Metro Manila, Philippines', 'San Fernando, Pampanga, Philippines', 'Malolos', NULL, 6.00, 'box', 'box', 59.63, 894.50, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-04 13:28:10', NULL, '1 hour 45 minutes - Light Traffic', '2026-01-16 18:13:02', 5, '', 'Luzon'),
-(166, 'CN-20260104-802667', 116, 'royzxcasd@gmail.com', NULL, 'Allan', NULL, 'Caloocan, Metro Manila, Philippines', 'San Fernando, Pampanga, Philippines', 'Santo rosario', NULL, 5.00, 'crate', 'Box', 59.63, 894.50, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-04 22:50:50', NULL, '2 hours 15 minutes - Heavy Traffic', '2026-01-16 18:13:02', 5, 'Good', 'Luzon'),
-(167, 'CN-20260105-518115', 116, 'royzxcasd@gmail.com', NULL, 'ROY EVERO VALLE', NULL, 'Taguig, Metro Manila, Philippines', 'Marcos Ira Street, Saint Francis, Meycauayan, Bulacan, Central Luzon, 3020, Philippines', 'B.silang', NULL, 10.00, 'box', 'Yy', 36.37, 545.59, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-05 05:39:42', NULL, '2 hours 15 minutes - Moderate to Heavy Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(168, 'CN-20260105-593361', 116, 'royzxcasd@gmail.com', NULL, 'ako lang', NULL, 'Caloocan, Metro Manila, Philippines', 'Baguio City, Benguet, Philippines', 'Baguio ', NULL, 10.00, 'parcel', 'DOCS', 278.41, 4176.14, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-05 13:28:44', NULL, '4 hours 30 minutes - Light Traffic, Good Weather', '2026-01-16 18:13:02', 5, 'wow', 'Luzon'),
-(169, 'CN-20260106-150256', 116, 'royzxcasd@gmail.com', NULL, 'Ttt', NULL, 'Caloocan, Metro Manila, Philippines', 'F. Tirona Street, Poblacion I-C, Imus, Cavite, Calabarzon, 4103, Philippines', 'Hdhsh', NULL, 5.00, 'box', 'Hdhs', 30.42, 456.35, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-06 04:55:28', NULL, '2 hours 15 minutes - Moderate Traffic', '2026-01-16 18:13:02', 5, 'Hdhd', 'Luzon'),
-(170, 'CN-20260106-132081', 116, 'royzxcasd@gmail.com', NULL, 'Yshs', NULL, 'Makati, Metro Manila, Philippines', 'A. Consunji Street, Santo Rosario, San Jose, Del Pilar, San Fernando, Pampanga, Central Luzon, 2000, Philippines', 'Bdhs', NULL, 58.00, 'crate', 'Hdjd', 73.54, 1103.13, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-06 05:26:06', NULL, '2 hours - Moderate Traffic', '2026-01-16 18:13:02', 5, '', 'Luzon'),
-(171, 'CN-20260106-702005', 116, 'royzxcasd@gmail.com', NULL, 'goku', NULL, 'Manila, Metro Manila, Philippines', 'Bacoor, Cavite, Philippines', 'Bacoor, Cavite, Philippines', NULL, 10.00, 'parcel', 'document', 17.01, 255.13, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', NULL, '2026-01-06 08:42:18', NULL, '1 hour 30 minutes - Heavy Traffic', '2026-01-16 18:13:02', 5, 'oh', 'Luzon'),
-(172, 'CN-20260108-554006', 116, 'royzxcasd@gmail.com', NULL, 'apr', NULL, 'Manila, Metro Manila, Philippines', 'Quezon City, Metro Manila, Philippines', 'Quezon City, Metro Manila, Philippines', NULL, 10.00, 'parcel', 'papers', 12.86, 192.96, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'uploads/proofs/proof_172_1767867142.jpg', '2026-01-08 09:40:24', NULL, '1 hour 30 minutes - Heavy Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(173, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'pogi', '09077100481', 'Manila, Metro Manila, Philippines', 'Caloocan, Metro Manila, Philippines', 'Caloocan, Metro Manila, Philippines', NULL, 10.00, 'box', 'bag', 9.26, 138.91, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'uploads/proofs/proof_173_1767952753.png', '2026-01-09 09:50:03', NULL, '', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(174, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'nce', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Pasig, Metro Manila, Philippines', 'Pasig', NULL, 10.00, 'box', 'Payong', 17.99, 269.86, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Met', 'POD_174_1768038298.jpg', '2026-01-09 10:02:41', NULL, '1 hour 45 minutes to 2 hours - Severe Rush Hour Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(175, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'nce', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Knit Joy Manufacturing, Inc., Cainta, Rizal, Philippines', 'Knit Joy Manufacturing, Inc., Cainta, Rizal, Philippines', NULL, 10.00, 'box', 'Payong', 22.71, 340.59, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'uploads/proofs/proof_175_1767954058.png', '2026-01-09 10:10:22', NULL, '2 hours 15 minutes - Very Heavy Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon'),
-(176, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'mindanao', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 25.00, 'crate', 'BOX', 1382.25, 20733.77, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Met', 'POD_176_1768038075.jpg', '2026-01-09 10:40:13', NULL, '24 - 36 hours (via Air Cargo Express)', '2026-01-16 18:49:18', 0, NULL, 'Luzon'),
-(177, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'zxc', '09077100481', 'Pasay, Metro Manila, Philippines', 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', NULL, 5.00, 'box', 'bag', 1477.10, 22156.57, 'Agreed to Standard Terms & Conditions', 'online', 'Maya', 'Delivered', 'Pending', 'POD_177_1768038561.jpg', '2026-01-09 10:51:07', NULL, '', NULL, 0, NULL, 'Luzon'),
-(178, 'test', 116, 'royzxcasd@gmail.com', '09499508447', 'min', '09077100481', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 12.00, 'parcel', 'zcx', 1385.84, 20787.61, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Met', NULL, '2026-01-09 11:09:38', NULL, '20-24 hours (Delivery by Saturday afternoon/evening, heavily impacted by Metro Manila traffic and Tr', '2026-01-14 19:14:35', 0, NULL, 'Luzon'),
-(179, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'gumana', '09077100481', 'Caloocan, Metro Manila, Philippines', 'General Santos, Soccsksargen, Philippines', 'Soccsksargen', NULL, 10.00, 'box', 'BAG', 1620.46, 24306.89, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Met', NULL, '2026-01-09 11:46:56', NULL, 'Estimated time: 18-24 hours - Very Heavy Traffic & Event Impact', '2026-01-17 00:00:00', 5, '', 'Luzon'),
-(180, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'justine', '09071004815', 'Manila, Metro Manila, Philippines', 'General Santos, Soccsksargen, Philippines', 'sdfaf', NULL, 25.00, 'box', 'wewr', 1613.61, 24204.16, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Met', 'POD_180_1768040771.jpg', '2026-01-10 10:25:36', NULL, '18-24 hours via air cargo (targeting Sunday, January 11, 2026 evening delivery)', '2026-01-18 00:00:00', 0, NULL, 'Luzon'),
-(181, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'teng', '090771004815', 'Manila, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Xavier University', NULL, 15.00, 'box', 'GAMES', 1375.40, 20631.04, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Met', 'POD_181_1768044159.jpg', '2026-01-10 11:21:54', NULL, '48 hours - Light Traffic, Favorable Weather', '2026-01-18 00:00:00', 1, 'nice', 'Luzon'),
-(182, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'asd', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 16.00, 'box', 'kamatis', 1385.84, 20787.61, 'Standard Terms', 'cod', '', 'Pending', 'Pending', NULL, '2026-01-10 12:59:42', NULL, '24-48 hours - Moderate Traffic', '2026-01-18 00:00:00', 0, NULL, 'Luzon'),
-(183, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'visca', '090771004815', 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', 'General Santos, Soccsksargen, Philippines', 'Santos', NULL, 25.00, 'crate', 'papers', 138.20, 2073.03, NULL, 'cod', '', 'Pending', 'Pending', NULL, '2026-01-10 13:16:41', NULL, '2 hours 45 minutes - Light Traffic', '2026-01-17 00:00:00', 0, NULL, 'Mindanao'),
-(184, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'visca', '090771004815', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'General Santos, Soccsksargen, Philippines', 'Santos', NULL, 25.00, 'crate', 'papers', 901.44, 13521.59, NULL, 'cod', '', 'Delivered', 'Met', 'POD_184_1768053039.jpg', '2026-01-10 13:19:06', NULL, '', '2026-01-15 00:00:00', 0, NULL, 'Mindanao'),
-(185, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'visca', '090771004815', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'Old Bacolod Airport, 108 Street, Bacolod, Negros Occidental, Philippines', 'Santos', NULL, 25.00, 'crate', 'papers', 174.28, 2614.14, NULL, 'cod', '', 'Cancelled', 'Pending', NULL, '2026-01-10 13:19:55', NULL, '', '2026-01-17 00:00:00', 0, 'Changed mind', 'Visayas'),
-(186, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'mm', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Ateneo de Cagayan, Corral', NULL, 10.00, 'box', 'zzzx', 1385.84, 20787.61, NULL, 'online', 'GCash', 'Pending', 'Pending', NULL, '2026-01-10 14:07:12', NULL, '12-24 hours (Air Cargo) - Light Traffic', '2026-01-18 00:00:00', 0, NULL, 'Mindanao'),
-(187, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'mm', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Ateneo de Cagayan, Corral', NULL, 10.00, 'box', 'zzzx22', 1385.84, 20787.61, NULL, 'cod', '', 'Delivered', 'Met', 'POD_187_1768141480.jpg', '2026-01-10 14:08:02', NULL, 'Approximately 3.5 days - Light Traffic & Favorable Weather', '2026-01-18 00:00:00', 0, NULL, 'Mindanao'),
-(188, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'mm', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Ateneo de Cagayan, Corral', NULL, 10.00, 'box', 'zzzx22', 1385.84, 20787.61, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_188_1768054246.jpg', '2026-01-10 14:08:23', NULL, 'Approximately 3.5 days - Light Traffic & Favorable Weather', '2026-01-18 00:00:00', 0, NULL, 'Mindanao'),
-(189, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'jr', '09071004815', 'Caloocan, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 25.00, 'crate', 'bigas', 1382.25, 20733.77, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_189_1768083769.jpg', '2026-01-10 22:18:50', NULL, '4-5 days - Light Traffic & Favorable Weather', '2026-01-20 00:00:00', 4, '/', 'Mindanao'),
-(190, NULL, 0, 'Jose Rizal', NULL, 'Andres Bonifacio', NULL, NULL, NULL, NULL, '456 Dapitan St.', 0.00, NULL, '', 0.00, 1200.50, NULL, 'Unspecified', NULL, 'In Transit', 'Pending', NULL, '2026-01-11 13:48:16', NULL, 'Calculating...', NULL, 0, NULL, 'Visayas'),
-(192, NULL, 0, 'Jose Rizal', NULL, 'Andres Bonifacio', NULL, NULL, NULL, NULL, '456 Dapitan St.', 0.00, NULL, '', 0.00, 1200.50, NULL, 'Unspecified', NULL, 'In Transit', 'Pending', NULL, '2026-01-11 13:57:25', NULL, 'Calculating...', NULL, 0, NULL, 'Visayas'),
-(193, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'valle', '0907100481', 'Manila, Metro Manila, Philippines', 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', 'davao', NULL, 15.00, 'furniture', 'll', 1480.34, 22205.16, NULL, 'online', 'Credit Card', 'Delivered', 'Met', 'POD_193_1768270991.jpg', '2026-01-13 02:21:22', NULL, 'Wednesday, January 14, 2026 by 2:00 PM - Moderate Traffic, Good Weather', '2026-01-23 00:00:00', 0, NULL, 'Mindanao'),
-(194, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'jus', '0907100481', 'Manila, Metro Manila, Philippines', 'Tagbilaran City Friendship Park, Tagbilaran, Bohol, Philippines', 'Tagbilaran City Friendship Park, Tagbilaran, Bohol, Philippines', NULL, 25.00, 'box', 'gamot', 1160.04, 17400.63, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_194_1768282963.jpg', '2026-01-13 05:34:16', NULL, '18-24 hours (Air Cargo, Moderate Manila Traffic)', '2026-01-18 00:00:00', 4, '', 'Visayas'),
-(195, 'CNT-20260112-342', 125, 'olgabercasio18@gmail.com', '09499508447', 'ako', '0907100481', 'Manila, Metro Manila, Philippines', 'Tagbilaran City Friendship Park, Tagbilaran, Bohol, Philippines', 'Manila', NULL, 25.00, 'box', 'kamote', 1160.04, 17400.63, NULL, 'cod', '', 'Pending', 'Pending', NULL, '2026-01-13 06:05:14', NULL, '8 - 10 hours - Moderate Traffic, Dry Season', '2026-01-20 00:00:00', 0, NULL, 'Visayas'),
-(196, 'CNT-20260112-342', 125, 'olgabercasio18@gmail.com', '09499508447', 'boy', '0907100481', 'Manila, Metro Manila, Philippines', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'manila', NULL, 2.00, 'box', 'box', 572.96, 8594.34, NULL, 'online', 'GCash', 'Delivered', 'Met', 'POD_196_1768287815.jpg', '2026-01-13 06:36:36', NULL, '9-10 hours - Express Air Cargo (delivered late evening, Jan 13 or early morning, Jan 14)', '2026-01-20 00:00:00', 4, 'egerg', 'Visayas'),
-(197, 'CNT-20260112-342', 125, 'olgabercasio18@gmail.com', '09499508447', 'sdf', '0907100481', 'Quezon City, Metro Manila, Philippines', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', NULL, 12.00, 'box', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 583.39, 8750.90, NULL, 'online', 'GCash', 'In Transit', 'Pending', NULL, '2026-01-13 07:08:09', NULL, 'Approx. 19 hours (Next-Day Delivery) - Moderate Traffic for Initial Ground Transport, Favorable Air ', '2026-01-20 00:00:00', 0, NULL, 'Visayas'),
-(198, 'CNT-2026-0127', 127, 'valleroy851@gmail.com', '09499508447', 'klyde', '09071004815', 'Bacoor, Cavite, Philippines', 'Port of Dumaguete, Dumaguete, Negros Oriental, Philippines', 'Negros ', NULL, 5.00, 'box', 'bublee wrap', 1309.76, 19646.40, NULL, 'online', 'GCash', 'Delivered', 'Pending', 'uploads/proofs/proof_198_1768401442.jpg', '2026-01-14 14:36:14', NULL, '', '2026-01-21 00:00:00', 0, NULL, 'Visayas');
+INSERT INTO `shipments` (`id`, `contract_number`, `user_id`, `sender_name`, `sender_contact`, `receiver_name`, `receiver_contact`, `origin_address`, `destination_address`, `origin_island`, `specific_address`, `address`, `weight`, `package_type`, `package_description`, `distance_km`, `price`, `sla_agreement`, `payment_method`, `bank_name`, `status`, `payment_status`, `sla_status`, `proof_image`, `created_at`, `ip_address`, `ai_estimated_time`, `target_delivery_date`, `rating`, `feedback_text`, `destination_island`, `sender_email`, `updated_at`) VALUES
+(101, NULL, 0, 'Juan Dela Cruz', NULL, 'Maria Clara', NULL, NULL, NULL, NULL, NULL, '123 Rizal St. Manila', 0.00, NULL, '', 0.00, 500.00, NULL, 'Unspecified', NULL, 'Delivered', 'Pending', 'Pending', NULL, '2026-01-11 05:48:16', NULL, 'Calculating...', NULL, 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(102, NULL, 0, 'roy Dela Cruz', NULL, 'Maria Clara', NULL, NULL, NULL, NULL, NULL, '123 Rizal St. Manila', 0.00, NULL, '', 0.00, 500.00, NULL, 'Unspecified', NULL, 'Delivered', 'Pending', 'Pending', NULL, '2026-01-11 05:57:25', NULL, 'Calculating...', NULL, 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(143, NULL, 116, 'Roy valle', NULL, 'Justine', NULL, NULL, NULL, NULL, NULL, 'F. B. Harrison Street, Barangay 70, Zone 9, District 1, Pasay, Southern Manila District, Metro Manila, 1302, Philippines', 8.00, NULL, 'electronics', 14.76, 354.19, NULL, 'cod', NULL, 'In Transit', 'Pending', 'Pending', NULL, '2025-10-25 03:54:49', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(144, NULL, 116, 'justine', NULL, 'roy', NULL, NULL, NULL, NULL, NULL, 'Quezon city', 20.00, NULL, 'ok', 8.13, 195.12, NULL, 'cod', NULL, 'Pending', 'Pending', 'Pending', NULL, '2025-10-25 18:38:10', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(145, NULL, 0, 'Roy', NULL, 'ako lang', NULL, NULL, NULL, NULL, NULL, 'Barangay 3, Calamba, Laguna, CALABARZON, Philippines', 5.00, NULL, 'asfaf', 55.40, 1329.48, NULL, 'cod', NULL, 'Pending', 'Pending', 'Pending', NULL, '2025-10-28 06:07:03', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(146, NULL, 116, 'roy', NULL, 'asf', NULL, NULL, NULL, NULL, NULL, 'sdfasf', 4.00, NULL, 'affs', 25.93, 622.37, NULL, 'cod', NULL, 'Pending', 'Pending', 'Pending', NULL, '2025-10-28 06:08:55', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(147, NULL, 0, 'resr', NULL, 'test', NULL, NULL, NULL, NULL, NULL, 'dfadfadsf', 155.00, NULL, 'fadsf', 15.37, 368.78, NULL, 'cod', NULL, 'Pending', 'Pending', 'Pending', NULL, '2025-11-10 22:52:27', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(148, NULL, 0, 'dfadsf', NULL, 'dfasdfasdf', NULL, NULL, NULL, NULL, NULL, 'fdsadfasdf', 222.00, NULL, 'dfad', 15.37, 368.78, NULL, 'cod', NULL, 'Pending', 'Pending', 'Pending', NULL, '2025-11-10 23:26:18', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(149, NULL, 116, 'royzxcasd@gmail.com', NULL, 'GG', NULL, NULL, NULL, NULL, NULL, 'Novaliches Proper, Quezon City, Metro Manila, NCR, Philippines', 5.00, NULL, 'BOOK', 175.11, 4202.69, NULL, 'cod', NULL, 'Cancelled', 'Pending', 'Pending', NULL, '2025-12-19 06:38:07', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(150, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ere', NULL, NULL, NULL, NULL, NULL, 'Cofradia', 4.00, NULL, 'ggasd', 40.01, 960.19, NULL, 'cod', NULL, 'Cancelled', 'Pending', 'Pending', NULL, '2025-12-19 18:33:34', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(151, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ako lang', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', 'Maliksi III, Bacoor, Cavite, CALABARZON, Philippines', NULL, NULL, 'maliksi', 12.00, NULL, 'bato', 28.73, 689.45, NULL, 'cod', NULL, 'Cancelled', 'Pending', 'Pending', NULL, '2025-12-20 05:19:35', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(152, NULL, 116, 'royzxcasd@gmail.com', NULL, 'bb', NULL, 'Malino, San Fernando, Pampanga, Central Luzon, Philippines', 'Molino I, Bacoor, Cavite, CALABARZON, Philippines', NULL, NULL, '54', 5.00, NULL, 'papers', 99.45, 2386.85, NULL, 'cod', NULL, 'In Transit', 'Pending', 'Pending', NULL, '2025-12-22 03:32:10', NULL, 'Calculating...', '2026-01-16 18:13:02', 5, 'hey', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(153, NULL, 116, 'royzxcasd@gmail.com', NULL, 'ROY EVERO VALLE', NULL, 'Bagong Silang, Caloocan, Metro Manila, NCR, Philippines', 'San Felipe, San Jose, Del Pilar, San Fernando, Pampanga, Central Luzon, 2000, Philippines', NULL, NULL, 'Jdhdh', 5.00, NULL, 'Hdh', 54.34, 1304.21, NULL, 'cod', NULL, 'Delivered', 'Pending', 'Pending', NULL, '2025-12-29 06:21:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 5, 'sdfaf', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(154, NULL, 123, 'gerrychogonzales1234+slate@gmail.com', NULL, 'Diwata', NULL, 'Bagong Silangan, Quezon City, Metro Manila, NCR, Philippines', 'Bagong Silang, Caloocan, Metro Manila, NCR, Philippines', NULL, NULL, 'bcp mv campus', 2.00, NULL, 'asdasdasd', 14.65, 351.53, NULL, 'cod', NULL, 'Delivered', 'Pending', 'Met', 'POD_154_1768038490.jpg', '2026-01-01 19:55:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(155, NULL, 123, 'gerrychogonzales1234+slate@gmail.com', NULL, '<h1>Boy Dila</h1>', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', 'Bagong Silangan, Quezon City, Metro Manila, NCR, Philippines', NULL, NULL, '<h1>biringan city</h1>', 0.00, NULL, '<h1>Sample description</>', 21.10, 506.50, NULL, 'cod', NULL, 'Pending', 'Pending', 'Pending', NULL, '2026-01-01 20:00:30', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(156, NULL, 116, 'royzxcasd@gmail.com', NULL, 'asdsad', NULL, 'Tondo, Manila, Metro Manila, NCR, Philippines', '207, Molino Road, T. Kalugdan Compound, Ligas II, Bacoor, Cavite, Calabarzon, 4102, Philippines', NULL, NULL, 'asda', 3.00, NULL, 'werewr', 24.55, 589.20, NULL, 'cod', NULL, 'Cancelled', 'Pending', 'Pending', NULL, '2026-01-03 07:35:45', NULL, 'Calculating...', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(157, 'CN-20260103-705631', 116, 'royzxcasd@gmail.com', NULL, 'ararsdfs', NULL, 'Botocan, Quezon City, Metro Manila, Philippines', 'Bagong Silang, Caloocan, Metro Manila, Philippines', NULL, 'sfs', NULL, 5.00, 'standard', 'GG', 19.30, 463.30, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Force Majeure', 'cod', '', 'Cancelled', 'Pending', 'Pending', NULL, '2026-01-03 09:10:43', NULL, '35-45 minutes - Light Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(158, 'CN-20260103-926822', 116, 'royzxcasd@gmail.com', NULL, 'daryl', NULL, 'San Roque, Quezon City, Metro Manila, Philippines', 'Mambog Road, Springside Villas, Mambog II, Mambog, Bacoor, Cavite, Calabarzon, 4102, Philippines', NULL, 'Mambog Road, Springside Villas, Mambog II, Mambog, Bacoor, Cavite, Calabarzon, 4102, Philippines', NULL, 1.00, 'standard', 'fragile', 30.01, 720.28, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-03 09:16:01', NULL, '50 minutes - Very Light Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(159, 'CN-20260103-212954', 116, 'royzxcasd@gmail.com', NULL, 'ian', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Catmon, Malolos, Bulacan, Philippines', NULL, 'Catmon, Malolos, Bulacan, Philippines', NULL, 7.00, 'standard', 'POP', 30.77, 738.37, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Force Majeure', 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-03 09:22:28', NULL, '1 hour - Light Traffic', '2026-01-16 18:13:02', 0, 'Booked by mistake', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(160, 'CN-20260104-806604', 116, 'royzxcasd@gmail.com', NULL, 'cherie mae', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 8.00, 'standard', 'bag', 278.41, 6681.82, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-03 18:54:56', NULL, '7 to 8 hours - Moderate to Heavy Traffic', '2026-01-16 18:13:02', 5, '', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(161, 'CN-20260104-806604', 116, 'royzxcasd@gmail.com', NULL, 'cherie mae', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 8.00, 'standard', 'bag', 278.41, 6681.82, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'In Transit', 'Pending', 'Pending', NULL, '2026-01-03 18:55:41', NULL, '7 to 8 hours - Moderate to Heavy Traffic', '2026-01-16 18:13:02', 0, 'aray', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(162, 'CN-20260104-264066', 116, 'royzxcasd@gmail.com', NULL, 'moy', NULL, 'Bagong Silang, Caloocan, Metro Manila, Philippines', 'Dalumpinas Road, Bangcusay, San Fernando, La Union, Ilocos Region, 2500, Philippines', NULL, 'Dalumpinas Road, Bangcusay, San Fernando, La Union, Ilocos Region, 2500, Philippines', NULL, 10.00, 'standard', 'kamote', 261.99, 6287.79, 'Shipment Handling Policy, Delay Policy, Loss and Damage Policy, Cancellation Policy, Confidentiality Policy, Compliance Policy, Force Majeure', 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-03 20:29:34', NULL, '5 hours - Moderate Traffic', '2026-01-16 18:13:02', 5, 'hjgojg', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(163, 'CN-20260104-739020', 116, 'royzxcasd@gmail.com', NULL, 'valle', NULL, 'Caloocan, Metro Manila, Philippines', 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 'Baguio City – Twin River – Keweng – Dalupirip National Road, Petican, Tinongdan, Benguet, Cordillera Administrative Region, Philippines', NULL, 5.00, 'standard', 'baso', 278.41, 4176.14, 'Shipment Handling Policy, Delay Policy', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-04 04:17:56', NULL, '7 hours 15 minutes - Moderate Traffic with Potential Fog', '2026-01-16 18:13:02', 5, 'nc', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(164, 'CN-20260104-194405', 116, 'royzxcasd@gmail.com', NULL, 'rhey', NULL, 'Adsia Logistics Johnstown, Elisco Road, Uyvico Compound, Kalawaan, Pasig First District, Pasig, Eastern Manila District, Metro Manila, 1638, Philippines', 'A. Consunji Street, Santo Rosario, San Jose, Del Pilar, San Fernando, Pampanga, Central Luzon, 2000, Philippines', NULL, 'Consunji Street', NULL, 10.00, 'box', 'box', 74.90, 1123.48, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-04 04:54:13', NULL, '1 hour 35 minutes to 1 hour 50 minutes - Light Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(165, 'CN-20260104-434976', 116, 'royzxcasd@gmail.com', NULL, 'mae', NULL, 'Caloocan, Metro Manila, Philippines', 'San Fernando, Pampanga, Philippines', NULL, 'Malolos', NULL, 6.00, 'box', 'box', 59.63, 894.50, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-04 05:28:10', NULL, '1 hour 45 minutes - Light Traffic', '2026-01-16 18:13:02', 5, '', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(166, 'CN-20260104-802667', 116, 'royzxcasd@gmail.com', NULL, 'Allan', NULL, 'Caloocan, Metro Manila, Philippines', 'San Fernando, Pampanga, Philippines', NULL, 'Santo rosario', NULL, 5.00, 'crate', 'Box', 59.63, 894.50, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-04 14:50:50', NULL, '2 hours 15 minutes - Heavy Traffic', '2026-01-16 18:13:02', 5, 'Good', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(167, 'CN-20260105-518115', 116, 'royzxcasd@gmail.com', NULL, 'ROY EVERO VALLE', NULL, 'Taguig, Metro Manila, Philippines', 'Marcos Ira Street, Saint Francis, Meycauayan, Bulacan, Central Luzon, 3020, Philippines', NULL, 'B.silang', NULL, 10.00, 'box', 'Yy', 36.37, 545.59, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-04 21:39:42', NULL, '2 hours 15 minutes - Moderate to Heavy Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(168, 'CN-20260105-593361', 116, 'royzxcasd@gmail.com', NULL, 'ako lang', NULL, 'Caloocan, Metro Manila, Philippines', 'Baguio City, Benguet, Philippines', NULL, 'Baguio ', NULL, 10.00, 'parcel', 'DOCS', 278.41, 4176.14, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-05 05:28:44', NULL, '4 hours 30 minutes - Light Traffic, Good Weather', '2026-01-16 18:13:02', 5, 'wow', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(169, 'CN-20260106-150256', 116, 'royzxcasd@gmail.com', NULL, 'Ttt', NULL, 'Caloocan, Metro Manila, Philippines', 'F. Tirona Street, Poblacion I-C, Imus, Cavite, Calabarzon, 4103, Philippines', NULL, 'Hdhsh', NULL, 5.00, 'box', 'Hdhs', 30.42, 456.35, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-05 20:55:28', NULL, '2 hours 15 minutes - Moderate Traffic', '2026-01-16 18:13:02', 5, 'Hdhd', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(170, 'CN-20260106-132081', 116, 'royzxcasd@gmail.com', NULL, 'Yshs', NULL, 'Makati, Metro Manila, Philippines', 'A. Consunji Street, Santo Rosario, San Jose, Del Pilar, San Fernando, Pampanga, Central Luzon, 2000, Philippines', NULL, 'Bdhs', NULL, 58.00, 'crate', 'Hdjd', 73.54, 1103.13, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-05 21:26:06', NULL, '2 hours - Moderate Traffic', '2026-01-16 18:13:02', 5, '', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(171, 'CN-20260106-702005', 116, 'royzxcasd@gmail.com', NULL, 'goku', NULL, 'Manila, Metro Manila, Philippines', 'Bacoor, Cavite, Philippines', NULL, 'Bacoor, Cavite, Philippines', NULL, 10.00, 'parcel', 'document', 17.01, 255.13, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-06 00:42:18', NULL, '1 hour 30 minutes - Heavy Traffic', '2026-01-16 18:13:02', 5, 'oh', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(172, 'CN-20260108-554006', 116, 'royzxcasd@gmail.com', NULL, 'apr', NULL, 'Manila, Metro Manila, Philippines', 'Quezon City, Metro Manila, Philippines', NULL, 'Quezon City, Metro Manila, Philippines', NULL, 10.00, 'parcel', 'papers', 12.86, 192.96, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', 'uploads/proofs/proof_172_1767867142.jpg', '2026-01-08 01:40:24', NULL, '1 hour 30 minutes - Heavy Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(173, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'pogi', '09077100481', 'Manila, Metro Manila, Philippines', 'Caloocan, Metro Manila, Philippines', NULL, 'Caloocan, Metro Manila, Philippines', NULL, 10.00, 'box', 'bag', 9.26, 138.91, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', 'uploads/proofs/proof_173_1767952753.png', '2026-01-09 01:50:03', NULL, '', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(174, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'nce', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Pasig, Metro Manila, Philippines', NULL, 'Pasig', NULL, 10.00, 'box', 'Payong', 17.99, 269.86, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Met', 'POD_174_1768038298.jpg', '2026-01-09 02:02:41', NULL, '1 hour 45 minutes to 2 hours - Severe Rush Hour Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(175, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'nce', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Knit Joy Manufacturing, Inc., Cainta, Rizal, Philippines', NULL, 'Knit Joy Manufacturing, Inc., Cainta, Rizal, Philippines', NULL, 10.00, 'box', 'Payong', 22.71, 340.59, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Pending', 'uploads/proofs/proof_175_1767954058.png', '2026-01-09 02:10:22', NULL, '2 hours 15 minutes - Very Heavy Traffic', '2026-01-16 18:13:02', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(176, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'mindanao', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 25.00, 'crate', 'BOX', 1382.25, 20733.77, 'Agreed to Standard Terms & Conditions', 'online', 'GCash', 'Delivered', 'Pending', 'Met', 'POD_176_1768038075.jpg', '2026-01-09 02:40:13', NULL, '24 - 36 hours (via Air Cargo Express)', '2026-01-16 18:49:18', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(177, 'STANDARD-RATE', 116, 'royzxcasd@gmail.com', '09499508447', 'zxc', '09077100481', 'Pasay, Metro Manila, Philippines', 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', NULL, 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', NULL, 5.00, 'box', 'bag', 1477.10, 22156.57, 'Agreed to Standard Terms & Conditions', 'online', 'Maya', 'Delivered', 'Pending', 'Pending', 'POD_177_1768038561.jpg', '2026-01-09 02:51:07', NULL, '', NULL, 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(178, 'test', 116, 'royzxcasd@gmail.com', '09499508447', 'min', '09077100481', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 12.00, 'parcel', 'zcx', 1385.84, 20787.61, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Pending', 'Met', NULL, '2026-01-09 03:09:38', NULL, '20-24 hours (Delivery by Saturday afternoon/evening, heavily impacted by Metro Manila traffic and Tr', '2026-01-14 19:14:35', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(179, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'gumana', '09077100481', 'Caloocan, Metro Manila, Philippines', 'General Santos, Soccsksargen, Philippines', NULL, 'Soccsksargen', NULL, 10.00, 'box', 'BAG', 1620.46, 24306.89, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Pending', 'Met', NULL, '2026-01-09 03:46:56', NULL, 'Estimated time: 18-24 hours - Very Heavy Traffic & Event Impact', '2026-01-17 00:00:00', 5, '', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(180, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'justine', '09071004815', 'Manila, Metro Manila, Philippines', 'General Santos, Soccsksargen, Philippines', NULL, 'sdfaf', NULL, 25.00, 'box', 'wewr', 1613.61, 24204.16, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Pending', 'Met', 'POD_180_1768040771.jpg', '2026-01-10 02:25:36', NULL, '18-24 hours via air cargo (targeting Sunday, January 11, 2026 evening delivery)', '2026-01-18 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(181, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'teng', '090771004815', 'Manila, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Xavier University', NULL, 15.00, 'box', 'GAMES', 1375.40, 20631.04, 'Agreed to Standard Terms & Conditions', 'cod', '', 'Delivered', 'Pending', 'Met', 'POD_181_1768044159.jpg', '2026-01-10 03:21:54', NULL, '48 hours - Light Traffic, Favorable Weather', '2026-01-18 00:00:00', 1, 'nice', 'Luzon', NULL, '2026-01-19 09:45:39'),
+(182, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'asd', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 16.00, 'box', 'kamatis', 1385.84, 20787.61, 'Standard Terms', 'cod', '', 'Delivered', 'Pending', 'Pending', 'uploads/proofs/proof_182_1768544058.jpg', '2026-01-10 04:59:42', NULL, '24-48 hours - Moderate Traffic', '2026-01-18 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(183, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'visca', '090771004815', 'SM City Davao, Quimpo Boulevard, Davao City, Davao Region, Philippines', 'General Santos, Soccsksargen, Philippines', NULL, 'Santos', NULL, 25.00, 'crate', 'papers', 138.20, 2073.03, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', 'uploads/proofs/proof_183_1768539166.jpg', '2026-01-10 05:16:41', NULL, '2 hours 45 minutes - Light Traffic', '2026-01-17 00:00:00', 0, NULL, 'Mindanao', NULL, '2026-01-19 09:45:39'),
+(184, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'visca', '090771004815', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'General Santos, Soccsksargen, Philippines', NULL, 'Santos', NULL, 25.00, 'crate', 'papers', 901.44, 13521.59, NULL, 'cod', '', 'Delivered', 'Pending', 'Met', 'POD_184_1768053039.jpg', '2026-01-10 05:19:06', NULL, '', '2026-01-15 00:00:00', 0, NULL, 'Mindanao', NULL, '2026-01-19 09:45:39'),
+(185, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'visca', '090771004815', 'Roxas Airport, Roxas City Airport Bypass Road, Roxas, Capiz, Philippines', 'Old Bacolod Airport, 108 Street, Bacolod, Negros Occidental, Philippines', NULL, 'Santos', NULL, 25.00, 'crate', 'papers', 174.28, 2614.14, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-10 05:19:55', NULL, '', '2026-01-17 00:00:00', 0, 'Changed mind', 'Visayas', NULL, '2026-01-19 09:45:39'),
+(186, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'mm', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Ateneo de Cagayan, Corral', NULL, 10.00, 'box', 'zzzx', 1385.84, 20787.61, NULL, 'online', 'GCash', 'Delivered', 'Pending', 'Pending', 'uploads/proofs/proof_186_1768539104.jpg', '2026-01-10 06:07:12', NULL, '12-24 hours (Air Cargo) - Light Traffic', '2026-01-18 00:00:00', 0, NULL, 'Mindanao', NULL, '2026-01-19 09:45:39'),
+(187, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'mm', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Ateneo de Cagayan, Corral', NULL, 10.00, 'box', 'zzzx22', 1385.84, 20787.61, NULL, 'cod', '', 'Delivered', 'Pending', 'Met', 'POD_187_1768141480.jpg', '2026-01-10 06:08:02', NULL, 'Approximately 3.5 days - Light Traffic & Favorable Weather', '2026-01-18 00:00:00', 0, NULL, 'Mindanao', NULL, '2026-01-19 09:45:39'),
+(188, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'mm', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Ateneo de Cagayan, Corral', NULL, 10.00, 'box', 'zzzx22', 1385.84, 20787.61, NULL, 'online', 'GCash', 'Delivered', 'Pending', 'Met', 'POD_188_1768054246.jpg', '2026-01-10 06:08:23', NULL, 'Approximately 3.5 days - Light Traffic & Favorable Weather', '2026-01-18 00:00:00', 0, NULL, 'Mindanao', NULL, '2026-01-19 09:45:39'),
+(189, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'jr', '09071004815', 'Caloocan, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', NULL, 25.00, 'crate', 'bigas', 1382.25, 20733.77, NULL, 'online', 'GCash', 'Delivered', 'Pending', 'Met', 'POD_189_1768083769.jpg', '2026-01-10 14:18:50', NULL, '4-5 days - Light Traffic & Favorable Weather', '2026-01-20 00:00:00', 4, '/', 'Mindanao', NULL, '2026-01-19 09:45:39'),
+(190, NULL, 0, 'Jose Rizal', NULL, 'Andres Bonifacio', NULL, NULL, NULL, NULL, NULL, '456 Dapitan St.', 0.00, NULL, '', 0.00, 1200.50, NULL, 'Unspecified', NULL, 'Delivered', 'Pending', 'Pending', NULL, '2026-01-11 05:48:16', NULL, 'Calculating...', NULL, 0, NULL, 'Visayas', NULL, '2026-01-19 09:45:39'),
+(192, NULL, 0, 'Jose Rizal', NULL, 'Andres Bonifacio', NULL, NULL, NULL, NULL, NULL, '456 Dapitan St.', 0.00, NULL, '', 0.00, 1200.50, NULL, 'Unspecified', NULL, 'Arrived', 'Pending', 'Pending', NULL, '2026-01-11 05:57:25', NULL, 'Calculating...', NULL, 0, NULL, 'Visayas', NULL, '2026-01-19 09:45:39'),
+(199, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'renante', '09950806728', 'General Santos, Soccsksargen, Philippines', 'Caloocan, Metro Manila, Philippines', 'Luzon', 'phs 7c', NULL, 12.00, 'parcel', 'box', 1713.56, 25703.46, NULL, 'online', 'GCash', 'Pending', 'Pending', 'Pending', NULL, '2026-01-16 13:24:49', NULL, '', '2026-01-26 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(200, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'nce', '09077100481', 'Pasig, Metro Manila, Philippines', 'Quezon City, Metro Manila, Philippines', NULL, 'n City, Metro Manila, Philippines', NULL, 5.00, 'parcel', 'ff', 13.94, 209.10, NULL, 'cod', '', 'Pending', 'Pending', 'Pending', NULL, '2026-01-16 14:03:13', NULL, '', '2026-01-19 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(201, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'aws', '09077100481', 'Pasig, Metro Manila, Philippines', 'Quezon City, Metro Manila, Philippines', NULL, 'n City, Metro Manila, Philippines', NULL, 5.00, 'parcel', 'ff', 13.94, 209.10, NULL, 'cod', '', 'Pending', 'Pending', 'Pending', NULL, '2026-01-16 14:39:21', NULL, '', '2026-01-19 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(202, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'big', '09077100481', 'Pasig, Metro Manila, Philippines', 'Quezon City, Metro Manila, Philippines', '', 'bsilang', NULL, 5.00, 'parcel', 'ff', 13.94, 209.10, NULL, 'cod', '', 'Pending', 'Pending', 'Pending', NULL, '2026-01-16 14:48:51', NULL, '', '2026-01-19 00:00:00', 0, NULL, '', NULL, '2026-01-19 09:45:39'),
+(203, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'hey', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Parañaque, Metro Manila, Philippines', '', 're', NULL, 5.00, 'parcel', 'saging', 19.12, 286.75, NULL, 'cod', '', 'Pending', 'Pending', 'Pending', NULL, '2026-01-16 14:50:14', NULL, '', '2026-01-19 00:00:00', 0, NULL, '', NULL, '2026-01-19 09:45:39'),
+(204, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'hey', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Parañaque, Metro Manila, Philippines', '', 're', NULL, 5.00, 'parcel', 'saging', 19.12, 286.75, NULL, 'cod', '', 'Pending', 'Pending', 'Pending', NULL, '2026-01-16 14:50:20', NULL, '', '2026-01-19 00:00:00', 0, NULL, '', NULL, '2026-01-19 09:45:39'),
+(205, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'hey', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Parañaque, Metro Manila, Philippines', NULL, 're', NULL, 5.00, 'parcel', 'saging', 19.12, 286.75, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-16 14:51:03', NULL, '', '2026-01-19 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(206, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'hey', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Parañaque, Metro Manila, Philippines', 'Luzon', 'ret', NULL, 5.00, 'parcel', 'saging', 19.12, 286.75, NULL, 'cod', '', 'In Transit', 'Pending', 'Pending', NULL, '2026-01-16 14:53:47', NULL, '', '2026-01-19 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(207, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'hey', '09077100481', 'Caloocan, Metro Manila, Philippines', 'Cebu City, Central Visayas, Philippines', 'Luzon', 'ret', NULL, 5.00, 'parcel', 'saging', 1120.90, 16813.47, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-16 14:54:49', NULL, '', '2026-01-21 00:00:00', 0, NULL, 'Visayas', NULL, '2026-01-19 09:45:39'),
+(208, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'api', '0907100481', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Manila, Metro Manila, Philippines', 'Mindanao', 'Manila, Metro Manila, Philippines', NULL, 1.00, 'box', 'bakal', 1378.64, 20679.53, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-16 15:49:29', NULL, '', '2026-01-23 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(209, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'rj', '0907100481', 'Manila, Metro Manila, Philippines', 'Quezon City, Metro Manila, Philippines', 'Luzon', 'v', NULL, 5.00, 'box', 'wdf', 12.86, 192.96, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', 'uploads/proofs/proof_209_1768807458.png', '2026-01-16 16:49:16', NULL, '', '2026-01-19 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(210, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'api', '0907100481', 'Kalibo, Aklan, Philippines', 'Manila, Metro Manila, Philippines', 'Visayas', 'Manila, Metro Manila, Philippines', NULL, 10.00, 'box', 'box', 496.65, 9164.04, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-17 02:00:57', NULL, '', '2026-01-22 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(211, 'CNT-2026-0128', 128, 'cheriemaelabanza@gmail.com', '09499508447', 'valle roy', '0907100481', 'Quezon City, Metro Manila, Philippines', 'Cebu Doctors University, Dr. P. V. Larrazabal Jr. Avenue, Mandaue, Central Visayas, Philippines', 'Luzon', 'Cebu Doctors University, Dr. P. V. Larrazabal Jr. Avenue, Mandaue, Central Visayas, Philippines', NULL, 0.50, 'parcel', 'box', 1119.86, 16812.90, NULL, 'cod', '', 'Delivered', 'Pending', 'Pending', NULL, '2026-01-18 03:31:57', NULL, 'Est. 28 hrs', '2026-01-23 00:00:00', 0, NULL, 'Visayas', NULL, '2026-01-19 09:45:39'),
+(212, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', '12', '090771004815', 'Manila, Metro Manila, Philippines', 'Taguig, Metro Manila, Philippines', 'Luzon', 'Taguig, Metro Manila, Philippines', NULL, 0.50, 'parcel', 'e', 17.25, 772.50, NULL, 'cod', '', 'Delivered', 'Paid', 'Pending', 'uploads/proofs/proof_212_1768807193.png', '2026-01-19 07:18:41', NULL, 'Est. 0.4 hrs', '2026-01-22 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 09:45:39'),
+(213, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'roy', '090771004815', 'Quezon City, Metro Manila, Philippines', 'Meycauayan, Bulacan, Philippines', 'Luzon', 'Meycauayan, Bulacan, Philippines', NULL, 80.00, 'furniture', 'x', 20.12, 1405.40, NULL, 'cod', '', 'Delivered', 'Paid', 'Pending', NULL, '2026-01-19 09:18:03', NULL, 'Est. 0.5 hrs', '2026-01-22 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 12:38:45'),
+(214, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'bb', '090771004815', 'Tagbilaran City Friendship Park, Tagbilaran, Bohol, Philippines', 'Pasig, Metro Manila, Philippines', 'Visayas', 'Pasig, Metro Manila, Philippines', NULL, 20.00, 'box', 'e', 1160.07, 32781.96, NULL, 'cod', '', 'Delivered', 'Paid', 'Pending', NULL, '2026-01-19 11:53:33', NULL, 'Est. 29 hrs', '2026-01-24 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 12:22:39'),
+(215, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '0999949566', 'core1', '09071004815', 'Caloocan, Metro Manila, Philippines', 'Xavier University - Ateneo de Cagayan, Corrales Avenue, Cagayan de Oro, Northern Mindanao, Philippines', 'Luzon', 'wqw', NULL, 1.00, 'parcel', 'papers', 1382.25, 13922.50, NULL, 'cod', '', 'Delivered', 'Paid', 'Pending', NULL, '2026-01-19 12:42:15', NULL, 'Est. 34.6 hrs', '2026-01-26 00:00:00', 0, NULL, 'Mindanao', NULL, '2026-01-19 12:43:02'),
+(216, 'CN-2026-B59BB', 116, 'royzxcasd@gmail.com', '09499508447', 'e', '09071004815', 'Iloilo City, Western Visayas, Philippines', 'Manila, Metro Manila, Philippines', 'Visayas', 'vv', NULL, 20.00, 'box', 'e', 650.21, 3551.05, NULL, 'online', 'GCash', 'Delivered', 'Paid', 'Pending', NULL, '2026-01-19 12:45:34', NULL, 'Est. 16.3 hrs', '2026-01-24 00:00:00', 0, NULL, 'Luzon', NULL, '2026-01-19 12:47:27');
 
 -- --------------------------------------------------------
 
@@ -1157,7 +1254,12 @@ INSERT INTO `shipment_documents` (`id`, `tracking_number`, `doc_type`, `file_nam
 (11, '193', 'Proof of Delivery', '193_ProofofDelivery_1768271726.pdf', 'uploads/193_ProofofDelivery_1768271726.pdf', 'Admin', '2026-01-13 10:35:26'),
 (12, '101', 'Commercial Invoice', '101_CommercialInvoice_1768272557.jpg', 'uploads/101_CommercialInvoice_1768272557.jpg', 'API User (Sales Dept)', '2026-01-13 10:49:17'),
 (13, '101', 'Commercial Invoice', '101_CommercialInvoice_1768283257.jpg', 'uploads/101_CommercialInvoice_1768283257.jpg', 'API User (Sales Dept)', '2026-01-13 13:47:37'),
-(14, '101', 'Commercial Invoice', '101_CommercialInvoice_1768287866.pdf', 'uploads/101_CommercialInvoice_1768287866.pdf', 'API User (Sales Dept)', '2026-01-13 15:04:26');
+(14, '101', 'Commercial Invoice', '101_CommercialInvoice_1768287866.pdf', 'uploads/101_CommercialInvoice_1768287866.pdf', 'API User (Sales Dept)', '2026-01-13 15:04:26'),
+(15, '101', 'Commercial Invoice', '101_CommercialInvoice_1768704321.pdf', 'uploads/101_CommercialInvoice_1768704321.pdf', 'API User (Sales Dept)', '2026-01-18 10:45:21'),
+(16, '101', 'Commercial Invoice', '101_CommercialInvoice_1768808117.docx', 'uploads/101_CommercialInvoice_1768808117.docx', 'API User (Sales Dept)', '2026-01-19 15:35:17'),
+(17, '101', 'Commercial Invoice', '101_CommercialInvoice_1768808594.docx', 'uploads/101_CommercialInvoice_1768808594.docx', 'API User (Sales Dept)', '2026-01-19 15:43:14'),
+(18, '102', 'Commercial Invoice', '102_CommercialInvoice_1768808660.docx', 'uploads/102_CommercialInvoice_1768808660.docx', 'API User (Sales Dept)', '2026-01-19 15:44:20'),
+(19, '212', 'Other', '212_Other_1768809261.docx', 'uploads/212_Other_1768809261.docx', 'Admin', '2026-01-19 15:54:21');
 
 -- --------------------------------------------------------
 
@@ -1178,62 +1280,22 @@ CREATE TABLE `sla_policies` (
 --
 
 INSERT INTO `sla_policies` (`id`, `contract_id`, `origin_group`, `destination_group`, `max_days`) VALUES
-(81, 14, 'Luzon', 'Visayas', 7),
-(82, 14, 'Luzon', 'Visayas', 7),
-(83, 14, 'Luzon', 'Visayas', 7),
-(84, 14, 'Luzon', 'Visayas', 7),
-(85, 14, 'Luzon', 'Visayas', 7),
-(86, 14, 'Luzon', 'Mindanao', 7),
-(87, 14, 'Luzon', 'Mindanao', 7),
-(88, 14, 'Luzon', 'Mindanao', 7),
-(89, 14, 'Metro Manila', 'Metro Manila', 3),
-(90, 14, 'Metro Manila', 'Metro Manila', 3),
-(91, 14, 'Metro Manila', 'Visayas', 5),
-(92, 14, 'Metro Manila', 'Visayas', 5),
-(93, 15, 'Luzon', 'Visayas', 7),
-(94, 15, 'Luzon', 'Visayas', 7),
-(95, 15, 'Luzon', 'Visayas', 7),
-(96, 15, 'Luzon', 'Visayas', 7),
-(97, 15, 'Luzon', 'Visayas', 7),
-(98, 15, 'Luzon', 'Visayas', 7),
-(99, 15, 'Luzon', 'Visayas', 7),
-(100, 15, 'Luzon', 'Visayas', 7),
-(101, 15, 'Luzon', 'Visayas', 7),
-(102, 15, 'Luzon', 'Visayas', 7),
-(103, 15, 'Luzon', 'Visayas', 7),
-(104, 15, 'Luzon', 'Mindanao', 7),
-(105, 15, 'Luzon', 'Mindanao', 7),
-(106, 15, 'Luzon', 'Mindanao', 7),
-(107, 15, 'Metro Manila', 'Metro Manila', 3),
-(108, 15, 'Metro Manila', 'Metro Manila', 3),
-(109, 15, 'Metro Manila', 'Visayas', 5),
-(110, 15, 'Metro Manila', 'Visayas', 5),
-(111, 16, 'Luzon', 'Visayas', 7),
-(112, 16, 'Luzon', 'Visayas', 7),
-(113, 16, 'Luzon', 'Visayas', 7),
-(114, 16, 'Luzon', 'Visayas', 7),
-(115, 16, 'Luzon', 'Visayas', 7),
-(116, 16, 'Luzon', 'Visayas', 7),
-(117, 16, 'Luzon', 'Visayas', 7),
-(118, 16, 'Luzon', 'Visayas', 7),
-(119, 16, 'Luzon', 'Visayas', 7),
-(120, 16, 'Luzon', 'Visayas', 7),
-(121, 16, 'Luzon', 'Visayas', 7),
-(122, 16, 'Luzon', 'Mindanao', 7),
-(123, 16, 'Luzon', 'Mindanao', 7),
-(124, 16, 'Luzon', 'Mindanao', 7),
-(125, 16, 'Metro Manila', 'Metro Manila', 3),
-(126, 16, 'Metro Manila', 'Metro Manila', 3),
-(127, 16, 'Metro Manila', 'Visayas', 5),
-(128, 16, 'Metro Manila', 'Visayas', 5),
-(129, 0, 'Metro Manila', 'Metro Manila', 3),
-(130, 0, 'Luzon', 'Visayas', 7),
-(131, 0, 'Luzon', 'Mindanao', 10),
-(132, 0, 'Visayas', 'Mindanao', 7),
-(133, 17, 'Metro Manila', 'Metro Manila', 3),
-(134, 17, 'Luzon', 'Visayas', 7),
-(135, 17, 'Luzon', 'Mindanao', 10),
-(136, 17, 'Visayas', 'Mindanao', 7);
+(140, 0, 'Luzon', 'Luzon', 3),
+(141, 0, 'Luzon', 'Visayas', 5),
+(142, 0, 'Luzon', 'Mindanao', 7),
+(143, 0, 'Visayas', 'Luzon', 5),
+(144, 0, 'Visayas', 'Visayas', 3),
+(145, 0, 'Visayas', 'Mindanao', 5),
+(147, 0, 'Mindanao', 'Luzon', 7),
+(148, 0, 'Mindanao', 'Visayas', 5),
+(149, 18, 'Luzon', 'Luzon', 3),
+(150, 18, 'Luzon', 'Visayas', 5),
+(151, 18, 'Luzon', 'Mindanao', 7),
+(152, 18, 'Visayas', 'Luzon', 5),
+(153, 18, 'Visayas', 'Visayas', 3),
+(154, 18, 'Visayas', 'Mindanao', 5),
+(155, 18, 'Mindanao', 'Luzon', 7),
+(156, 18, 'Mindanao', 'Visayas', 5);
 
 -- --------------------------------------------------------
 
@@ -1324,9 +1386,9 @@ ALTER TABLE `notifications`
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `password_resets`
+-- Indexes for table `password_reset`
 --
-ALTER TABLE `password_resets`
+ALTER TABLE `password_reset`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1383,13 +1445,13 @@ ALTER TABLE `user_data`
 -- AUTO_INCREMENT for table `accounts`
 --
 ALTER TABLE `accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
 
 --
 -- AUTO_INCREMENT for table `activity_log`
 --
 ALTER TABLE `activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=501;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=513;
 
 --
 -- AUTO_INCREMENT for table `admin_activity`
@@ -1413,7 +1475,7 @@ ALTER TABLE `archive_doc`
 -- AUTO_INCREMENT for table `contracts`
 --
 ALTER TABLE `contracts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `crm`
@@ -1437,19 +1499,19 @@ ALTER TABLE `e_doc`
 -- AUTO_INCREMENT for table `feedback`
 --
 ALTER TABLE `feedback`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
--- AUTO_INCREMENT for table `password_resets`
+-- AUTO_INCREMENT for table `password_reset`
 --
-ALTER TABLE `password_resets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+ALTER TABLE `password_reset`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `payments`
@@ -1461,25 +1523,25 @@ ALTER TABLE `payments`
 -- AUTO_INCREMENT for table `replies`
 --
 ALTER TABLE `replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `shipments`
 --
 ALTER TABLE `shipments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=199;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=217;
 
 --
 -- AUTO_INCREMENT for table `shipment_documents`
 --
 ALTER TABLE `shipment_documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `sla_policies`
 --
 ALTER TABLE `sla_policies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=157;
 
 --
 -- AUTO_INCREMENT for table `user_data`
@@ -1501,7 +1563,7 @@ ALTER TABLE `feedback`
 -- Constraints for table `notifications`
 --
 ALTER TABLE `notifications`
-  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `accounts` (`id`);
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `payments`

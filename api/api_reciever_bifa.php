@@ -5,8 +5,8 @@
     header('Content-Type: application/json'); // Return JSON format
 
 // 1. IMPORT NIYO YUNG CONNECTIONS AT LOGIC NIYO
-include 'connection.php';    // Ito yung connection sa Admin DB
-include 'file_handler.php';  // Ito yung engine na nag-uupload (yung may uploadDocument function)
+include '../connection.php';    // Ito yung connection sa Admin DB
+include '../file_handler.php';  // Ito yung engine na nag-uupload (yung may uploadDocument function)
 
 // 2. SECURITY CHECK (API KEY)
 // Para hindi kung sino-sino lang ang tumatawag.

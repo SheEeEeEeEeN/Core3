@@ -6,14 +6,15 @@ requireRole('user');
 
 $username = $_SESSION['email']; 
 
-// Fetch shipments 
-$query = "SELECT * FROM shipments WHERE sender_name = '$username' OR contract_number = '$username' ORDER BY id DESC";
-$result = mysqli_query($conn, $query);
-
-// User Profile logic
-$q_user = mysqli_query($conn, "SELECT * FROM accounts WHERE email = '$username'");
+// 1. Fetch user ID for accurate querying
+$q_user = mysqli_query($conn, "SELECT id, profile_image FROM accounts WHERE email = '$username'");
 $user = mysqli_fetch_assoc($q_user);
+$userId = $user['id'];
 $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.png';
+
+// 2. Fetch shipments (Updated Query to use user_id)
+$query = "SELECT * FROM shipments WHERE user_id = '$userId' ORDER BY created_at DESC";
+$result = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -141,6 +142,7 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
             <?php if(mysqli_num_rows($result) > 0): ?>
                 <?php while($row = mysqli_fetch_assoc($result)): ?>
                     <?php 
+                        // Delivery Status Logic
                         $rawStatus = $row['status'] ?? 'Pending';
                         $st = strtolower($rawStatus); 
 
@@ -148,24 +150,51 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
                         if(strpos($st, 'transit') !== false) $statusClass = 'status-transit';
                         else if(strpos($st, 'delivered') !== false) $statusClass = 'status-delivered';
                         else if(strpos($st, 'cancelled') !== false) $statusClass = 'status-cancelled';
+
+                        // --- ✨ PAYMENT STATUS LOGIC (Requested Feature) ✨ ---
+                        $payStatus = $row['payment_status'] ?? 'Pending'; // Default
+                        $payMethod = strtoupper($row['payment_method'] ?? 'COD');
+                        
+                        // Badge Color: Green for Paid, Yellow for Pending
+                        $payBadgeClass = ($payStatus === 'Paid') ? 'bg-success' : 'bg-warning text-dark';
+                        $payIcon = ($payStatus === 'Paid') ? 'bi-check-circle-fill' : 'bi-hourglass-split';
                     ?>
                     
                     <div class="col-12">
                         <div class="card shadow-sm card-status <?php echo $statusClass; ?>">
                             <div class="card-body">
                                 <div class="row align-items-center">
+                                    
                                     <div class="col-md-3 border-end">
-                                        <h6 class="text-muted small mb-1">ID: #<?php echo $row['id']; ?></h6>
-                                        <span class="badge rounded-pill <?php echo ($statusClass == 'status-delivered')?'bg-success':(($statusClass == 'status-cancelled')?'bg-danger':'bg-warning text-dark'); ?>">
-                                            <?php echo strtoupper($rawStatus); ?>
-                                        </span>
-                                        <div class="small text-muted mt-2">Booked: <?php echo date('M d, Y', strtotime($row['created_at'] ?? 'now')); ?></div>
+                                        <h6 class="text-primary fw-bold small mb-1">
+                                            #<?php echo $row['tracking_number'] ?? $row['id']; ?>
+                                        </h6>
+                                        
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">DELIVERY</small>
+                                            <span class="badge rounded-pill <?php echo ($statusClass == 'status-delivered')?'bg-success':(($statusClass == 'status-cancelled')?'bg-danger':'bg-info text-dark'); ?>">
+                                                <?php echo strtoupper($rawStatus); ?>
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">PAYMENT</small>
+                                            <span class="badge <?php echo $payBadgeClass; ?>">
+                                                <i class="bi <?php echo $payIcon; ?>"></i> <?php echo strtoupper($payStatus); ?>
+                                            </span>
+                                            <span class="badge bg-light text-dark border ms-1">
+                                                <?php echo $payMethod; ?>
+                                            </span>
+                                        </div>
                                     </div>
                                     
                                     <div class="col-md-4">
                                         <div class="d-flex flex-column gap-1">
                                             <div><i class="bi bi-geo-alt-fill text-danger"></i> <small>From:</small> <strong><?php echo $row['origin_address']; ?></strong></div>
                                             <div><i class="bi bi-geo-alt-fill text-success"></i> <small>To:</small> <strong><?php echo $row['destination_address']; ?></strong></div>
+                                            <div class="mt-2 text-dark fw-bold">
+                                                <i class="bi bi-tag-fill text-primary"></i> Price: ₱<?php echo number_format($row['price'], 2); ?>
+                                            </div>
                                         </div>
                                     </div>
                                     
@@ -174,12 +203,12 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
                                         <span class="text-info fw-bold">
                                             <?php echo !empty($row['ai_estimated_time']) ? $row['ai_estimated_time'] : 'Calculating...'; ?>
                                         </span>
+                                        <div class="small text-muted mt-2">Booked: <?php echo date('M d, Y', strtotime($row['created_at'])); ?></div>
                                     </div>
                                     
                                     <div class="col-md-2 text-end d-grid gap-2">
                                         
                                         <?php if(strpos($st, 'delivered') !== false): ?>
-                                            
                                             <?php if(!empty($row['proof_image'])): ?>
                                                 <button onclick="viewProof('<?php echo $row['proof_image']; ?>')" class="btn btn-info btn-sm text-white">
                                                     <i class="bi bi-image"></i> View Proof
@@ -202,7 +231,7 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
 
                                         <?php else: ?>
                                             <button onclick="openReceiveModal(<?php echo $row['id']; ?>)" class="btn btn-success btn-sm">
-                                                <i class="bi bi-camera-fill"></i> Receive & Upload Proof
+                                                <i class="bi bi-camera-fill"></i> I Received This
                                             </button>
 
                                             <?php if($st == 'pending'): ?>
@@ -488,7 +517,7 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
             formData.append('action', 'update_status');
             if(reason) formData.append('reason', reason);
 
-            const res = await fetch('update_shipment_api.php', { 
+            const res = await fetch('update_shipments_api.php', { 
                 method: 'POST', body: formData 
             });
             const data = await res.json();
@@ -521,7 +550,7 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
         formData.append('action', 'submit_rating');
         
         try {
-            const res = await fetch('https://core3.slatefreight-ph.com/update_shipment_api.php', { 
+            const res = await fetch('update_shipment_api.php', { 
                 method: 'POST', body: formData 
             });
             const data = await res.json();
@@ -540,7 +569,7 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
 </script>
 
 <script>
-    // AUTO-CHECK NOTIFICATIONS EVERY 5 SECONDS
+    // AUTO-CHECK NOTIFICATIONS
     function fetchNotifications() {
         fetch('api/get_notifications.php')
         .then(response => response.json())
@@ -548,7 +577,6 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
             const badge = document.getElementById('notifBadge');
             const list = document.getElementById('notifList');
 
-            // 1. Update Badge Count
             if (data.count > 0) {
                 badge.innerText = data.count;
                 badge.style.display = 'inline-block';
@@ -556,11 +584,9 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
                 badge.style.display = 'none';
             }
 
-            // 2. Update Dropdown List
             let html = '';
             if (data.data.length > 0) {
                 data.data.forEach(notif => {
-                    // Check if read or unread styling
                     let bgClass = notif.is_read == 0 ? 'bg-light' : '';
                     let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-circle text-muted';
                     
@@ -586,7 +612,6 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
         });
     }
 
-    // Mark as Read when clicked
     function markRead() {
         fetch('api/get_notifications.php', {
             method: 'POST',
@@ -597,9 +622,8 @@ $profileImage = !empty($user['profile_image']) ? $user['profile_image'] : 'user.
         });
     }
 
-    // Initial Call + Interval
     fetchNotifications();
-    setInterval(fetchNotifications, 5000); // Check every 5 seconds
+    setInterval(fetchNotifications, 5000);
 </script>
 </body>
 </html>

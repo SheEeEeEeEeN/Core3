@@ -160,7 +160,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
     @media (max-width: 768px) {
       .location-selectors {
         grid-template-columns: 1fr;
-      }
+            }
     }
 
     .location-group {
@@ -432,7 +432,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                 <div class="form-control p-2 text-center bg-light"><small class="text-muted d-block">Distance</small><strong id="distanceKmDisplay">0.000</strong> km</div>
               </div>
               <div class="col-4">
-                <div class="form-control p-2 text-center bg-light"><small class="text-muted d-block">Rate/km</small><strong id="ratePerKmDisplay">₱15.00</strong></div>
+                <div class="form-control p-2 text-center bg-light"><small class="text-muted d-block">Rate/km</small><strong id="ratePerKmDisplay">--</strong></div>
               </div>
               <div class="col-4">
                 <div class="form-control p-2 text-center bg-light"><small class="text-muted d-block">Price</small><strong id="priceDisplay">₱0.00</strong></div>
@@ -537,9 +537,9 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                     📦 Small Box (Shoe Box Size)
                   </option>
 
-                  <option value="m_box" data-l="50" data-w="40" data-h="40" data-k="10" data-type="box">
+                  <!-- <option value="m_box" data-l="50" data-w="40" data-h="40" data-k="10" data-type="box">
                     📦 Medium Box (Microwave Size)
-                  </option>
+                  </option> -->
                   <option value="l_box" data-l="60" data-w="60" data-h="60" data-k="20" data-type="box">
                     📦 Large Box (Standard Balikbayan)
                   </option>
@@ -613,7 +613,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
               <input type="hidden" name="price_php" id="price_php" value="0">
 
               <div class="d-grid gap-2">
-                <button type="button" id="calcBtn" class="btn btn-success">Calculate Price</button>
+                <button type="button" id="calcBtn" class="btn btn-success" onclick="calculateTotal()">Calculate Price</button>
                 <button type="submit" class="btn btn-primary" id="submitBtn">🚀 Submit Booking</button>
               </div>
             </form>
@@ -658,7 +658,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
             <h5 class="modal-title">📑 Terms and Conditions</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
-        <div class="modal-body">
+          <div class="modal-body">
     <div class="border p-4 rounded bg-light shadow-sm" style="max-height: 400px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; color: #333;">
         
         <div class="text-center mb-4">
@@ -791,8 +791,8 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
 
   <script src="ph_locations.js?v=2"></script>
 
-  <script>
-    // 1. UI HELPERS
+ <script>
+    // 1. UI INITIALIZATION
     if (typeof initDarkMode === "function") initDarkMode("userThemeToggle", "userDarkMode");
 
     document.getElementById('hamburger').addEventListener('click', function() {
@@ -809,17 +809,6 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
     document.getElementById('sidebarOverlay').addEventListener('click', function() {
       document.getElementById('sidebar').classList.remove('mobile-open');
       this.classList.remove('show');
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-      checkSLA();
-    });
-
-    // AGREEMENT LOGIC
-    document.getElementById("acceptContract").addEventListener("click", () => {
-      bootstrap.Modal.getInstance(document.getElementById("contractModal")).hide();
-      document.getElementById("contractAgree").checked = true;
-      document.getElementById("contractAgree").disabled = false;
     });
 
     // 2. LOCATION HIERARCHY LOGIC
@@ -878,52 +867,32 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       if (brgyData) brgyData.forEach(b => brgySelect.add(new Option(b, b)));
     }
 
-    // --- ORIGIN LISTENERS ---
+    // Origin Listeners
     document.getElementById('originIsland').addEventListener('change', function() {
-      // Sync to Hidden Input
       document.getElementById('hiddenOriginIsland').value = this.value;
       updateRegionDropdown(this.value, 'originRegion');
       resetDropdowns(['originProvince', 'originMunicipality', 'originBarangay']);
       checkSLA();
     });
-    document.getElementById('originRegion').addEventListener('change', function() {
-      loadProvinces(this, 'originProvince');
-      resetDropdowns(['originMunicipality', 'originBarangay']);
-    });
-    document.getElementById('originProvince').addEventListener('change', function() {
-      loadMunicipalities(this, 'originMunicipality', 'originRegion');
-      resetDropdowns(['originBarangay']);
-    });
-    document.getElementById('originMunicipality').addEventListener('change', function() {
-      loadBarangays(this, 'originBarangay', 'originRegion', 'originProvince');
-    });
+    document.getElementById('originRegion').addEventListener('change', function() { loadProvinces(this, 'originProvince'); resetDropdowns(['originMunicipality', 'originBarangay']); });
+    document.getElementById('originProvince').addEventListener('change', function() { loadMunicipalities(this, 'originMunicipality', 'originRegion'); resetDropdowns(['originBarangay']); });
+    document.getElementById('originMunicipality').addEventListener('change', function() { loadBarangays(this, 'originBarangay', 'originRegion', 'originProvince'); });
 
-    // --- DESTINATION LISTENERS ---
+    // Destination Listeners
     document.getElementById('destIsland').addEventListener('change', function() {
-      // Sync to Hidden Input
       document.getElementById('hiddenDestIsland').value = this.value;
       updateRegionDropdown(this.value, 'destRegion');
       resetDropdowns(['destProvince', 'destMunicipality', 'destBarangay']);
       checkSLA();
     });
-    document.getElementById('destRegion').addEventListener('change', function() {
-      loadProvinces(this, 'destProvince');
-      resetDropdowns(['destMunicipality', 'destBarangay']);
-    });
-    document.getElementById('destProvince').addEventListener('change', function() {
-      loadMunicipalities(this, 'destMunicipality', 'destRegion');
-      resetDropdowns(['destBarangay']);
-    });
-    document.getElementById('destMunicipality').addEventListener('change', function() {
-      loadBarangays(this, 'destBarangay', 'destRegion', 'destProvince');
-    });
+    document.getElementById('destRegion').addEventListener('change', function() { loadProvinces(this, 'destProvince'); resetDropdowns(['destMunicipality', 'destBarangay']); });
+    document.getElementById('destProvince').addEventListener('change', function() { loadMunicipalities(this, 'destMunicipality', 'destRegion'); resetDropdowns(['destBarangay']); });
+    document.getElementById('destMunicipality').addEventListener('change', function() { loadBarangays(this, 'destBarangay', 'destRegion', 'destProvince'); });
 
 
     // 3. MAP LOGIC
     const map = L.map('map').setView([14.5995, 120.9842], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
     const greenPinHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#198754" width="40" height="40" stroke="black" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white"/></svg>`;
     const redPinHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#dc3545" width="40" height="40" stroke="black" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white"/></svg>`;
@@ -937,85 +906,47 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       waypoints: [],
       routeWhileDragging: true,
       geocoder: L.Control.Geocoder.photon(),
-      show: false,
-      addWaypoints: true,
+      show: false, 
+      addWaypoints: false, 
       lineOptions: {
-        styles: [{
-          color: 'blue',
-          opacity: 0.7,
-          weight: 5
-        }]
+        styles: [{ color: '#0d6efd', opacity: 0.8, weight: 6 }] 
       },
       createMarker: function(i, wp, n) {
         let iconHtml = (i === 0) ? greenPinHtml : ((i === n - 1) ? redPinHtml : null);
         if (iconHtml) {
           return L.marker(wp.latLng, {
             draggable: true,
-            icon: L.divIcon({
-              className: 'custom-pin-icon',
-              html: iconHtml,
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40]
-            })
-          }).bindPopup(i === 0 ? "<b>Pickup</b> (Green)" : "<b>Drop-off</b> (Red)");
-        } else {
-          return L.marker(wp.latLng, {
-            draggable: true
-          });
+            icon: L.divIcon({ className: 'custom-pin-icon', html: iconHtml, iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40] })
+          }).bindPopup(i === 0 ? "<b>Pickup</b>" : "<b>Drop-off</b>");
         }
+        return null; 
       }
     }).addTo(map);
-    // ito
+
+    // EVENT: Route Found
     routingControl.on('routesfound', function(e) {
       const routes = e.routes;
       if (routes && routes.length > 0) {
         const km = routes[0].summary.totalDistance / 1000.0;
-        // updateDistanceAndPrice(km);
+        
         document.getElementById('distance_km').value = km.toFixed(2);
         document.getElementById('distanceKmDisplay').textContent = km.toFixed(2);
-        calculateTotal();
+        
         const wp = routingControl.getWaypoints();
         if (wp[0].name) document.getElementById('originField').value = wp[0].name;
         if (wp[1].name) document.getElementById('destinationField').value = wp[1].name;
+
+        // Trigger Calc & AI
+        calculateTotal(); 
         getAiPrediction(document.getElementById('originField').value, document.getElementById('destinationField').value, km);
       }
     });
 
-    // AI Prediction
-    async function getAiPrediction(origin, destination, distanceKm) {
-      const timeDisplay = document.getElementById('aiPredictionTime');
-      const scoreDisplay = document.getElementById('aiConfidenceScore');
-      const reasonDisplay = document.getElementById('aiReasoning');
-      timeDisplay.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    routingControl.on('routingerror', function(e) {
+      console.error('Routing Error:', e);
+      alert("Route not found. Please try searchable city names.");
+    });
 
-      try {
-        const res = await fetch('get_prediction.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            origin,
-            destination,
-            distance_km: distanceKm
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (!data.error) {
-            timeDisplay.textContent = data.prediction;
-            scoreDisplay.textContent = data.confidence + "%";
-            reasonDisplay.textContent = data.reasoning;
-            document.getElementById('aiConfidenceBar').style.width = data.confidence + "%";
-          }
-        } else {
-          timeDisplay.textContent = "Est. " + (distanceKm / 40).toFixed(1) + " hrs";
-        }
-      } catch (e) {}
-    }
-
-    // Route Button Logic
     document.getElementById('routeBtn').addEventListener('click', () => {
       const getLoc = (p) => {
         const m = document.getElementById(p + 'Municipality').value;
@@ -1028,7 +959,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       const dest = getLoc('dest');
 
       if (!orig || !dest) {
-        alert("Please select complete Origin and Destination (Province & City).");
+        alert("Please select complete Origin and Destination.");
         return;
       }
 
@@ -1038,18 +969,8 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       btn.disabled = true;
 
       Promise.all([
-        new Promise((resolve) => {
-          geocoder.geocode(orig, (results) => {
-            if (results && results.length > 0) resolve(results[0]);
-            else resolve(null);
-          });
-        }),
-        new Promise((resolve) => {
-          geocoder.geocode(dest, (results) => {
-            if (results && results.length > 0) resolve(results[0]);
-            else resolve(null);
-          });
-        })
+        new Promise((resolve) => geocoder.geocode(orig, (results) => resolve(results && results.length > 0 ? results[0] : null))),
+        new Promise((resolve) => geocoder.geocode(dest, (results) => resolve(results && results.length > 0 ? results[0] : null)))
       ]).then(([o, d]) => {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -1058,7 +979,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
           document.getElementById('originField').value = o.name;
           document.getElementById('destinationField').value = d.name;
         } else {
-          alert("Location not found. Try specific nearby city.");
+          alert("Locations not found on map.");
         }
       }).catch(err => {
         console.error(err);
@@ -1076,129 +997,163 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       document.getElementById('priceDisplay').textContent = '₱0.00';
     });
 
-    // 4. PRICING LOGIC
-    // const baseRates = {
-    //   parcel: 30,
-    //   box: 50,
-    //   crate: 100,
-    //   furniture: 200,
-    //   pallet: 500
-    // };
 
-    // function calculateWeightPrice() {
-    //   const weightInput = document.querySelector('input[name="weight"]');
-    //   const packageType = document.getElementById("packageType").value;
-    //   let weight = parseFloat(weightInput.value) || 0;
-    //   if (weight <= 0 || !packageType) return;
-    //   let rate = baseRates[packageType] || 50;
-    //   let price = weight * rate;
-    //   price = Math.round(price);
-    //   document.getElementById('priceDisplaySmall').textContent = '₱' + price.toLocaleString() + '.00 (weight)';
-    // }
+    // -----------------------------------------------------------
+    // 4. INTEGRATED PRICING LOGIC (FIXED)
+    // -----------------------------------------------------------
+    
+    // Default values (Fallback)
+    let currentRates = { base: 60, km: 15, kg: 5 }; 
 
-    // 4. NEW PRICING LOGIC (Chargeable Weight)
-    const baseRates = {
-      parcel: 30,
-      box: 50,
-      crate: 100,
-      furniture: 200,
-      pallet: 500
-    };
+    // FIXED PATH VERSION
+    async function fetchLiveRates() {
+        const itemSelect = document.getElementById('itemHelper'); 
+        let type = 'parcel'; 
 
-    // Pinalitan natin yung pangalan from 'calculateWeightPrice' to 'calculateTotal'
+        if(itemSelect && itemSelect.value) {
+            const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+            if (selectedOption.getAttribute('data-type')) {
+                type = selectedOption.getAttribute('data-type');
+            }
+        } else {
+            const manualType = document.getElementById('packageType').value;
+            if(manualType) type = manualType;
+        }
+
+        console.log("Targeting Core 2 API for:", type);
+
+        try {
+            // --- DITO ANG PAGBABAGO ---
+            // Tumatarget na ito sa folder na 'db_core2_freight' sa localhost
+            const response = await fetch(`/db_core2_freight/api_get_rates.php?type=${type}`);
+            
+            if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
+            
+            const data = await response.json();
+
+            if(data.status === 'success') {
+                const basePrice = parseFloat(data.rates.base);
+                const kmRate = parseFloat(data.rates.km);
+                const kgRate = parseFloat(data.rates.kg);
+
+                currentRates.base = basePrice;
+                currentRates.km = kmRate;
+                currentRates.kg = kgRate;
+
+                const slaText = document.getElementById('slaPromiseText');
+                if(slaText) {
+                    slaText.innerHTML = 
+                    `<i class="bi bi-truck text-primary"></i> Fulfilled by: <strong>${data.provider}</strong> (${data.vehicle}) <br> 
+                     <span class="badge bg-light text-dark border">Base: ₱${basePrice}</span> 
+                     <span class="badge bg-light text-dark border">Rate: ₱${kmRate}/km</span>`;
+                }
+
+                const rateDisplay = document.getElementById('ratePerKmDisplay');
+                if(rateDisplay) {
+                    if (!isNaN(kmRate)) {
+                        rateDisplay.innerHTML = '₱' + kmRate.toFixed(2);
+                        rateDisplay.style.color = '#0d6efd';
+                    } else {
+                        rateDisplay.innerHTML = 'Err';
+                    }
+                }
+            } else {
+                console.warn("API Error:", data.message);
+                document.getElementById('ratePerKmDisplay').textContent = "Offline";
+            }
+            
+            calculateTotal();
+
+        } catch (err) {
+            console.error("Path Error:", err);
+            // Visual cue pag hindi pa rin mahanap
+            document.getElementById('slaPromiseText').innerHTML = "<span class='text-danger fw-bold'>Error: Cannot find API in /db_core2_freight/ folder</span>";
+        }
+    }
+
     function calculateTotal() {
-      // A. Distance Cost
       const distKm = parseFloat(document.getElementById('distance_km').value) || 0;
-      const ratePerKm = 15;
-      const distCost = distKm * ratePerKm;
-
-      // B. Weight Cost (Actual vs Volumetric)
-      // Note: Naglagay ako ng id="actualWeight" sa HTML mo kanina, siguraduhin mong meron yun
-      const actualW = parseFloat(document.querySelector('input[name="weight"]').value) || 0;
-
-      // Compute Volumetric: (L x W x H) / 3500
+      const actualW = parseFloat(document.getElementById('actualWeight').value) || 0;
       const L = parseFloat(document.getElementById('dimL').value) || 0;
       const W = parseFloat(document.getElementById('dimW').value) || 0;
       const H = parseFloat(document.getElementById('dimH').value) || 0;
-      const volW = (L * W * H) / 3500;
 
-      // Compare: Whichever is HIGHER is the Chargeable Weight
+      // Volumetric
+      const volW = (L * W * H) / 3500;
       const chargeableW = Math.max(actualW, volW);
 
-      // Update Display
+      // UI Weight Update
       if (document.getElementById('volWeightDisplay')) document.getElementById('volWeightDisplay').innerText = volW.toFixed(2);
       if (document.getElementById('chargeableWeightDisplay')) document.getElementById('chargeableWeightDisplay').innerText = chargeableW.toFixed(2);
 
-      // Get Rate based on Type
-      const pkgType = document.getElementById('packageType').value;
-      const baseRate = baseRates[pkgType] || 50;
+      // COST COMPUTATION (USING API RATES)
+      const distCost = distKm * currentRates.km;
+      const weightCost = chargeableW * currentRates.kg;
+      
+      let totalPrice = currentRates.base + distCost + weightCost;
+      
+      // Minimum Fare
+      if (totalPrice < currentRates.base) totalPrice = currentRates.base;
 
-      const weightCost = chargeableW * baseRate;
-
-      // C. Final Total
-      let totalPrice = distCost + weightCost;
-      if (totalPrice < 100 && totalPrice > 0) totalPrice = 100; // Minimum fare
-
-      // UI Updates
-      document.getElementById('priceDisplay').innerText = '₱' + totalPrice.toLocaleString(undefined, {
-        minimumFractionDigits: 2
-      });
-      document.getElementById('priceDisplaySmall').innerText = '₱' + totalPrice.toLocaleString(undefined, {
-        minimumFractionDigits: 2
-      });
+      // Display Price
+      document.getElementById('priceDisplay').innerText = '₱' + totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 });
+      document.getElementById('priceDisplaySmall').innerText = '₱' + totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 });
       document.getElementById('price_php').value = totalPrice.toFixed(2);
     }
 
-    // D. LISTENERS (Para automatic mag-calculate habang nagta-type)
-    // Listahan ng lahat ng inputs na nakaka-apekto sa presyo
-    const inputIds = ['actualWeight', 'dimL', 'dimW', 'dimH', 'packageType'];
-
-    inputIds.forEach(id => {
+    // Listeners
+    ['actualWeight', 'dimL', 'dimW', 'dimH', 'packageType'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) {
-        el.addEventListener('input', calculateTotal);
-        el.addEventListener('change', calculateTotal); // Para sa dropdown
-      }
+      if (el) el.addEventListener('input', calculateTotal);
     });
+    
+    // Trigger API fetch when package type changes
+    document.getElementById('packageType').addEventListener('change', fetchLiveRates);
 
-    // E. ITEM HELPER LOGIC (Auto-Fill)
+    // Auto-Fill Helper
     document.getElementById('itemHelper').addEventListener('change', function() {
       const selected = this.options[this.selectedIndex];
-
       if (selected.value !== "") {
-        // 1. Kunin ang values
-        const l = selected.getAttribute('data-l');
-        const w = selected.getAttribute('data-w');
-        const h = selected.getAttribute('data-h');
-        const k = selected.getAttribute('data-k');
-        const t = selected.getAttribute('data-type'); // Ito yung mahalaga
-
-        // 2. Ipasok sa inputs
-        document.getElementById('dimL').value = l;
-        document.getElementById('dimW').value = w;
-        document.getElementById('dimH').value = h;
-        document.getElementById('actualWeight').value = k;
-
-        // 3. I-update din ang Package Type dropdown
+        document.getElementById('dimL').value = selected.getAttribute('data-l');
+        document.getElementById('dimW').value = selected.getAttribute('data-w');
+        document.getElementById('dimH').value = selected.getAttribute('data-h');
+        document.getElementById('actualWeight').value = selected.getAttribute('data-k');
+        
+        const t = selected.getAttribute('data-type');
         const typeSelect = document.getElementById('packageType');
         if (typeSelect) typeSelect.value = t;
 
-        // 4. Trigger calculation
-        calculateTotal();
+        fetchLiveRates(); // Fetch new pricing
       }
     });
 
-    function updateDistanceAndPrice(km) {
-      const rate = 15.00;
-      const price = km * rate;
-      document.getElementById('distance_km').value = km.toFixed(2);
-      document.getElementById('price_php').value = price.toFixed(2);
-      document.getElementById('distanceKmDisplay').textContent = km.toFixed(2);
-      document.getElementById('priceDisplay').textContent = '₱' + price.toFixed(2);
-      document.getElementById('priceDisplaySmall').textContent = '₱' + price.toFixed(2);
+    // 5. OTHER LOGIC (SLA, AI, PAYMENTS)
+    async function getAiPrediction(origin, destination, distanceKm) {
+      const timeDisplay = document.getElementById('aiPredictionTime');
+      const scoreDisplay = document.getElementById('aiConfidenceScore');
+      const reasonDisplay = document.getElementById('aiReasoning');
+      timeDisplay.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+      try {
+        const res = await fetch('get_prediction.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origin, destination, distance_km: distanceKm })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.error) {
+            timeDisplay.textContent = data.prediction;
+            scoreDisplay.textContent = data.confidence + "%";
+            reasonDisplay.textContent = data.reasoning;
+            document.getElementById('aiConfidenceBar').style.width = data.confidence + "%";
+          }
+        } else {
+          timeDisplay.textContent = "Est. " + (distanceKm / 40).toFixed(1) + " hrs";
+        }
+      } catch (e) {}
     }
 
-    // 5. PAYMENT UI LOGIC
     function selectPayment(method, element) {
       document.querySelectorAll('.payment-option-card').forEach(el => el.classList.remove('selected'));
       element.classList.add('selected');
@@ -1220,8 +1175,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
         document.getElementById('paymentProcessing').classList.add('d-none');
         document.getElementById('paymentSuccess').classList.remove('d-none');
         setTimeout(() => {
-          const pgModal = bootstrap.Modal.getInstance(document.getElementById('paymentGatewayModal'));
-          pgModal.hide();
+          bootstrap.Modal.getInstance(document.getElementById('paymentGatewayModal')).hide();
           showPreviewModal();
         }, 1500);
       }, 2000);
@@ -1230,22 +1184,13 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
     document.getElementById("shipmentForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const method = document.getElementById('selectedPaymentMethod').value;
-      if (!method) {
-        alert("Please select a payment method.");
-        return;
-      }
-      if (!document.getElementById('contractAgree').checked) {
-        alert("Please accept the contract.");
-        return;
-      }
-      if (parseFloat(document.getElementById('distance_km').value) <= 0) {
-        alert("Please search for a route first.");
-        return;
-      }
-      const price = document.getElementById('priceDisplaySmall').textContent;
+      if (!method) { alert("Please select a payment method."); return; }
+      if (!document.getElementById('contractAgree').checked) { alert("Please accept the contract."); return; }
+      if (parseFloat(document.getElementById('distance_km').value) <= 0) { alert("Please search for a route first."); return; }
+      
       if (method === 'online') {
         const pgModal = new bootstrap.Modal(document.getElementById('paymentGatewayModal'));
-        document.getElementById('pgAmount').textContent = price;
+        document.getElementById('pgAmount').textContent = document.getElementById('priceDisplaySmall').textContent;
         document.getElementById('paymentTabs').classList.remove('d-none');
         document.querySelector('.tab-content').classList.remove('d-none');
         document.getElementById('paymentProcessing').classList.add('d-none');
@@ -1255,35 +1200,28 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       } else {
         showPreviewModal();
       }
-
     });
 
     function showPreviewModal() {
       const fd = new FormData(document.getElementById('shipmentForm'));
       const p = Object.fromEntries(fd.entries());
       document.getElementById("previewContractNumber").textContent = p.contract_number;
-
       document.getElementById("previewSenderName").textContent = p.sender_name;
       document.getElementById("previewSenderContact").textContent = p.sender_contact;
       document.getElementById("previewReceiverName").textContent = p.receiver_name;
       document.getElementById("previewReceiverContact").textContent = p.receiver_contact;
-
       document.getElementById("previewOrigin").textContent = p.origin_address;
       document.getElementById("previewDestination").textContent = p.destination_address;
       document.getElementById("previewPrice").textContent = '₱' + p.price_php;
       document.getElementById("previewAiTime").textContent = document.getElementById('aiPredictionTime').textContent;
       document.getElementById("previewPaymentMethod").textContent = document.getElementById('selectedPaymentMethod').value === 'online' ? 'Online Paid' : 'COD';
-
       new bootstrap.Modal(document.getElementById("inputPreviewModal")).show();
     }
 
     document.getElementById("finalConfirmBtn").addEventListener("click", async function() {
       const payload = Object.fromEntries(new FormData(document.getElementById('shipmentForm')).entries());
-
-      // Ensure Island Values are populated
       payload.origin_island = document.getElementById('hiddenOriginIsland').value;
       payload.destination_island = document.getElementById('hiddenDestIsland').value;
-
       payload.payment_method = document.getElementById('selectedPaymentMethod').value;
       payload.bank_name = document.getElementById('selectedBankName').value;
       payload.sla_rules = ["Standard Terms"];
@@ -1294,9 +1232,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       try {
         const res = await fetch("api/bookshipment_api.php", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         const result = await res.json();
@@ -1309,118 +1245,65 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
           msg.className = "alert alert-danger mt-3";
           msg.innerHTML = "❌ Error: " + (result.error || 'Unknown');
         }
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
     });
 
-    // 6. SLA LOGIC (UPDATED)
+    document.getElementById("acceptContract").addEventListener("click", () => {
+      bootstrap.Modal.getInstance(document.getElementById("contractModal")).hide();
+      document.getElementById("contractAgree").checked = true;
+      document.getElementById("contractAgree").disabled = false;
+    });
+
     function checkSLA() {
       const origin = document.getElementById('originIsland').value;
       const dest = document.getElementById('destIsland').value;
-
       if (!origin || !dest) return;
-
       const fd = new FormData();
       fd.append('origin_island', origin);
       fd.append('dest_island', dest);
-
-      fetch('get_contract_logic.php', {
-          method: 'POST',
-          body: fd
-        })
+      fetch('get_contract_logic.php', { method: 'POST', body: fd })
         .then(res => res.json())
         .then(data => {
-          const conInput = document.getElementById('contractNumber');
+          document.getElementById('contractNumber').value = data.contract_number;
+          document.getElementById('slaMaxDays').value = data.sla_days;
+          document.getElementById('targetDeliveryDate').value = data.target_date;
           const badge = document.getElementById('contractStatusBadge');
-          const slaText = document.getElementById('slaPromiseText');
-          const slaHidden = document.getElementById('slaMaxDays');
-          const targetDate = document.getElementById('targetDeliveryDate');
-
-          // UPDATE VALUES
-          conInput.value = data.contract_number; // Ito na ang CNT-XXXX o STANDARD-RATE
-          slaHidden.value = data.sla_days;
-          targetDate.value = data.target_date;
-
           if (data.is_contracted) {
-            // KUNG MAY CONTRACT (Priority man o Standard route)
-            badge.className = "badge bg-primary";
-            badge.innerText = "Contract Active";
-            slaText.innerHTML = `<i class="bi bi-shield-fill-check text-success"></i> <strong>SLA Applied:</strong> ${data.display_text}`;
+            badge.className = "badge bg-primary"; badge.innerText = "Contract Active";
           } else {
-            // KUNG WALANG CONTRACT (Guest / Fallback)
-            badge.className = "badge bg-secondary";
-            badge.innerText = "No Contract";
-            slaText.innerHTML = "Standard shipping rates apply (No SLA Guarantee).";
+            badge.className = "badge bg-secondary"; badge.innerText = "No Contract";
           }
-        })
-        .catch(err => console.error(err));
+        }).catch(err => console.error(err));
     }
-  </script>
 
-  <script>
-    // AUTO-CHECK NOTIFICATIONS EVERY 5 SECONDS
     function fetchNotifications() {
-      fetch('api/get_notifications.php')
-        .then(response => response.json())
-        .then(data => {
-          const badge = document.getElementById('notifBadge');
-          const list = document.getElementById('notifList');
-
-          // 1. Update Badge Count
-          if (data.count > 0) {
-            badge.innerText = data.count;
-            badge.style.display = 'inline-block';
-          } else {
-            badge.style.display = 'none';
-          }
-
-          // 2. Update Dropdown List
-          let html = '';
-          if (data.data.length > 0) {
-            data.data.forEach(notif => {
-              // Check if read or unread styling
-              let bgClass = notif.is_read == 0 ? 'bg-light' : '';
-              let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-circle text-muted';
-
-              html += `
-                    <li>
-                        <a class="dropdown-item ${bgClass} p-2 border-bottom" href="${notif.link}">
-                            <div class="d-flex align-items-start">
-                                <i class="bi ${icon} me-2 mt-1" style="font-size: 10px;"></i>
-                                <div>
-                                    <small class="fw-bold d-block">${notif.title}</small>
-                                    <small class="text-muted text-wrap">${notif.message}</small>
-                                    <br>
-                                    <small class="text-secondary" style="font-size: 0.7rem;">${new Date(notif.created_at).toLocaleString()}</small>
-                                </div>
-                            </div>
-                        </a>
-                    </li>`;
-            });
-          } else {
-            html = '<li class="text-center p-3 text-muted small">No notifications</li>';
-          }
-          list.innerHTML = html;
-        });
-    }
-
-    // Mark as Read when clicked
-    function markRead() {
-      fetch('api/get_notifications.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'action=read_all'
-      }).then(() => {
-        document.getElementById('notifBadge').style.display = 'none';
+      fetch('api/get_notifications.php').then(r => r.json()).then(data => {
+        const badge = document.getElementById('notifBadge');
+        const list = document.getElementById('notifList');
+        if (data.count > 0) { badge.innerText = data.count; badge.style.display = 'inline-block'; } 
+        else { badge.style.display = 'none'; }
+        let html = '';
+        if (data.data.length > 0) {
+          data.data.forEach(notif => {
+            let bgClass = notif.is_read == 0 ? 'bg-light' : '';
+            html += `<li><a class="dropdown-item ${bgClass} p-2 border-bottom" href="${notif.link}"><small class="fw-bold d-block">${notif.title}</small><small class="text-muted">${notif.message}</small></a></li>`;
+          });
+        } else { html = '<li class="text-center p-3 text-muted small">No notifications</li>'; }
+        list.innerHTML = html;
       });
     }
+    function markRead() {
+      fetch('api/get_notifications.php', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'action=read_all' })
+      .then(() => document.getElementById('notifBadge').style.display = 'none');
+    }
 
-    // Initial Call + Interval
-    fetchNotifications();
-    setInterval(fetchNotifications, 5000); // Check every 5 seconds
+    // 6. INITIAL RUN
+    document.addEventListener("DOMContentLoaded", () => {
+        checkSLA();
+        fetchLiveRates(); // Pre-load rates para may laman na agad
+        fetchNotifications();
+    });
+    setInterval(fetchNotifications, 5000);
   </script>
 </body>
 
