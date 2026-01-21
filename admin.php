@@ -1,41 +1,86 @@
 <?php
+// C:\xampp\htdocs\last\admin.php
 include("connection.php");
 include("darkmode.php");
 include('session.php');
 requireRole('admin');
-include('loading.html');
+// include('loading.html'); // Optional: Uncomment kung gusto mo ng loading screen
 
-// --- DATABASE METRICS ---
-$sql = "SELECT COUNT(*) AS total_users FROM accounts WHERE role='user'";
-$users = $conn->query($sql)->fetch_assoc()['total_users'];
+// =========================================================
+// 1. DATA FETCHING (DATABASE CONNECTIONS)
+// =========================================================
 
-$sql = "SELECT COUNT(*) as total_active FROM csm WHERE status = 'Active'";
-$contracts = $conn->query($sql)->fetch_assoc()['total_active'];
+// CARD 1: Total Revenue (Paid Shipments)
+$sql = "SELECT SUM(price) as total FROM shipments WHERE payment_status = 'Paid'";
+$revData = $conn->query($sql)->fetch_assoc();
+$totalRevenue = $revData['total'] ? $revData['total'] : 0;
 
-$sql = "SELECT COUNT(*) as total_pending FROM shipments WHERE status = 'Pending'";
-$pending = $conn->query($sql)->fetch_assoc()['total_pending'];
+// CARD 2: Active Shipments (On-going process)
+$sql = "SELECT COUNT(*) as total FROM shipments WHERE status IN ('Pending', 'In Transit', 'Out for Delivery', 'Processing')";
+$activeShipments = $conn->query($sql)->fetch_assoc()['total'];
 
-$sql = "SELECT AVG(rating) as avg_rate, COUNT(*) as total_reviews FROM shipments WHERE rating > 0";
-$rateData = $conn->query($sql)->fetch_assoc();
-$avgRating = number_format($rateData['avg_rate'], 1);
-$totalReviews = $rateData['total_reviews'];
+// CARD 3: Pending Request (Need Approval)
+$sql = "SELECT COUNT(*) as total FROM shipments WHERE status = 'Pending'";
+$pendingCount = $conn->query($sql)->fetch_assoc()['total'];
 
-$met = $conn->query("SELECT COUNT(*) as c FROM shipments WHERE sla_status='Met'")->fetch_assoc()['c'];
-$breached = $conn->query("SELECT COUNT(*) as c FROM shipments WHERE sla_status='Breached'")->fetch_assoc()['c'];
+// CARD 4: SLA Performance (Success Rate)
+$sqlMet = "SELECT COUNT(*) as c FROM shipments WHERE sla_status='Met'";
+$sqlBreach = "SELECT COUNT(*) as c FROM shipments WHERE sla_status='Breached'";
+$met = $conn->query($sqlMet)->fetch_assoc()['c'];
+$breached = $conn->query($sqlBreach)->fetch_assoc()['c'];
+$totalSLA = $met + $breached;
+$slaRate = ($totalSLA > 0) ? round(($met / $totalSLA) * 100, 1) : 100;
 
-// Recent Feedback List
+// CHART 1: Revenue & Volume Trend (Last 7 Days)
+$chartLabels = [];
+$chartRevenue = [];
+$chartVolume = [];
+
+for ($i = 6; $i >= 0; $i--) {
+    $date = date('Y-m-d', strtotime("-$i days"));
+    $chartLabels[] = date('M d', strtotime($date));
+    
+    // Daily Revenue
+    $qRev = "SELECT SUM(price) as t FROM shipments WHERE DATE(created_at) = '$date' AND payment_status = 'Paid'";
+    $rRev = $conn->query($qRev)->fetch_assoc();
+    $chartRevenue[] = $rRev['t'] ? $rRev['t'] : 0;
+
+    // Daily Volume
+    $qVol = "SELECT COUNT(*) as c FROM shipments WHERE DATE(created_at) = '$date'";
+    $rVol = $conn->query($qVol)->fetch_assoc();
+    $chartVolume[] = $rVol['c'] ? $rVol['c'] : 0;
+}
+
+// CHART 2: Shipment Status Distribution (Pie Chart Data)
+$statusCounts = [0, 0, 0, 0]; // Pending, In Transit, Delivered, Cancelled
+$qStat = "SELECT status, COUNT(*) as c FROM shipments GROUP BY status";
+$rStat = $conn->query($qStat);
+while($row = $rStat->fetch_assoc()){
+    if($row['status'] == 'Pending') $statusCounts[0] = $row['c'];
+    if($row['status'] == 'In Transit') $statusCounts[1] += $row['c']; // Combine processing/transit
+    if($row['status'] == 'Out for Delivery') $statusCounts[1] += $row['c'];
+    if($row['status'] == 'Delivered') $statusCounts[2] = $row['c'];
+    if($row['status'] == 'Cancelled') $statusCounts[3] = $row['c'];
+}
+
+// TABLE: Recent Shipments (Limit 5)
+$recShip = $conn->query("SELECT id, user_id, destination_address, status, price, created_at 
+                         FROM shipments ORDER BY created_at DESC LIMIT 5");
+
+// FEEDBACK: Latest Reviews
 $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.username 
                            FROM shipments s 
                            JOIN accounts a ON s.user_id = a.id 
                            WHERE s.rating > 0 
-                           ORDER BY s.created_at DESC LIMIT 5");
+                           ORDER BY s.created_at DESC LIMIT 4");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
+  <title>Admin Dashboard | Logistics Core</title>
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
@@ -43,32 +88,38 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
   <style>
     :root {
       --primary: #4e73df; --secondary: #f8f9fc; --dark-bg: #1e1e2f; --dark-card: #2b2b40;
-      --light-text: #f8f9fa; --radius: 1rem; --shadow: 0 0.35rem 1.2rem rgba(0, 0, 0, 0.15);
+      --light-text: #f8f9fa; --radius: 0.8rem; --shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
     }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--secondary); transition: all 0.3s ease; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--secondary); transition: 0.3s; }
     body.dark-mode { background-color: var(--dark-bg); color: var(--light-text); }
     
+    /* Sidebar & Layout */
     .sidebar { width: 250px; height: 100vh; background: #2c3e50; color: white; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
     .sidebar.collapsed { transform: translateX(-100%); }
     .content { margin-left: 250px; padding: 2rem; transition: 0.3s; }
     .content.expanded { margin-left: 0; }
     
-    .sidebar a { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.2rem; text-decoration: none; color: rgba(255,255,255,0.9); }
-    .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.2); border-left: 4px solid #fff; color: white; }
+    .sidebar a { display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; color: rgba(255,255,255,0.8); border-left: 4px solid transparent; transition: 0.2s; }
+    .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.1); border-left-color: #fff; color: white; }
     
-    .header { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-    .card { border: none; border-radius: var(--radius); padding: 1.5rem; background: white; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+    /* Cards & Panels */
+    .header { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .card { border: none; border-radius: var(--radius); background: white; box-shadow: var(--shadow); transition: 0.3s; }
+    .card:hover { transform: translateY(-3px); }
     
+    /* Dark Mode Overrides */
     body.dark-mode .header, body.dark-mode .card, body.dark-mode .list-group-item { background: var(--dark-card); color: var(--light-text); border-color: #444; }
+    body.dark-mode .table { color: var(--light-text); }
+    body.dark-mode .table thead th { background: #3a3b45; color: white; border: none; }
+    body.dark-mode .table td { border-color: #444; }
     
-    .stat-value { font-size: 1.8rem; font-weight: 700; }
-    
-    .theme-switch { width: 50px; height: 25px; position: relative; display: inline-block; }
+    /* Toggle Switch */
+    .theme-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
     .theme-switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; border-radius: 50%; transition: .4s; }
     input:checked+.slider { background-color: var(--primary); }
-    input:checked+.slider:before { transform: translateX(24px); }
+    input:checked+.slider:before { transform: translateX(20px); }
   </style>
 </head>
 
@@ -96,14 +147,12 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
         </a>
         <div class="collapse" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
             <a href="admin_contracts.php" class="ps-4"><i class="bi bi-dot"></i> Manage Contracts</a>
-            <a href="Admin_shipments.php" class="ps-4"><i class="bi bi-dot"></i> SLA Monitoring</a>
+            <a href="admin_shipments.php" class="ps-4"><i class="bi bi-dot"></i> SLA Monitoring</a>
         </div>
 
         <a href="E-Doc.php"><i class="bi bi-folder2-open"></i> E-Docs</a>
+        <a href="admin_completed.php"><i class="bi bi-check-circle-fill"></i> Completed Trans.</a>
         <a href="BIFA.php"><i class="bi bi-graph-up"></i> BI & Analytics</a>
-        <a href="admin_reports.php">
-       <i class="bi bi-file-earmark-bar-graph"></i> Reports Generation
-        </a>
         <a href="activity-log.php"><i class="bi bi-clock-history"></i> Activity Log</a>
         <a href="Archive.php"><i class="bi bi-archive"></i> Archives</a>
         <a href="logout.php" class="border-top mt-3"><i class="bi bi-box-arrow-right"></i> Logout</a>
@@ -115,188 +164,315 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
     
     <div class="header">
       <div class="d-flex align-items-center gap-3">
-      
         <i class="bi bi-list fs-4" id="hamburger" style="cursor: pointer;"></i>
-        <h4 class="fw-bold mb-0">Executive Dashboard</h4>
+        <h5 class="fw-bold mb-0">Executive Dashboard</h5>
       </div>
-      
-      <div class="d-flex align-items-center gap-2">
-          <div class="dropdown me-3">
-    <a href="#" class="text-dark position-relative" id="notifDropdown" data-bs-toggle="dropdown" onclick="markRead()">
-        <i class="bi bi-bell fs-4"></i>
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display: none;">
-            0
-        </span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 300px; max-height: 400px; overflow-y: auto;">
-        <li class="p-2 border-bottom fw-bold bg-light">Notifications</li>
-        <div id="notifList">
-            <li class="text-center p-3 text-muted small">Checking...</li>
+      <div class="d-flex align-items-center gap-3">
+        <div class="dropdown">
+            <a href="#" class="text-dark position-relative" data-bs-toggle="dropdown" onclick="markRead()">
+                <i class="bi bi-bell-fill fs-5"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display:none;">0</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow p-0 border-0" style="width: 300px;">
+                <li class="p-2 border-bottom fw-bold bg-light rounded-top">Notifications</li>
+                <div id="notifList" style="max-height: 300px; overflow-y: auto;">
+                    <li class="text-center p-3 text-muted small">Checking...</li>
+                </div>
+            </ul>
         </div>
-        <li><a class="dropdown-item text-center small text-primary p-2 border-top" href="feedback.php">View All</a></li>
-    </ul>
-</div>
-        <small>Dark Mode</small>
-        <label class="theme-switch">
-          <input type="checkbox" id="adminThemeToggle"><span class="slider"></span>
-        </label>
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-moon-fill small"></i>
+            <label class="theme-switch">
+              <input type="checkbox" id="adminThemeToggle"><span class="slider"></span>
+            </label>
+        </div>
       </div>
     </div>
 
     <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card p-3 text-center border-top border-5 border-info h-100">
-          <h5 class="text-secondary">Users</h5>
-          <div class="stat-value text-dark"><?php echo $users; ?></div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card p-3 text-center border-top border-5 border-success h-100">
-          <h5 class="text-secondary">Active Contracts</h5>
-          <div class="stat-value text-dark"><?php echo $contracts; ?></div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card p-3 text-center border-top border-5 border-warning h-100">
-          <h5 class="text-secondary">Pending</h5>
-          <div class="stat-value text-dark"><?php echo $pending; ?></div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card p-3 text-center border-top border-5 border-danger h-100">
-          <h5 class="text-secondary">Avg Rating</h5>
-          <div class="stat-value text-danger">
-            <?php echo $avgRating; ?> <small class="fs-6 text-muted">/ 5</small>
+      <div class="col-xl-3 col-md-6">
+        <div class="card h-100 py-2 border-start border-4 border-primary">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs fw-bold text-primary text-uppercase mb-1">Total Earnings (Paid)</div>
+                <div class="h5 mb-0 fw-bold text-gray-800">₱<?php echo number_format($totalRevenue); ?></div>
+              </div>
+              <div class="col-auto"><i class="bi bi-currency-dollar fs-2 text-gray-300 text-primary opacity-50"></i></div>
+            </div>
           </div>
-          <small class="text-muted"><?php echo $totalReviews; ?> Reviews</small>
         </div>
       </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="card h-100 py-2 border-start border-4 border-success">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs fw-bold text-success text-uppercase mb-1">Active Shipments</div>
+                <div class="h5 mb-0 fw-bold text-gray-800"><?php echo $activeShipments; ?></div>
+              </div>
+              <div class="col-auto"><i class="bi bi-truck fs-2 text-success opacity-50"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="card h-100 py-2 border-start border-4 border-warning">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs fw-bold text-warning text-uppercase mb-1">Pending Requests</div>
+                <div class="h5 mb-0 fw-bold text-gray-800"><?php echo $pendingCount; ?></div>
+              </div>
+              <div class="col-auto"><i class="bi bi-clipboard-data fs-2 text-warning opacity-50"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="card h-100 py-2 border-start border-4 border-info">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs fw-bold text-info text-uppercase mb-1">SLA Compliance</div>
+                <div class="row no-gutters align-items-center">
+                  <div class="col-auto">
+                    <div class="h5 mb-0 mr-3 fw-bold text-gray-800"><?php echo $slaRate; ?>%</div>
+                  </div>
+                  <div class="col ps-2">
+                    <div class="progress progress-sm mr-2" style="height: 5px;">
+                      <div class="progress-bar bg-info" role="progressbar" style="width: <?php echo $slaRate; ?>%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-auto"><i class="bi bi-speedometer2 fs-2 text-info opacity-50"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex justify-content-between bg-transparent border-bottom align-items-center">
+                    <h6 class="m-0 fw-bold text-primary">Revenue Overview (7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 bg-transparent border-bottom">
+                    <h6 class="m-0 fw-bold text-primary">Shipment Status</h6>
+                </div>
+                <div class="card-body">
+                      <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center small">
+                        <span class="me-2"><i class="bi bi-circle-fill text-success"></i> Delivered</span>
+                        <span class="me-2"><i class="bi bi-circle-fill text-warning"></i> Pending</span>
+                        <span><i class="bi bi-circle-fill text-info"></i> Transit</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row g-3">
-      <div class="col-lg-7">
-        <div class="card h-100">
-          <div class="d-flex justify-content-between mb-3">
-            <h5 class="fw-bold"><i class="bi bi-chat-quote text-primary"></i> Latest Feedback</h5>
-            <a href="customer_feedback.php" class="btn btn-sm btn-outline-primary">View All Reviews</a>
-          </div>
-          <div class="list-group list-group-flush">
-            <?php if($feedbacks->num_rows > 0): while($f = $feedbacks->fetch_assoc()): ?>
-            <div class="list-group-item px-0">
-              <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1 fw-bold"><?php echo htmlspecialchars($f['username']); ?></h6>
-                <small class="text-muted"><?php echo date('M d', strtotime($f['created_at'])); ?></small>
-              </div>
-              <div class="text-warning small mb-1">
-                <?php for($i=0; $i<$f['rating']; $i++) echo '★'; ?>
-              </div>
-              <small class="text-muted fst-italic">"<?php echo $f['feedback_text'] ?: 'No comment'; ?>"</small>
+        <div class="col-lg-8">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 bg-transparent border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-primary">Recent Transactions</h6>
+                    <a href="shiphistory.php" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Tracking ID</th>
+                                <th>Destination</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if($recShip->num_rows > 0): while($row = $recShip->fetch_assoc()): ?>
+                            <tr>
+                                <td class="fw-bold text-primary">
+                                    <?php echo $row['user_id'] ?: 'SHIP-'.str_pad($row['id'], 5, "0", STR_PAD_LEFT); ?>
+                                </td>
+                                <td><?php echo substr($row['destination_address'], 0, 20) . '...'; ?></td>
+                                <td>
+                                    <?php 
+                                        $st = $row['status'];
+                                        $badge = 'secondary';
+                                        if($st=='Delivered') $badge='success';
+                                        else if($st=='Pending') $badge='warning text-dark';
+                                        else if($st=='In Transit') $badge='info text-dark';
+                                        else if($st=='Cancelled') $badge='danger';
+                                    ?>
+                                    <span class="badge bg-<?php echo $badge; ?> rounded-pill"><?php echo $st; ?></span>
+                                </td>
+                                <td class="fw-bold">₱<?php echo number_format($row['price']); ?></td>
+                                <td class="small text-muted"><?php echo date('M d', strtotime($row['created_at'])); ?></td>
+                            </tr>
+                            <?php endwhile; else: ?>
+                                <tr><td colspan="5" class="text-center py-3">No recent data</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <?php endwhile; else: ?>
-              <p class="text-center text-muted py-4">No feedback yet.</p>
-            <?php endif; ?>
-          </div>
         </div>
-      </div>
 
-      <div class="col-lg-5">
-        <div class="card h-100">
-          <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart text-success"></i> SLA Performance</h5>
-          <canvas id="slaChart" style="width:100%; max-height:250px;"></canvas>
-          <div class="mt-3 text-center small text-muted">
-            On-Time Deliveries vs Delayed
-          </div>
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 bg-transparent border-bottom">
+                    <h6 class="m-0 fw-bold text-primary">Customer Voices</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <?php if($feedbacks->num_rows > 0): while($f = $feedbacks->fetch_assoc()): ?>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <h6 class="mb-1 fw-bold"><?php echo htmlspecialchars($f['username']); ?></h6>
+                            <small class="text-muted"><?php echo date('M d', strtotime($f['created_at'])); ?></small>
+                        </div>
+                        <div class="text-warning small mb-1">
+                            <?php for($i=0; $i<$f['rating']; $i++) echo '★'; ?>
+                        </div>
+                        <p class="mb-1 small fst-italic text-muted">"<?php echo $f['feedback_text'] ?: 'No comment'; ?>"</p>
+                    </div>
+                    <?php endwhile; else: ?>
+                        <div class="text-center p-4 text-muted">No feedback received yet.</div>
+                    <?php endif; ?>
+                </div>
+                <div class="card-footer text-center bg-transparent">
+                    <a href="customer_feedback.php" class="small text-decoration-none">View All Reviews</a>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </div> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // 1. UI INIT
     initDarkMode("adminThemeToggle", "adminDarkMode");
     document.getElementById('hamburger').addEventListener('click', () => {
       document.getElementById('sidebar').classList.toggle('collapsed');
       document.getElementById('mainContent').classList.toggle('expanded');
     });
 
-    new Chart("slaChart", {
-      type: "doughnut",
-      data: {
-        labels: ["On Time (Met)", "Delayed (Breached)"],
-        datasets: [{
-          backgroundColor: ["#1cc88a", "#e74a3b"],
-          data: [<?php echo $met; ?>, <?php echo $breached; ?>]
-        }]
-      },
-      options: { legend: { position: 'bottom' }, cutoutPercentage: 70 }
+    // 2. REVENUE CHART (Combo Line/Bar)
+    const ctxRev = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctxRev, {
+        type: 'bar',
+        data: {
+            labels: <?php echo json_encode($chartLabels); ?>,
+            datasets: [
+                {
+                    label: 'Revenue (₱)',
+                    data: <?php echo json_encode($chartRevenue); ?>,
+                    type: 'line',
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    pointRadius: 4,
+                    pointBackgroundColor: '#4e73df',
+                    yAxisID: 'y1'
+                },
+                {
+                    label: 'Volume',
+                    data: <?php echo json_encode($chartVolume); ?>,
+                    backgroundColor: '#1cc88a',
+                    yAxisID: 'y2',
+                    barThickness: 20
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Prevents infinite height growth
+            tooltips: { mode: 'index', intersect: false },
+            scales: {
+                yAxes: [
+                    { id: 'y1', position: 'left', ticks: { beginAtZero: true, callback: v => '₱' + v } },
+                    { id: 'y2', position: 'right', gridLines: { display: false }, ticks: { beginAtZero: true } }
+                ],
+                xAxes: [{ gridLines: { display: false } }]
+            }
+        }
     });
-  </script>
-  <script>
-    // --- GLOBAL NOTIFICATION SCRIPT ---
+
+    // 3. STATUS CHART (Doughnut)
+    const ctxStat = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStat, {
+        type: 'doughnut',
+        data: {
+            labels: ["Pending", "Transit/Out", "Delivered", "Cancelled"],
+            datasets: [{
+                data: <?php echo json_encode($statusCounts); ?>,
+                backgroundColor: ['#f6c23e', '#36b9cc', '#1cc88a', '#e74a3b'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: { display: false },
+            cutoutPercentage: 75,
+        }
+    });
+
+    // 4. NOTIFICATIONS
     function fetchNotifications() {
-        // Siguraduhing tama ang path ng API mo relative sa file location
-        // Kung nasa root folder ka (gaya ng user.php), gamitin ang 'api/get_notifications.php'
         fetch('api/get_notifications.php')
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             const badge = document.getElementById('notifBadge');
             const list = document.getElementById('notifList');
-
-            // 1. Update Badge Count
+            
             if (data.count > 0) {
                 badge.innerText = data.count;
                 badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';
             }
-
-            // 2. Update Dropdown List
+            
             let html = '';
             if (data.data.length > 0) {
-                data.data.forEach(notif => {
-                    let bgClass = notif.is_read == 0 ? 'bg-light' : '';
-                    let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-circle text-muted';
-                    
-                    // Adjust link if needed based on user role
-                    let link = notif.link ? notif.link : '#';
-
-                    html += `
-                    <li>
-                        <a class="dropdown-item ${bgClass} p-2 border-bottom" href="${link}">
-                            <div class="d-flex align-items-start">
-                                <i class="bi ${icon} me-2 mt-1" style="font-size: 10px;"></i>
-                                <div>
-                                    <small class="fw-bold d-block">${notif.title}</small>
-                                    <small class="text-muted text-wrap">${notif.message}</small>
-                                    <br>
-                                    <small class="text-secondary" style="font-size: 0.7rem;">${new Date(notif.created_at).toLocaleString()}</small>
-                                </div>
-                            </div>
-                        </a>
-                    </li>`;
+                data.data.forEach(n => {
+                    let bg = n.is_read == 0 ? 'bg-light' : '';
+                    html += `<li class="border-bottom ${bg}"><a class="dropdown-item p-2 text-wrap" href="#">
+                        <small class="fw-bold d-block">${n.title}</small>
+                        <small class="text-muted">${n.message}</small>
+                    </a></li>`;
                 });
             } else {
                 html = '<li class="text-center p-3 text-muted small">No new notifications</li>';
             }
             list.innerHTML = html;
-        })
-        .catch(err => console.error("Notif Error:", err));
+        }).catch(e => console.error(e));
     }
 
     function markRead() {
-        fetch('api/get_notifications.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'action=read_all'
-        }).then(() => {
-            document.getElementById('notifBadge').style.display = 'none';
-        });
+        fetch('api/get_notifications.php', { method: 'POST', body: 'action=read_all', headers: {'Content-Type': 'application/x-www-form-urlencoded'} })
+        .then(() => { document.getElementById('notifBadge').style.display = 'none'; });
     }
 
-    // Run immediately and every 5 seconds
+    // Run notifications loop
     fetchNotifications();
     setInterval(fetchNotifications, 5000);
-</script>
+  </script>
 </body>
 </html>

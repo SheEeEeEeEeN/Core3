@@ -399,6 +399,24 @@ $promos = [['code' => 'PROMO10', 'desc' => 'Get 10% off'], ['code' => 'SHIPFREE'
         </div>
     </div>
 
+    <div class="modal fade" id="waybillModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" style="max-width: 900px;">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-receipt"></i> Waybill Preview</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" style="background: #ccc;">
+                    <iframe id="waybillFrame" src="" style="width: 100%; height: 80vh; border: none; display: block;"></iframe>
+                </div>
+                <div class="modal-footer bg-light">
+                     <small class="text-muted me-auto">Note: Use the print button inside the receipt.</small>
+                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="ratingModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -537,10 +555,18 @@ $promos = [['code' => 'PROMO10', 'desc' => 'Get 10% off'], ['code' => 'SHIPFREE'
         }).catch(err => { document.getElementById('modalAiText').textContent = "Error fetching details."; });
     }
 
+    // UPDATED FUNCTION: Open Waybill in MODAL
     function openWaybill() {
         const id = document.getElementById('modalShipmentId').textContent;
-        if(id && id !== '...') window.open('waybill.php?id=' + id, '_blank');
-        else alert("Wait for details to load...");
+        if(id && id !== '...') {
+            // Set source of iframe
+            document.getElementById('waybillFrame').src = 'waybill.php?id=' + id;
+            // Open the Waybill Modal
+            new bootstrap.Modal(document.getElementById('waybillModal')).show();
+        }
+        else {
+            alert("Wait for details to load...");
+        }
     }
 
     function viewProof() {

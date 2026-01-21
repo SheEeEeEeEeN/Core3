@@ -1150,7 +1150,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
           }
         } else {
           timeDisplay.textContent = "Est. " + (distanceKm / 40).toFixed(1) + " hrs";
-        }
+        } 
       } catch (e) {}
     }
 
@@ -1229,7 +1229,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
 
       bootstrap.Modal.getInstance(document.getElementById("inputPreviewModal")).hide();
 
-      try {
+      try { // Send to booking API
         const res = await fetch("api/bookshipment_api.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
