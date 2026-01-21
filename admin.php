@@ -4,7 +4,31 @@ include("connection.php");
 include("darkmode.php");
 include('session.php');
 requireRole('admin');
-// include('loading.html'); // Optional: Uncomment kung gusto mo ng loading screen
+
+// HELPER FUNCTION: Time Elapsed (e.g., "2 hours ago")
+function time_elapsed_string($datetime, $full = false) {
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+
+    $diff->w = floor($diff->d / 7);
+    $diff->d -= $diff->w * 7;
+
+    $string = array(
+        'y' => 'yr', 'm' => 'mon', 'w' => 'wk',
+        'd' => 'day', 'h' => 'hr', 'i' => 'min', 's' => 'sec',
+    );
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
+        }
+    }
+
+    if (!$full) $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
 
 // =========================================================
 // 1. DATA FETCHING (DATABASE CONNECTIONS)
@@ -15,15 +39,15 @@ $sql = "SELECT SUM(price) as total FROM shipments WHERE payment_status = 'Paid'"
 $revData = $conn->query($sql)->fetch_assoc();
 $totalRevenue = $revData['total'] ? $revData['total'] : 0;
 
-// CARD 2: Active Shipments (On-going process)
+// CARD 2: Active Shipments
 $sql = "SELECT COUNT(*) as total FROM shipments WHERE status IN ('Pending', 'In Transit', 'Out for Delivery', 'Processing')";
 $activeShipments = $conn->query($sql)->fetch_assoc()['total'];
 
-// CARD 3: Pending Request (Need Approval)
+// CARD 3: Pending Request
 $sql = "SELECT COUNT(*) as total FROM shipments WHERE status = 'Pending'";
 $pendingCount = $conn->query($sql)->fetch_assoc()['total'];
 
-// CARD 4: SLA Performance (Success Rate)
+// CARD 4: SLA Performance
 $sqlMet = "SELECT COUNT(*) as c FROM shipments WHERE sla_status='Met'";
 $sqlBreach = "SELECT COUNT(*) as c FROM shipments WHERE sla_status='Breached'";
 $met = $conn->query($sqlMet)->fetch_assoc()['c'];
@@ -51,21 +75,20 @@ for ($i = 6; $i >= 0; $i--) {
     $chartVolume[] = $rVol['c'] ? $rVol['c'] : 0;
 }
 
-// CHART 2: Shipment Status Distribution (Pie Chart Data)
+// CHART 2: Shipment Status Distribution
 $statusCounts = [0, 0, 0, 0]; // Pending, In Transit, Delivered, Cancelled
 $qStat = "SELECT status, COUNT(*) as c FROM shipments GROUP BY status";
 $rStat = $conn->query($qStat);
 while($row = $rStat->fetch_assoc()){
     if($row['status'] == 'Pending') $statusCounts[0] = $row['c'];
-    if($row['status'] == 'In Transit') $statusCounts[1] += $row['c']; // Combine processing/transit
-    if($row['status'] == 'Out for Delivery') $statusCounts[1] += $row['c'];
+    if($row['status'] == 'In Transit' || $row['status'] == 'Out for Delivery') $statusCounts[1] += $row['c'];
     if($row['status'] == 'Delivered') $statusCounts[2] = $row['c'];
     if($row['status'] == 'Cancelled') $statusCounts[3] = $row['c'];
 }
 
 // TABLE: Recent Shipments (Limit 5)
 $recShip = $conn->query("SELECT id, user_id, destination_address, status, price, created_at 
-                         FROM shipments ORDER BY created_at DESC LIMIT 5");
+                          FROM shipments ORDER BY created_at DESC LIMIT 5");
 
 // FEEDBACK: Latest Reviews
 $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.username 
@@ -107,11 +130,18 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
     .card { border: none; border-radius: var(--radius); background: white; box-shadow: var(--shadow); transition: 0.3s; }
     .card:hover { transform: translateY(-3px); }
     
+    /* Table Styling Overrides */
+    .table-responsive { overflow-x: auto; }
+    .text-xxs { font-size: 0.75rem !important; }
+    .opacity-7 { opacity: 0.7; }
+    .font-weight-bolder { font-weight: 700 !important; }
+    
     /* Dark Mode Overrides */
     body.dark-mode .header, body.dark-mode .card, body.dark-mode .list-group-item { background: var(--dark-card); color: var(--light-text); border-color: #444; }
     body.dark-mode .table { color: var(--light-text); }
     body.dark-mode .table thead th { background: #3a3b45; color: white; border: none; }
     body.dark-mode .table td { border-color: #444; }
+    body.dark-mode .bg-light { background-color: #3a3b45 !important; }
     
     /* Toggle Switch */
     .theme-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
@@ -198,7 +228,7 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
                 <div class="text-xs fw-bold text-primary text-uppercase mb-1">Total Earnings (Paid)</div>
                 <div class="h5 mb-0 fw-bold text-gray-800">₱<?php echo number_format($totalRevenue); ?></div>
               </div>
-              <div class="col-auto"><i class="bi bi-currency-dollar fs-2 text-gray-300 text-primary opacity-50"></i></div>
+              <div class="col-auto"><i class="bi bi-currency-dollar fs-2 text-primary opacity-50"></i></div>
             </div>
           </div>
         </div>
@@ -294,42 +324,76 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
             <div class="card shadow h-100">
                 <div class="card-header py-3 bg-transparent border-bottom d-flex justify-content-between align-items-center">
                     <h6 class="m-0 fw-bold text-primary">Recent Transactions</h6>
-                    <a href="shiphistory.php" class="btn btn-sm btn-primary">View All</a>
+                    <a href="shiphistory.php" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th>Tracking ID</th>
-                                <th>Destination</th>
-                                <th>Status</th>
-                                <th>Amount</th>
-                                <th>Date</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-4">Tracking ID</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Destination</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Amount</th>
+                                <th class="text-secondary opacity-7"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if($recShip->num_rows > 0): while($row = $recShip->fetch_assoc()): ?>
                             <tr>
-                                <td class="fw-bold text-primary">
-                                    <?php echo $row['user_id'] ?: 'SHIP-'.str_pad($row['id'], 5, "0", STR_PAD_LEFT); ?>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-light d-flex justify-content-center align-items-center me-3 text-primary" style="width: 35px; height: 35px;">
+                                            <i class="bi bi-box-seam"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold text-dark d-block text-sm">
+                                                <?php echo 'SHIP-'.str_pad($row['id'], 5, "0", STR_PAD_LEFT); ?>
+                                            </span>
+                                            <small class="text-muted" style="font-size: 11px;">
+                                                <?php echo $row['user_id']; ?>
+                                            </small>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td><?php echo substr($row['destination_address'], 0, 20) . '...'; ?></td>
+                                <td>
+                                    <div class="d-flex align-items-center text-secondary">
+                                        <i class="bi bi-geo-alt me-1 small"></i>
+                                        <span class="text-sm fw-bold"><?php echo substr($row['destination_address'], 0, 18) . '...'; ?></span>
+                                    </div>
+                                </td>
                                 <td>
                                     <?php 
                                         $st = $row['status'];
-                                        $badge = 'secondary';
-                                        if($st=='Delivered') $badge='success';
-                                        else if($st=='Pending') $badge='warning text-dark';
-                                        else if($st=='In Transit') $badge='info text-dark';
-                                        else if($st=='Cancelled') $badge='danger';
+                                        // Soft Badge Logic (BG Opacity)
+                                        $badgeClass = 'bg-secondary text-secondary bg-opacity-10'; 
+                                        if($st=='Delivered') $badgeClass = 'bg-success text-success bg-opacity-10';
+                                        else if($st=='Pending') $badgeClass = 'bg-warning text-warning bg-opacity-10';
+                                        else if($st=='In Transit' || $st=='Out for Delivery') $badgeClass = 'bg-info text-info bg-opacity-10';
+                                        else if($st=='Cancelled') $badgeClass = 'bg-danger text-danger bg-opacity-10';
                                     ?>
-                                    <span class="badge bg-<?php echo $badge; ?> rounded-pill"><?php echo $st; ?></span>
+                                    <span class="badge <?php echo $badgeClass; ?> px-3 py-2 rounded-pill border border-0 fw-bold">
+                                        <?php echo $st; ?>
+                                    </span>
                                 </td>
-                                <td class="fw-bold">₱<?php echo number_format($row['price']); ?></td>
-                                <td class="small text-muted"><?php echo date('M d', strtotime($row['created_at'])); ?></td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark">₱<?php echo number_format($row['price']); ?></span>
+                                        <small class="text-muted" style="font-size: 10px;">
+                                            <?php echo date('M d', strtotime($row['created_at'])); ?>
+                                        </small>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <small class="text-muted d-block mb-1" style="font-size: 10px;">
+                                        <?php echo time_elapsed_string($row['created_at']); ?>
+                                    </small>
+                                    <a href="view_shipment.php?id=<?php echo $row['id']; ?>" class="text-secondary text-hover-primary">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </td>
                             </tr>
                             <?php endwhile; else: ?>
-                                <tr><td colspan="5" class="text-center py-3">No recent data</td></tr>
+                                <tr><td colspan="5" class="text-center py-4 text-muted">No recent transactions.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -344,28 +408,30 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
                 </div>
                 <div class="list-group list-group-flush">
                     <?php if($feedbacks->num_rows > 0): while($f = $feedbacks->fetch_assoc()): ?>
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between align-items-center">
-                            <h6 class="mb-1 fw-bold"><?php echo htmlspecialchars($f['username']); ?></h6>
-                            <small class="text-muted"><?php echo date('M d', strtotime($f['created_at'])); ?></small>
+                    <div class="list-group-item border-bottom-0 pb-3 pt-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold text-dark small"><?php echo htmlspecialchars($f['username']); ?></h6>
+                            <small class="text-muted" style="font-size: 10px;"><?php echo time_elapsed_string($f['created_at']); ?></small>
                         </div>
-                        <div class="text-warning small mb-1">
-                            <?php for($i=0; $i<$f['rating']; $i++) echo '★'; ?>
+                        <div class="text-warning small mb-2" style="font-size: 10px;">
+                            <?php for($i=0; $i<$f['rating']; $i++) echo '<i class="bi bi-star-fill"></i> '; ?>
                         </div>
-                        <p class="mb-1 small fst-italic text-muted">"<?php echo $f['feedback_text'] ?: 'No comment'; ?>"</p>
+                        <p class="mb-0 small text-secondary bg-light p-2 rounded fst-italic">"<?php echo $f['feedback_text'] ?: 'No comment'; ?>"</p>
                     </div>
                     <?php endwhile; else: ?>
-                        <div class="text-center p-4 text-muted">No feedback received yet.</div>
+                        <div class="text-center p-4 text-muted small">No feedback received yet.</div>
                     <?php endif; ?>
                 </div>
-                <div class="card-footer text-center bg-transparent">
-                    <a href="customer_feedback.php" class="small text-decoration-none">View All Reviews</a>
+                <div class="card-footer text-center bg-transparent border-top-0 pb-3">
+                    <a href="customer_feedback.php" class="small text-decoration-none fw-bold">View All Reviews</a>
                 </div>
             </div>
         </div>
     </div>
 
-  </div> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </div> 
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // 1. UI INIT
     initDarkMode("adminThemeToggle", "adminDarkMode");
@@ -374,7 +440,7 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
       document.getElementById('mainContent').classList.toggle('expanded');
     });
 
-    // 2. REVENUE CHART (Combo Line/Bar)
+    // 2. REVENUE CHART
     const ctxRev = document.getElementById('revenueChart').getContext('2d');
     new Chart(ctxRev, {
         type: 'bar',
@@ -402,7 +468,7 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // Prevents infinite height growth
+            maintainAspectRatio: false,
             tooltips: { mode: 'index', intersect: false },
             scales: {
                 yAxes: [
@@ -414,7 +480,7 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
         }
     });
 
-    // 3. STATUS CHART (Doughnut)
+    // 3. STATUS CHART
     const ctxStat = document.getElementById('statusChart').getContext('2d');
     new Chart(ctxStat, {
         type: 'doughnut',
@@ -470,7 +536,6 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
         .then(() => { document.getElementById('notifBadge').style.display = 'none'; });
     }
 
-    // Run notifications loop
     fetchNotifications();
     setInterval(fetchNotifications, 5000);
   </script>

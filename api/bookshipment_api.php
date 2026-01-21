@@ -14,6 +14,10 @@ $DB_HOST = "localhost";
 $DB_USER = "root";
 $DB_PASS = "";
 
+// $CORE1_DB_NAME = "core1_transac"; 
+// $DB_HOST = "localhost";                      ito ang  papalitan ng database connection galing core1
+// $DB_USER = "core1_transac";
+// $DB_PASS = "core1_transac";
 try {
     // 1. Check User Session
     if (!isset($_SESSION['email'])) { throw new Exception("Unauthorized access."); }

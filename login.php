@@ -21,22 +21,29 @@ $baseLock  = 30;
 $maxLock   = 3600;
 $resetTime = 3600;
 
-if (!isset($_SESSION['login_attempts'])) {
-    $_SESSION['login_attempts'] = 0;
-    $_SESSION['last_attempt_time'] = 0;
-    $_SESSION['lockout_count'] = 0;
+// ------------------
+// 🛡️ SESSION SELF-REPAIR (Fixes all Array/Int errors)
+// ------------------
+$sessionVars = ['login_attempts', 'last_attempt_time', 'lockout_count'];
+foreach ($sessionVars as $var) {
+    // If variable doesn't exist OR is corrupted (is an array), reset it to 0
+    if (!isset($_SESSION[$var]) || is_array($_SESSION[$var])) {
+        $_SESSION[$var] = 0;
+    }
 }
 
-if (!empty($_SESSION['last_attempt_time']) && ($_SESSION['last_attempt_time'] > 0)) {
+// Check if lockout time has passed
+if ($_SESSION['last_attempt_time'] > 0) {
     if ((time() - $_SESSION['last_attempt_time']) > $resetTime) {
         $_SESSION['lockout_count'] = 0;
         $_SESSION['login_attempts'] = 0;
+        $_SESSION['last_attempt_time'] = 0;
     }
 }
 
 $isLocked = false;
 $remaining = 0;
-if ($_SESSION['lockout_count'] > 0 && !empty($_SESSION['last_attempt_time'])) {
+if ($_SESSION['lockout_count'] > 0 && $_SESSION['last_attempt_time'] > 0) {
     $lockDuration = min($baseLock * pow(2, $_SESSION['lockout_count'] - 1), $maxLock);
     $elapsed = time() - $_SESSION['last_attempt_time'];
     if ($elapsed < $lockDuration) {
@@ -45,7 +52,9 @@ if ($_SESSION['lockout_count'] > 0 && !empty($_SESSION['last_attempt_time'])) {
     }
 }
 
-// Handle AJAX requests for live check
+// ------------------
+// AJAX HANDLER
+// ------------------
 if (isset($_GET['check'])) {
     $field = $_GET['check'];
     $value = trim($_GET['value']);
@@ -74,7 +83,7 @@ if (isset($_GET['check'])) {
 }
 
 // ------------------
-// LOGIN
+// LOGIN LOGIC
 // ------------------
 if (isset($_POST['login']) && !$isLocked) {
     $username = trim($_POST['username']);
@@ -88,6 +97,7 @@ if (isset($_POST['login']) && !$isLocked) {
     $login_stmt->close();
 
     if ($id && password_verify($password, $db_password)) {
+        // Successful Login
         $_SESSION['login_attempts'] = 0;
         $_SESSION['last_attempt_time'] = 0;
         $_SESSION['lockout_count'] = 0;
@@ -110,11 +120,22 @@ if (isset($_POST['login']) && !$isLocked) {
         header("Location: request_otp.php");
         exit;
     } else {
+        // Failed Login
+        
+        // Safety check: ensure login_attempts is an integer before incrementing
+        if (is_array($_SESSION['login_attempts'])) $_SESSION['login_attempts'] = 0;
+        
         $_SESSION['login_attempts']++;
+        
         if ($_SESSION['login_attempts'] >= 3) {
+            
+            // Safety check for lockout_count
+            if (is_array($_SESSION['lockout_count'])) $_SESSION['lockout_count'] = 0;
+
             $_SESSION['lockout_count']++;
             $_SESSION['last_attempt_time'] = time();
             $_SESSION['login_attempts'] = 0;
+            
             $lockDuration = min($baseLock * pow(2, $_SESSION['lockout_count'] - 1), $maxLock);
             $remaining = (int)$lockDuration;
             $error = "Too many failed attempts. Try again in {$remaining} seconds.";
@@ -126,26 +147,22 @@ if (isset($_POST['login']) && !$isLocked) {
 }
 
 // ------------------
-// FORGOT PASSWORD (SECURE & FIXED)
+// FORGOT PASSWORD
 // ------------------
 if (isset($_POST['forgot_pass'])) {
     $f_email = trim($_POST['forgot_email']);
     
-    // 1. Check if email exists in database
     $stmt = $conn->prepare("SELECT id, username FROM accounts WHERE email = ?");
     $stmt->bind_param("s", $f_email);
     $stmt->execute();
-    $stmt->store_result(); // Important for num_rows check
+    $stmt->store_result();
     $stmt->bind_result($f_id, $f_username);
     $stmt->fetch();
     
-    // 2. STRICT CHECK: Only proceed if email exists (num_rows > 0)
     if ($stmt->num_rows > 0) {
-        $token = bin2hex(random_bytes(32)); // Create unique token
-        $expiry = date("Y-m-d H:i:s", strtotime("+30 minutes")); // Valid for 30 mins
+        $token = bin2hex(random_bytes(32));
+        $expiry = date("Y-m-d H:i:s", strtotime("+30 minutes"));
         
-        // 3. Save token to DB (Corrected table name to 'password_reset')
-        // Make sure your table in MySQL is named 'password_reset' OR change this code to match your DB
         $ins = $conn->prepare("INSERT INTO password_reset (email, token, expiry) VALUES (?, ?, ?)");
         $ins->bind_param("sss", $f_email, $token, $expiry);
         
@@ -153,61 +170,48 @@ if (isset($_POST['forgot_pass'])) {
             $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
             $resetLink = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/login.php?reset_token=" . $token;
 
-            // 4. Send Email via PHPMailer
             $mail = new PHPMailer(true);
-
             try {
-                // Server settings
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'royzxcasd@gmail.com';          // Your Email
-                $mail->Password   = 'wgdfjpgdphkdziab';             // Your App Password
+                $mail->Username   = 'royzxcasd@gmail.com'; // CHECK CREDENTIALS
+                $mail->Password   = 'wgdfjpgdphkdziab';    // CHECK CREDENTIALS
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port       = 587;
 
-                // Recipients
                 $mail->setFrom('no-reply@slate-freight.com', 'SLATE System');
                 $mail->addAddress($f_email, $f_username); 
 
-                // Content
                 $mail->isHTML(true);                                  
                 $mail->Subject = 'Reset Your Password - SLATE Freight Management';
                 $mail->Body    = "
                     <h3>Password Reset Request</h3>
                     <p>Hi <b>$f_username</b>,</p>
-                    <p>We received a request to reset your password. Click the link below to proceed:</p>
+                    <p>We received a request to reset your password. Click the link below:</p>
                     <p><a href='$resetLink' style='background-color: #0072ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Reset Password</a></p>
                     <p>Or copy this link: <br> $resetLink</p>
                     <p><small>This link will expire in 30 minutes.</small></p>
                 ";
-
                 $mail->send();
-
-                // Success Alert
                 $alertTitle = "Email Sent!";
                 $alertMessage = "If this email is registered, we have sent a password reset link.";
                 
             } catch (Exception $e) {
                 $forgot_error = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
             }
-
         } else {
             $forgot_error = "Database error. Please try again.";
         }
         $ins->close();
     } else {
-        // SECURITY BEST PRACTICE:
-        // Do not tell the user "Email not found". It helps hackers build a list of users.
-        // Instead, show the SAME success message or a generic error.
-        // But for your project requirement ("make sure it's secure"), simply showing an error is fine for now.
         $forgot_error = "Email not found in our records.";
     }
     $stmt->close();
 }
 
 // ------------------
-// FORGOT PASSWORD (RESET PROCESS)
+// RESET PROCESS
 // ------------------
 $showResetForm = false;
 $token_error = "";
@@ -217,7 +221,6 @@ if (isset($_GET['reset_token'])) {
     $token = $_GET['reset_token'];
     $now = date("Y-m-d H:i:s");
     
-    // Corrected table name here too: 'password_reset'
     $stmt = $conn->prepare("SELECT email FROM password_reset WHERE token = ? AND expiry > ?");
     $stmt->bind_param("ss", $token, $now);
     $stmt->execute();
@@ -249,11 +252,9 @@ if (isset($_POST['reset_password_submit'])) {
         $upd->bind_param("ss", $hashed, $r_email);
         
         if ($upd->execute()) {
-            // Corrected table name here: 'password_reset'
             $del = $conn->prepare("DELETE FROM password_reset WHERE email = ?");
             $del->bind_param("s", $r_email);
             $del->execute();
-            
             $register_success = "Password successfully reset! You can now login."; 
         } else {
             $reset_error = "Failed to update password.";
@@ -543,8 +544,30 @@ $_SESSION['captcha_sum'] = $num1 + $num2;
             });
         }
         
-        function validateUsername(value) { /* ... same code ... */ }
-        function checkAvailability(field, value) { /* ... same code ... */ }
+        // --- ADDED MISSING FUNCTIONS HERE ---
+        function validateUsername(value) {
+            const msg = document.getElementById('usernameMessage');
+            if (value.length > 0) {
+                checkAvailability('username', value);
+            } else {
+                msg.textContent = "";
+            }
+        }
+
+        function checkAvailability(field, value) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'login.php?check=' + field + '&value=' + encodeURIComponent(value), true);
+            xhr.onload = function() {
+                if (this.status === 200) {
+                    const response = this.responseText;
+                    const msgElement = document.getElementById(field + 'Message');
+                    msgElement.textContent = response;
+                    msgElement.className = response ? "inline-message error" : "inline-message";
+                }
+            };
+            xhr.send();
+        }
+        // --- END ADDED FUNCTIONS ---
     </script>
 
     <?php if (!empty($alertMessage)): ?>

@@ -1,5 +1,5 @@
 <?php
-// admin_completed.php - COMPLETE UI WITH MODAL PREVIEW 🖼️
+// admin_completed.php - SECURE VAULT EDITION 🔒
 include("connection.php");
 include("darkmode.php"); 
 include('session.php'); 
@@ -8,26 +8,55 @@ if (function_exists('requireRole')) {
     requireRole('admin');
 }
 
-// ==========================================================
-// 1. DATA FETCHING 
-// ==========================================================
-$sql = "SELECT 
-            s.id AS shipment_id, 
-            p.invoice_number,
-            p.amount,
-            p.payment_date,
-            p.method,
-            s.contract_number,
-            s.sender_name,
-            s.status as delivery_status,
-            a.username
-        FROM payments p
-        JOIN shipments s ON p.shipment_id = s.id
-        LEFT JOIN accounts a ON p.user_id = a.id
-        WHERE s.status = 'Delivered' 
-        ORDER BY p.payment_date DESC";
+// =========================================================
+// 🔐 SECURITY CONFIGURATION
+// =========================================================
+$VAULT_PASSWORD = "core3"; // <--- PALITAN MO ITO
 
-$result = mysqli_query($conn, $sql);
+// Handle Unlock
+$vault_error = "";
+if (isset($_POST['btn_unlock'])) {
+    $input_pass = $_POST['vault_pass'];
+    if ($input_pass === $VAULT_PASSWORD) {
+        $_SESSION['completed_unlocked'] = true;
+        header("Location: admin_completed.php");
+        exit;
+    } else {
+        $vault_error = "Incorrect password. Access denied.";
+    }
+}
+
+// Handle Lock
+if (isset($_GET['action']) && $_GET['action'] == 'lock') {
+    unset($_SESSION['completed_unlocked']);
+    header("Location: admin_completed.php");
+    exit;
+}
+
+$is_unlocked = isset($_SESSION['completed_unlocked']) && $_SESSION['completed_unlocked'] === true;
+
+// ==========================================================
+// 1. DATA FETCHING (EXECUTE ONLY IF UNLOCKED)
+// ==========================================================
+$result = null;
+if ($is_unlocked) {
+    $sql = "SELECT 
+                s.id AS shipment_id, 
+                p.invoice_number,
+                p.amount,
+                p.payment_date,
+                p.method,
+                s.contract_number,
+                s.sender_name,
+                s.status as delivery_status,
+                a.username
+            FROM payments p
+            JOIN shipments s ON p.shipment_id = s.id
+            LEFT JOIN accounts a ON p.user_id = a.id
+            WHERE s.status = 'Delivered' 
+            ORDER BY p.payment_date DESC";
+    $result = mysqli_query($conn, $sql);
+}
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +64,7 @@ $result = mysqli_query($conn, $sql);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Completed Transactions</title>
+  <title>Completed Transactions | Secured</title>
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -71,6 +100,18 @@ $result = mysqli_query($conn, $sql);
     .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
     input:checked+.slider { background-color: var(--primary); }
     input:checked+.slider:before { transform: translateX(24px); }
+
+    /* LOCK SCREEN STYLES */
+    .lock-screen {
+        max-width: 400px;
+        margin: 5rem auto;
+        text-align: center;
+    }
+    .lock-icon {
+        font-size: 4rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
   </style>
 </head>
 
@@ -113,9 +154,15 @@ $result = mysqli_query($conn, $sql);
     <div class="header">
       <div class="d-flex align-items-center gap-3">
         <i class="bi bi-list fs-4" id="hamburger" style="cursor: pointer;"></i>
-        <h4 class="fw-bold mb-0">✅ Completed Deliveries & Collections</h4>
+        <h4 class="fw-bold mb-0">✅ Completed Deliveries</h4>
       </div>
       <div class="d-flex align-items-center gap-2">
+        <?php if($is_unlocked): ?>
+            <a href="?action=lock" class="btn btn-outline-danger btn-sm rounded-pill px-3 me-3">
+                <i class="bi bi-lock-fill me-1"></i> Lock Vault
+            </a>
+        <?php endif; ?>
+
         <div class="dropdown me-3">
             <a href="#" class="text-dark position-relative" id="notifDropdown" data-bs-toggle="dropdown" onclick="markRead()">
                 <i class="bi bi-bell fs-4"></i>
@@ -133,6 +180,34 @@ $result = mysqli_query($conn, $sql);
         </label>
       </div>
     </div>
+
+    <?php if (!$is_unlocked): ?>
+        <div class="lock-screen fade-in">
+            <div class="card shadow-lg border-0 p-4">
+                <div class="card-body">
+                    <i class="bi bi-shield-lock-fill lock-icon"></i>
+                    <h4 class="fw-bold mb-1">Financial Records Locked</h4>
+                    <p class="text-muted small mb-4">Authorized personnel only. Enter password to view.</p>
+                    
+                    <?php if($vault_error): ?>
+                        <div class="alert alert-danger py-2 small"><?php echo $vault_error; ?></div>
+                    <?php endif; ?>
+
+                    <form method="POST">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+                            <input type="password" name="vault_pass" class="form-control" placeholder="Enter Password" required autofocus>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" name="btn_unlock" class="btn btn-primary fw-bold py-2">
+                                Unlock Records <i class="bi bi-arrow-right-short"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php else: ?>
 
     <div class="card">
       <div class="card-body">
@@ -186,41 +261,38 @@ $result = mysqli_query($conn, $sql);
       </div>
     </div>
 
-  </div>
-
-  <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg" style="max-width: 900px;">
-      <div class="modal-content">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title"><i class="bi bi-receipt"></i> Official Receipt Preview</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" style="max-width: 900px;">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title"><i class="bi bi-receipt"></i> Official Receipt Preview</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="background: #555;">
+            <iframe id="receiptFrame" src="" style="width: 100%; height: 80vh; border: none; display: block;"></iframe>
+            </div>
+            <div class="modal-footer bg-light">
+                <small class="text-muted me-auto">Note: Use the print button inside the receipt to save as PDF.</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
-        <div class="modal-body p-0" style="background: #555;">
-          <iframe id="receiptFrame" src="" style="width: 100%; height: 80vh; border: none; display: block;"></iframe>
         </div>
-        <div class="modal-footer bg-light">
-             <small class="text-muted me-auto">Note: Use the print button inside the receipt to save as PDF.</small>
-             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <?php endif; ?> </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
-    // 1. RECEIPT MODAL FUNCTION
+    <?php if ($is_unlocked): ?>
+    // 1. RECEIPT MODAL FUNCTION (Only needed if unlocked)
     function openReceipt(id) {
-        // Hanapin ang iframe
         const frame = document.getElementById('receiptFrame');
-        
-        // I-set ang source ng iframe papunta sa waybill.php gamit ang ID
         frame.src = "waybill.php?id=" + id;
-        
-        // Buksan ang Modal
         const myModal = new bootstrap.Modal(document.getElementById('receiptModal'));
         myModal.show();
     }
+    <?php endif; ?>
 
     // 2. DARK MODE INIT
     const toggle = document.getElementById('adminThemeToggle');
