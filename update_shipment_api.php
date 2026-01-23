@@ -1,120 +1,105 @@
 <?php
-// update_shipment_api.php
+// FILE: update_shipments_api.php
+// PURPOSE: Handle Status Updates (Cancel, Receive, Rate)
 
-// 1. Pigilan ang PHP na mag-print ng text errors sa screen (nakakasira ito ng JSON)
+include("connection.php");
+session_start();
+
+header('Content-Type: application/json');
+
+// Error Handling para hindi mag return ng HTML kung may error
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// 2. Linisin ang output buffer
-ob_start();
-
-include("connection.php");
-
-// 3. Siguraduhin na JSON ang header
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-
-$response = ['success' => false, 'message' => 'Unknown error'];
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $response['message'] = "Invalid Request Method";
-    echo_json($response);
-}
-
-$action = $_POST['action'] ?? '';
-
-// === ACTION: UPDATE STATUS ===
-if ($action === 'update_status') {
-    $id = intval($_POST['id']);
-    $status = $_POST['status'];
-    $reason = $_POST['reason'] ?? '';
-
-    // A. KUNG DELIVERED (May Picture Upload)
-    if ($status === 'Delivered') {
+try {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
-        // Check kung may file upload
-        if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
+        $action = $_POST['action'] ?? '';
+        
+        // Check if ID is present
+        if (!isset($_POST['id']) && !isset($_POST['shipment_id'])) {
+            throw new Exception("Missing Shipment ID");
+        }
+
+        $id = intval($_POST['id'] ?? $_POST['shipment_id']);
+
+        // ======================================================
+        // 🛑 CANCELLATION LOGIC
+        // ======================================================
+        if ($action === 'update_status' && $_POST['status'] === 'Cancelled') {
             
-            $targetDir = "uploads/proofs/";
+            $reason = mysqli_real_escape_string($conn, $_POST['reason']);
             
-            // Gumawa ng folder kung wala pa
-            if (!is_dir($targetDir)) {
-                mkdir($targetDir, 0777, true);
-            }
+            // Siguraduhing may 'cancel_reason' column ka na sa DB!
+            $sql = "UPDATE shipments 
+                    SET status = 'Cancelled', 
+                        cancel_reason = '$reason', 
+                        updated_at = NOW() 
+                    WHERE id = '$id'";
 
-            $extension = pathinfo($_FILES["proof_image"]["name"], PATHINFO_EXTENSION);
-            $fileName = "proof_" . $id . "_" . time() . "." . $extension;
-            $targetFilePath = $targetDir . $fileName;
-
-            if (move_uploaded_file($_FILES["proof_image"]["tmp_name"], $targetFilePath)) {
-                
-                $stmt = $conn->prepare("UPDATE shipments SET status = ?, proof_image = ? WHERE id = ?");
-                $stmt->bind_param("ssi", $status, $targetFilePath, $id);
-                
-                if ($stmt->execute()) {
-                    $response = ['success' => true, 'message' => 'Status updated and proof uploaded'];
-                } else {
-                    $response['message'] = 'Database Error: ' . $stmt->error;
-                }
-                $stmt->close();
-
+            if (mysqli_query($conn, $sql)) {
+                echo json_encode(['success' => true, 'message' => 'Shipment cancelled.']);
             } else {
-                $response['message'] = 'Failed to move uploaded file. Check folder permissions.';
+                throw new Exception("DB Error: " . mysqli_error($conn));
             }
-        } else {
-            $response['message'] = 'No valid image file received.';
+            exit;
         }
-    }
 
-    // B. KUNG CANCELLED
-    elseif ($status === 'Cancelled') {
-        $stmt = $conn->prepare("UPDATE shipments SET status = ?, feedback_text = ? WHERE id = ?");
-        $stmt->bind_param("ssi", $status, $reason, $id);
-        if ($stmt->execute()) {
-            $response = ['success' => true];
-        } else {
-            $response['message'] = $stmt->error;
+        // ======================================================
+        // ✅ RECEIVED / DELIVERED LOGIC
+        // ======================================================
+        if ($action === 'update_status' && $_POST['status'] === 'Delivered') {
+            
+            // Handle Image Upload
+            $proofPath = NULL;
+            if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
+                $targetDir = "uploads/proofs/";
+                if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+                
+                $fileName = time() . "_" . basename($_FILES["proof_image"]["name"]);
+                $targetFilePath = $targetDir . $fileName;
+                
+                if (move_uploaded_file($_FILES["proof_image"]["tmp_name"], $targetFilePath)) {
+                    $proofPath = $targetFilePath;
+                }
+            }
+
+            $proofSql = $proofPath ? ", proof_image = '$proofPath'" : "";
+
+            $sql = "UPDATE shipments SET status = 'Delivered', payment_status = 'Paid' $proofSql, updated_at = NOW() WHERE id = '$id'";
+            
+            if (mysqli_query($conn, $sql)) {
+                echo json_encode(['success' => true, 'message' => 'Marked as Received!']);
+            } else {
+                throw new Exception("DB Error: " . mysqli_error($conn));
+            }
+            exit;
         }
-    }
 
-    // C. IBA PANG STATUS (Receive without pic, etc.)
-    else {
-        $stmt = $conn->prepare("UPDATE shipments SET status = ? WHERE id = ?");
-        $stmt->bind_param("si", $status, $id);
-        if ($stmt->execute()) {
-            $response = ['success' => true];
-        } else {
-            $response['message'] = $stmt->error;
+        // ======================================================
+        // ⭐ RATING LOGIC
+        // ======================================================
+        if ($action === 'submit_rating') {
+            $rating = intval($_POST['rating']);
+            $feedback = mysqli_real_escape_string($conn, $_POST['feedback']);
+
+            $sql = "UPDATE shipments SET rating = '$rating', feedback_text = '$feedback' WHERE id = '$id'";
+            
+            if (mysqli_query($conn, $sql)) {
+                echo json_encode(['success' => true]);
+            } else {
+                throw new Exception("DB Error: " . mysqli_error($conn));
+            }
+            exit;
         }
-    }
-}
+        
+        // Fallback
+        echo json_encode(['success' => false, 'message' => 'Invalid Action']);
 
-// === ACTION: SUBMIT RATING ===
-elseif ($action === 'submit_rating') {
-    $id = intval($_POST['shipment_id']);
-    $rating = intval($_POST['rating']);
-    $feedback = $_POST['feedback'];
-    
-    $stmt = $conn->prepare("UPDATE shipments SET rating = ?, feedback_text = ? WHERE id = ?");
-    $stmt->bind_param("isi", $rating, $feedback, $id);
-    
-    if ($stmt->execute()) {
-        $response = ['success' => true];
     } else {
-        $response['message'] = $stmt->error;
+        echo json_encode(['success' => false, 'message' => 'Invalid Request Method']);
     }
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-
-else {
-    $response['message'] = "No valid action provided";
-}
-
-// Function para mag-send ng JSON at patayin ang script
-function echo_json($data) {
-    ob_end_clean(); // Burahin ang anumang "Connected" text o errors
-    echo json_encode($data);
-    exit;
-}
-
-echo_json($response);
 ?>

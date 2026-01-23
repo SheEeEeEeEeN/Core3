@@ -5,9 +5,10 @@ error_reporting(E_ALL);
 include('connection.php');
 include('session.php');
 include('darkmode.php');
-requireRole('admin');
+// requireRole('admin'); // Uncomment if needed
 include('loading.html');
 
+// --- Archive Function ---
 if (isset($_GET['archive'])) {
   $id = intval($_GET['archive']);
   $res = $conn->query("SELECT * FROM accounts WHERE id = $id");
@@ -37,10 +38,6 @@ if (isset($_GET['archive'])) {
   }
 }
 
-
-
-
-
 // Helper
 function h($s)
 {
@@ -49,21 +46,17 @@ function h($s)
 
 // --- Export CSV (server-side) ---
 if (isset($_GET['export']) && $_GET['export'] === '1') {
-  $base = "SELECT id, customer_name, company, email, phone, status FROM crm";
+  $base = "SELECT id, username, email, phone_number, gender, role FROM accounts";
   $conds = [];
   $params = [];
   $types = '';
   if (!empty($_GET['q'])) {
-    $conds[] = "(customer_name LIKE ? OR company LIKE ? OR email LIKE ? OR phone LIKE ?)";
+    $conds[] = "(username LIKE ? OR email LIKE ? OR phone_number LIKE ?)";
     $term = '%' . $_GET['q'] . '%';
-    $params = array_merge($params, [$term, $term, $term, $term]);
-    $types .= 'ssss';
+    $params = array_merge($params, [$term, $term, $term]);
+    $types .= 'sss';
   }
-  if (!empty($_GET['status'])) {
-    $conds[] = "status = ?";
-    $params[] = $_GET['status'];
-    $types .= 's';
-  }
+ 
   if ($conds) $base .= " WHERE " . implode(" AND ", $conds);
   $base .= " ORDER BY id DESC";
 
@@ -75,9 +68,9 @@ if (isset($_GET['export']) && $_GET['export'] === '1') {
   header('Content-Type: text/csv; charset=utf-8');
   header('Content-Disposition: attachment; filename=crm_customers_export.csv');
   $out = fopen('php://output', 'w');
-  fputcsv($out, ['ID', 'Customer Name', 'Company', 'Email', 'Phone', 'Status']);
+  fputcsv($out, ['ID', 'Username', 'Email', 'Phone', 'Gender', 'Role']);
   while ($r = $res->fetch_assoc()) {
-    fputcsv($out, [$r['id'], $r['customer_name'], $r['company'], $r['email'], $r['phone'], $r['status']]);
+    fputcsv($out, [$r['id'], $r['username'], $r['email'], $r['phone_number'], $r['gender'], $r['role']]);
   }
   fclose($out);
   exit;
@@ -87,21 +80,12 @@ if (isset($_GET['export']) && $_GET['export'] === '1') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   $action = $_POST['action'];
 
-  // If form is inline Add New Customer
-  if (isset($_POST['customer_name'])) {
-    $username = trim($_POST['customer_name']);
-    $email = trim($_POST['email']);
-    $phone_number = trim($_POST['phone']);
-    $gender = $_POST['gender'] ?? 'N/A';
-    $role = 'customer'; // default role
-  } else {
-    // If form is modal Add/Edit Account
-    $username = trim($_POST['username'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $phone_number = trim($_POST['phone_number'] ?? '');
-    $gender = trim($_POST['gender'] ?? '');
-    $role = trim($_POST['role'] ?? '');
-  }
+  // Data Collection
+  $username = trim($_POST['username'] ?? '');
+  $email = trim($_POST['email'] ?? '');
+  $phone_number = trim($_POST['phone_number'] ?? '');
+  $gender = trim($_POST['gender'] ?? '');
+  $role = trim($_POST['role'] ?? '');
 
   $errors = [];
 
@@ -124,13 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
       $stmt->bind_param("sssssi", $username, $email, $phone_number, $gender, $role, $id);
 
       if ($stmt->execute()) {
-
         // ✅ Update session if current logged-in user is edited
         if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $id) {
           $_SESSION['username'] = $username;
-          $_SESSION['email'] = $email; // optional
+          $_SESSION['email'] = $email;
         }
-
         header("Location: CRM.php?msg=updated");
         exit;
       } else {
@@ -140,23 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   }
 }
 
-
-
-// --- Handle Delete via GET ---
-if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-  $delid = intval($_GET['delete']);
-  $stmt = $conn->prepare("DELETE FROM crm WHERE id = ?");
-  $stmt->bind_param("i", $delid);
-  $stmt->execute();
-  header("Location: CRM.php?msg=deleted");
-  exit;
-}
-
-// --- Stats ---
-$totalCustomers = $conn->query("SELECT COUNT(*) as c FROM crm")->fetch_assoc()['c'] ?? 0;
-$activeCustomers = $conn->query("SELECT COUNT(*) as c FROM crm WHERE status='Active'")->fetch_assoc()['c'] ?? 0;
-$prospectCustomers = $conn->query("SELECT COUNT(*) as c FROM crm WHERE status='Prospect'")->fetch_assoc()['c'] ?? 0;
-$inactiveCustomers = $conn->query("SELECT COUNT(*) as c FROM crm WHERE status='Inactive'")->fetch_assoc()['c'] ?? 0;
+// --- Stats Logic (Consolidated to 'accounts' table) ---
+$totalCustomers = $conn->query("SELECT COUNT(*) as c FROM accounts")->fetch_assoc()['c'] ?? 0;
+$activeCustomers = $conn->query("SELECT COUNT(*) as c FROM accounts WHERE role='customer'")->fetch_assoc()['c'] ?? 0;
+$adminUsers = $conn->query("SELECT COUNT(*) as c FROM accounts WHERE role='admin'")->fetch_assoc()['c'] ?? 0;
+$regularUsers = $conn->query("SELECT COUNT(*) as c FROM accounts WHERE role='user'")->fetch_assoc()['c'] ?? 0;
 
 // --- Fetch list (limit 500) from accounts table ---
 $where = [];
@@ -185,9 +155,8 @@ $stmt = $conn->prepare($sql);
 if ($params) $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
-
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -220,7 +189,7 @@ $result = $stmt->get_result();
       color: var(--light-text);
     }
 
-    /* Sidebar */
+    /* --- ORIGINAL SIDEBAR STYLES --- */
     .sidebar {
       width: 250px;
       height: 100vh;
@@ -267,7 +236,6 @@ $result = $stmt->get_result();
       border-left: 4px solid #fff;
     }
 
-
     /* Dropdown */
     .dropdown-container .dropdown-toggle {
       cursor: pointer;
@@ -298,15 +266,8 @@ $result = $stmt->get_result();
     }
 
     @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-5px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .content {
@@ -319,6 +280,7 @@ $result = $stmt->get_result();
       margin-left: 0;
     }
 
+    /* --- ORIGINAL HEADER STYLES --- */
     .header {
       background: white;
       border-radius: var(--radius);
@@ -340,6 +302,7 @@ $result = $stmt->get_result();
       font-size: 1.5rem;
     }
 
+    /* --- OLD DASHBOARD CARDS (RESTORED AS REQUESTED) --- */
     .dashboard-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -353,132 +316,59 @@ $result = $stmt->get_result();
       padding: 1.5rem;
       background: white;
       box-shadow: var(--shadow);
+      transition: transform 0.2s;
     }
+    
+    .card:hover { transform: translateY(-5px); }
 
     body.dark-mode .card {
       background: var(--dark-card);
       color: var(--light-text);
     }
 
-
     .card h4 {
-      color: var(--primary);
+      color: #555;
+      font-size: 1.1rem;
       font-weight: 600;
       margin-bottom: .5rem;
     }
+    
+    body.dark-mode .card h4 { color: #ccc; }
 
     .stat-value {
       font-size: 1.8rem;
       font-weight: 700;
     }
 
+    /* --- Table Styles --- */
     .table-responsive {
       max-height: 520px;
       overflow: auto;
     }
 
-    body.dark-mode .Select-section {
-      background-color: var(--dark-card) !important;
-      color: var(--light-text);
+    /* Avatar */
+    .avatar-initial {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-right: 10px;
     }
 
-    body.dark-mode .Select-section input,
-    body.dark-mode .Select-section select {
-      background-color: #222a45;
-      color: #f8f9fa;
-      border: 1px solid #3c4a73;
-    }
-
-    body.dark-mode .Select-section input::placeholder {
-      color: #b0b8d1;
-    }
-
-    body.dark-mode .Select-section label {
-      color: #dfe4ff;
-    }
-
-    body.dark-mode .Select-section .btn-primary {
-      background-color: #3a57e8;
-      border-color: #3a57e8;
-    }
-
-    body.dark-mode .Select-section .btn-outline-primary {
-      color: #f8f9fa;
-      border-color: #3a57e8;
-    }
-
-    /* 🌙 DARK MODE TABLE STYLES */
-    body.dark-mode table.table {
-      background-color: #16213e !important;
-      color: #000000 !important;
-      /* black text */
-      border-color: #2e3a5c !important;
-    }
-
-    body.dark-mode thead {
-      background-color: #1f2a4a !important;
-      color: #000000 !important;
-      /* black text */
-    }
-
-    body.dark-mode thead th {
-      border-bottom: 2px solid #2e3a5c !important;
-      color: #000000 !important;
-      /* black text */
-    }
-
-    body.dark-mode tbody tr {
-      background-color: #4e73df !important;
-      border-bottom: 1px solid #2e3a5c !important;
-      transition: background-color 0.25s ease;
-      color: #000000 !important;
-      /* black text */
-    }
-
-    body.dark-mode tbody tr:nth-child(even) {
-      background-color: #1e2b4f !important;
-      color: #000000 !important;
-      /* black text */
-    }
-
-    body.dark-mode tbody tr:hover {
-      background-color: #2b3b6d !important;
-      color: #000000 !important;
-      /* black text on hover */
-    }
-
-    body.dark-mode td,
-    body.dark-mode th {
-      color: #000000 !important;
-      /* black text everywhere */
-      border-color: #2e3a5c !important;
-    }
-
-    /* Dark Mode Card Headers / Footers */
-    body.dark-mode .card-header {
-      background-color: #24325f !important;
-      color: #fff !important;
-      border-bottom: 1px solid #3c4a73 !important;
-    }
-
-    body.dark-mode .card-footer {
-      background-color: #1e2747 !important;
-      color: #fff !important;
-      border-top: 1px solid #2e3a5c !important;
-    }
-
-    body.dark-mode .btn-light:hover {
-      background-color: #3d4f85 !important;
-    }
-
-
-
-    body.dark-mode .alert {
-      background-color: #24325f;
-      color: #e3e9ff;
-      border: 1px solid #3b4c84;
-    }
-
+    /* Dark Mode Table Fixes */
+    body.dark-mode table.table { background-color: #16213e !important; color: #000 !important; border-color: #2e3a5c !important; }
+    body.dark-mode thead { background-color: #1f2a4a !important; color: #000 !important; }
+    body.dark-mode thead th { border-bottom: 2px solid #2e3a5c !important; color: #000 !important; }
+    body.dark-mode tbody tr { background-color: #4e73df !important; border-bottom: 1px solid #2e3a5c !important; color: #000 !important; }
+    body.dark-mode tbody tr:nth-child(even) { background-color: #1e2b4f !important; color: #000 !important; }
+    body.dark-mode tbody tr:hover { background-color: #2b3b6d !important; color: #000 !important; }
+    body.dark-mode td, body.dark-mode th { color: #000 !important; border-color: #2e3a5c !important; }
 
     /* Theme Toggle */
     .theme-toggle-container {
@@ -494,12 +384,7 @@ $result = $stmt->get_result();
       display: inline-block;
     }
 
-    .theme-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
+    .theme-switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute;
       cursor: pointer;
@@ -508,7 +393,6 @@ $result = $stmt->get_result();
       border-radius: 34px;
       transition: .4s;
     }
-
     .slider:before {
       position: absolute;
       content: "";
@@ -520,27 +404,13 @@ $result = $stmt->get_result();
       border-radius: 50%;
       transition: .4s;
     }
-
-    input:checked+.slider {
-      background-color: var(--primary);
-    }
-
-    input:checked+.slider:before {
-      transform: translateX(24px);
-    }
+    input:checked+.slider { background-color: var(--primary); }
+    input:checked+.slider:before { transform: translateX(24px); }
 
     @media (max-width: 992px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-
-      .sidebar.show {
-        transform: translateX(0);
-      }
-
-      .content {
-        margin-left: 0;
-      }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.show { transform: translateX(0); }
+      .content { margin-left: 0; }
     }
   </style>
 </head>
@@ -552,47 +422,45 @@ $result = $stmt->get_result();
         <img src="Remorig.png" alt="Logo">
         <h6 class="mt-2 mb-0 text-light fw-normal">CORE TRANSACTION 3</h6>
       </div>
-     <nav class="mt-3">
-    <a href="admin.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin.php' ? 'active' : ''; ?>">
-        <i class="bi bi-speedometer2"></i> Dashboard
-    </a>
+      <nav class="mt-3">
+        <a href="admin.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin.php' ? 'active' : ''; ?>">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
 
-    <a href="#crmSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-people"></i> CRM</span>
-        <i class="bi bi-chevron-down" style="font-size: 0.8em;"></i>
-    </a>
-    
-    <div class="collapse <?php echo (basename($_SERVER['PHP_SELF']) == 'CRM.php' || basename($_SERVER['PHP_SELF']) == 'customer_feedback.php') ? 'show' : ''; ?>" id="crmSubmenu" style="background: rgba(0,0,0,0.2);">
+        <a href="#crmSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-people"></i> CRM</span>
+          <i class="bi bi-chevron-down" style="font-size: 0.8em;"></i>
+        </a>
         
-        <a href="CRM.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'CRM.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
+        <div class="collapse <?php echo (basename($_SERVER['PHP_SELF']) == 'CRM.php' || basename($_SERVER['PHP_SELF']) == 'customer_feedback.php') ? 'show' : ''; ?>" id="crmSubmenu" style="background: rgba(0,0,0,0.2);">
+          <a href="CRM.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'CRM.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
             <i class="bi bi-dot"></i> CRM Dashboard
-        </a>
-        
-        <a href="customer_feedback.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'customer_feedback.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
+          </a>
+          <a href="customer_feedback.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'customer_feedback.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
             <i class="bi bi-dot"></i> Customer Feedback
+          </a>
+        </div>
+
+        <a href="#csmSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-file-text"></i> Contract & SLA</span>
+          <i class="bi bi-chevron-down" style="font-size: 0.8em;"></i>
         </a>
-        
-    </div>
-    <a href="#csmSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-file-text"></i> Contract & SLA</span>
-        <i class="bi bi-chevron-down" style="font-size: 0.8em;"></i>
-    </a>
-    <div class="collapse <?php echo (basename($_SERVER['PHP_SELF']) == 'Admin_contracts.php' || basename($_SERVER['PHP_SELF']) == 'Admin_shipments.php') ? 'show' : ''; ?>" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
-        <a href="Admin_contracts.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'Admin_contracts.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
+        <div class="collapse <?php echo (basename($_SERVER['PHP_SELF']) == 'Admin_contracts.php' || basename($_SERVER['PHP_SELF']) == 'Admin_shipments.php') ? 'show' : ''; ?>" id="csmSubmenu" style="background: rgba(0,0,0,0.2);">
+          <a href="Admin_contracts.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'Admin_contracts.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
             <i class="bi bi-dot"></i> Manage Contracts
-        </a>
-        <a href="Admin_shipments.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'Admin_shipments.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
+          </a>
+          <a href="Admin_shipments.php" class="ps-4 <?php echo basename($_SERVER['PHP_SELF']) == 'Admin_shipments.php' ? 'active' : ''; ?>" style="font-size: 0.9em;">
             <i class="bi bi-dot"></i> SLA Monitoring
-        </a>
-    </div>
+          </a>
+        </div>
 
-    <a href="E-Doc.php"><i class="bi bi-folder2-open"></i> E-Docs</a>
-    <a href="BIFA.php"><i class="bi bi-graph-up"></i> BI & Freight Analytics</a>
-    <a href="activity-log.php"><i class="bi bi-clock-history"></i> Activity Log</a>
-    <a href="Archive.php"><i class="bi bi-archive"></i> Archived Docs</a>
+        <a href="E-Doc.php"><i class="bi bi-folder2-open"></i> E-Docs</a>
+        <a href="BIFA.php"><i class="bi bi-graph-up"></i> BI & Freight Analytics</a>
+        <a href="activity-log.php"><i class="bi bi-clock-history"></i> Activity Log</a>
+        <a href="Archive.php"><i class="bi bi-archive"></i> Archived Docs</a>
 
-    <a href="logout.php" class="border-top mt-3"><i class="bi bi-box-arrow-right"></i> Logout</a>
-</nav>
+        <a href="logout.php" class="border-top mt-3"><i class="bi bi-box-arrow-right"></i> Logout</a>
+      </nav>
     </div>
   </div>
 
@@ -604,20 +472,18 @@ $result = $stmt->get_result();
       </div>
       <div class="theme-toggle-container">
           <div class="dropdown me-3">
-    <a href="#" class="text-dark position-relative" id="notifDropdown" data-bs-toggle="dropdown" onclick="markRead()">
-        <i class="bi bi-bell fs-4"></i>
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display: none;">
-            0
-        </span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 300px; max-height: 400px; overflow-y: auto;">
-        <li class="p-2 border-bottom fw-bold bg-light">Notifications</li>
-        <div id="notifList">
-            <li class="text-center p-3 text-muted small">Checking...</li>
+            <a href="#" class="text-dark position-relative" id="notifDropdown" data-bs-toggle="dropdown" onclick="markRead()">
+                <i class="bi bi-bell fs-4"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display: none;">0</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                <li class="p-2 border-bottom fw-bold bg-light">Notifications</li>
+                <div id="notifList">
+                    <li class="text-center p-3 text-muted small">Checking...</li>
+                </div>
+                <li><a class="dropdown-item text-center small text-primary p-2 border-top" href="customer_feedback.php">View All</a></li>
+            </ul>
         </div>
-        <li><a class="dropdown-item text-center small text-primary p-2 border-top" href="feedback.php">View All</a></li>
-    </ul>
-</div>
         <small>Dark Mode</small>
         <label class="theme-switch">
           <input type="checkbox" id="adminThemeToggle">
@@ -628,305 +494,191 @@ $result = $stmt->get_result();
 
     <div class="dashboard-cards">
       <div class="card text-center border-top border-5 border-info">
-        <h4><i class="bi bi-people-fill me-2"></i>Total Customers</h4>
+        <h4><i class="bi bi-people-fill me-2"></i>Total Accounts</h4>
         <div class="stat-value"><?= (int)$totalCustomers ?></div>
       </div>
 
       <div class="card text-center border-top border-5 border-success">
-        <h4><i class="bi bi-check2-circle me-2"></i>Active</h4>
+        <h4><i class="bi bi-check2-circle me-2"></i>Customers</h4>
         <div class="stat-value"><?= (int)$activeCustomers ?></div>
       </div>
 
       <div class="card text-center border-top border-5 border-warning">
-        <h4><i class="bi bi-person-plus me-2"></i>Prospect</h4>
-        <div class="stat-value"><?= (int)$prospectCustomers ?></div>
+        <h4><i class="bi bi-shield-lock me-2"></i>Admins</h4>
+        <div class="stat-value"><?= (int)$adminUsers ?></div>
       </div>
 
       <div class="card text-center border-top border-5 border-secondary">
-        <h4><i class="bi bi-person-x me-2"></i>Inactive</h4>
-        <div class="stat-value"><?= (int)$inactiveCustomers ?></div>
+        <h4><i class="bi bi-person-badge me-2"></i>Users</h4>
+        <div class="stat-value"><?= (int)$regularUsers ?></div>
       </div>
     </div>
 
-    <!-- Search & Filter -->
-    <div class="card shadow-sm p-3 mb-3">
-      <div class="row g-2">
-        <div class="col-md-6">
-          <input type="text" id="searchBox" class="form-control" placeholder="🔍 Search by name, company, email, phone" value="<?= h($searchQ) ?>">
-        </div>
-        <div class="col-md-3">
-          <select id="statusFilter" class="form-select" disabled>
-            <option value="">All Status</option>
-            <option value="Active" <?= $filterStatus === 'Active' ? 'selected' : '' ?>>Active</option>
-            <option value="Prospect" <?= $filterStatus === 'Prospect' ? 'selected' : '' ?>>Prospect</option>
-            <option value="Inactive" <?= $filterStatus === 'Inactive' ? 'selected' : '' ?>>Inactive</option>
-          </select>
-        </div>
-        <div class="col-md-3 d-flex gap-2">
-          <button class="btn btn-secondary w-100" onclick="resetFilters()">Reset</button>
-          <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#modalCustomer" onclick="openAdd()">+ Add</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Inline Add Form -->
-    <div class="Select-section p-3 mb-4 shadow-sm rounded bg-white">
-      <h3 class="fw-bold mb-3">Add New Customer</h3>
-      <form method="post" class="row g-3">
-        <input type="hidden" name="action" value="add">
-        <div class="col-md-6">
-          <label class="form-label">Customer Name</label>
-          <input type="text" name="customer_name" class="form-control" required>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" required>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Phone Number</label>
-          <input type="text" name="phone" class="form-control">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Gender</label>
-          <select name="gender" class="form-select" required>
-            <option value="">Select</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        </div>
-        <div class="col-12 d-flex justify-content-center">
-          <button class="btn btn-primary" type="submit"><i class="bi bi-plus-circle me-2"></i> Add Customer</button>
-          <a class="btn btn-outline-primary ms-2" href="CRM.php?export=1">Export CSV</a>
-        </div>
-      </form>
-
-    </div>
-
-    <!-- Customers Table -->
     <div class="card shadow-sm">
-      <div class="card-body">
-        <?php if (!empty($errors)): ?>
-          <div class="alert alert-danger">
-            <?php foreach ($errors as $e) echo "<div>" . h($e) . "</div>"; ?>
+      <div class="card-header bg-white border-bottom-0 py-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+             <h5 class="mb-0 fw-bold"><i class="bi bi-list-ul me-2"></i>Account List</h5>
+             <div class="d-flex gap-2">
+                 <div class="input-group" style="width: 250px;">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchBox" class="form-control border-start-0" placeholder="Search..." value="<?= h($searchQ) ?>">
+                 </div>
+                 <select id="statusFilter" class="form-select w-auto">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="customer">Customer</option>
+                    <option value="user">User</option>
+                 </select>
+                 <button class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#modalCustomer" onclick="openAdd()">
+                     <i class="bi bi-plus-lg"></i> Add
+                 </button>
+                 <a href="CRM.php?export=1" class="btn btn-outline-secondary" title="Export CSV"><i class="bi bi-download"></i></a>
+             </div>
           </div>
+      </div>
+
+      <div class="card-body p-0">
+        <?php if (!empty($errors) || !empty($_GET['msg'])): ?>
+            <div class="p-3">
+                <?php if (!empty($errors)): ?>
+                    <div class="alert alert-danger mb-2">
+                        <?php foreach ($errors as $e) echo "<div>" . h($e) . "</div>"; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($_GET['msg'])): 
+                    $m = $_GET['msg'];
+                    $alertClass = 'success';
+                    $msgText = 'Action completed.';
+                    if($m == 'updated') { $alertClass = 'info'; $msgText = 'Account updated.'; }
+                    if($m == 'added') { $msgText = 'Account added successfully.'; }
+                ?>
+                    <div class="alert alert-<?= $alertClass ?> d-flex align-items-center mb-0">
+                        <i class="bi bi-check-circle-fill me-2"></i> <?= $msgText ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
 
-
-
-        <div class="card shadow-sm border-0">
-          <div class="card-header  text-black py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">
-                <i class="bi bi-people me-2"></i>Customer Accounts
-              </h5>
-              <a href="CRM.php?export=1" class="btn btn-light btn-sm d-flex align-items-center gap-2">
-                <i class="bi bi-download"></i>
-                Export CSV
-              </a>
-            </div>
-          </div>
-
-          <div class="card-body p-0">
-            <?php if (!empty($errors) || !empty($_GET['msg'])): ?>
-              <div class="p-3">
-                <?php if (!empty($errors)): ?>
-                  <div class="alert alert-danger d-flex align-items-center mb-0" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <div>
-                      <?php foreach ($errors as $e) echo "<div>" . h($e) . "</div>"; ?>
-                    </div>
-                  </div>
-                <?php endif; ?>
-
-                <?php if (!empty($_GET['msg'])): ?>
-                  <div class="alert alert-success d-flex align-items-center mb-0" role="alert">
-                    <?php
-                    $m = $_GET['msg'];
-                    $icon = '';
-                    $message = '';
-                    switch ($m) {
-                      case 'added':
-                        $icon = 'check-circle-fill';
-                        $message = 'Customer added successfully.';
-                        break;
-                      case 'updated':
-                        $icon = 'pencil-square';
-                        $message = 'Customer updated successfully.';
-                        break;
-                      case 'deleted':
-                        $icon = 'trash-fill';
-                        $message = 'Customer deleted successfully.';
-                        break;
-                      case 'archived':
-                        $icon = 'archive-fill';
-                        $message = 'Customer archived successfully.';
-                        break;
-                    }
-                    ?>
-                    <i class="bi bi-<?= $icon ?> me-2"></i>
-                    <div><?= $message ?></div>
-                  </div>
-                <?php endif; ?>
-              </div>
-            <?php endif; ?>
-
-            <div class="table-responsive">
-              <table id="customersTable" class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
+        <div class="table-responsive">
+          <table id="customersTable" class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="ps-4">User Profile</th>
+                <th>Contact Info</th>
+                <th>Gender</th>
+                <th>Role</th>
+                <th class="text-end pe-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if ($result->num_rows > 0): ?>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                  <?php 
+                      // Random avatar color logic
+                      $initial = strtoupper(substr($row['username'], 0, 1));
+                      $colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'];
+                      $bg = $colors[array_rand($colors)];
+                  ?>
                   <tr>
-                    <th scope="col" class="text-center" style="width: 70px">#</th>
-                    <th scope="col">Username</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Phone</th>
-                    <th scope="col">Gender</th>
-                    <th scope="col">Role</th>
-                    <th scope="col" class="text-center" style="width: 180px;">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php if ($result->num_rows > 0): ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
-                      <tr>
-                        <td class="text-center text-muted"><?= $row['id'] ?></td>
-                        <td class="fw-semibold text-primary"><?= h($row['username']) ?></td>
-                        <td>
-                          <div class="d-flex align-items-center">
-                            <i class="bi bi-envelope-fill text-muted me-2"></i>
-                            <?= h($row['email']) ?>
-                          </div>
-                        </td>
-                        <td>
-                          <?php if ($row['phone_number']): ?>
-                            <div class="d-flex align-items-center">
-                              <i class="bi bi-telephone-fill text-muted me-2"></i>
-                              <?= h($row['phone_number']) ?>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-initial" style="background-color: <?= $bg ?>;"><?= $initial ?></div>
+                            <div>
+                                <div class="fw-bold text-dark"><?= h($row['username']) ?></div>
+                                <small class="text-muted">ID: #<?= $row['id'] ?></small>
                             </div>
-                          <?php else: ?>
-                            <span class="text-muted fst-italic">N/A</span>
-                          <?php endif; ?>
-                        </td>
-                        <td>
-                          <i class="bi bi-<?= strtolower($row['gender']) === 'male' ? 'gender-male text-primary' : 'gender-female text-danger' ?> me-2"></i>
-                          <?= h($row['gender']) ?>
-                        </td>
-                        <td>
-                          <?php
-                          $roleClass = match ($row['role']) {
-                            'admin' => 'danger',
-                            'user' => 'primary',
-                            'customer' => 'success',
-                            default => 'secondary'
-                          };
-                          ?>
-                          <span class="badge bg-<?= $roleClass ?> rounded-pill px-3 py-2">
-                            <?= ucfirst(h($row['role'])) ?>
-                          </span>
-                        </td>
-                        <td>
-                          <div class="d-flex justify-content-center gap-2">
-                            <button type="button"
-                              class="btn btn-primary btn-sm d-flex align-items-center gap-1"
-                              data-bs-toggle="modal"
-                              data-bs-target="#modalCustomer"
-                              onclick="openEdit(
-                                <?= $row['id'] ?>,
-                                '<?= h(addslashes($row['username'])) ?>',
-                                '<?= h(addslashes($row['email'])) ?>',
-                                '<?= h(addslashes($row['phone_number'])) ?>',
-                                '<?= h(addslashes($row['gender'])) ?>',
-                                '<?= h(addslashes($row['role'])) ?>'
-                              )">
-                              <i class="bi bi-pencil"></i>
-                              Edit
-                            </button>
-
-                            <a href="CRM.php?archive=<?= $row['id'] ?>"
-                              class="btn btn-secondary btn-sm d-flex align-items-center gap-1">
-                              <i class="bi bi-archive"></i>
-                              Archive
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                    <?php endwhile; ?>
-                  <?php else: ?>
-                    <tr>
-                      <td colspan="7" class="text-center py-4">
-                        <div class="text-muted">
-                          <i class="bi bi-inbox display-6 d-block mb-2"></i>
-                          No customer accounts found
                         </div>
-                      </td>
-                    </tr>
-                  <?php endif; ?>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="card-footer bg-light py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <small class="text-muted">
-                <i class="bi bi-info-circle me-1"></i>
-                Showing up to 500 records
-              </small>
-              <small class="text-muted">
-                <i class="bi bi-database me-1"></i>
-                Total: <?= $result->num_rows ?> customers
-              </small>
-            </div>
-          </div>
+                    </td>
+                    <td>
+                      <div class="d-flex flex-column">
+                          <span class="text-dark small"><i class="bi bi-envelope me-1 text-muted"></i> <?= h($row['email']) ?></span>
+                          <?php if ($row['phone_number']): ?>
+                              <span class="text-muted small"><i class="bi bi-telephone me-1"></i> <?= h($row['phone_number']) ?></span>
+                          <?php endif; ?>
+                      </div>
+                    </td>
+                    <td><?= h($row['gender']) ?></td>
+                    <td>
+                      <?php
+                        $roleClass = match ($row['role']) {
+                          'admin' => 'bg-danger',
+                          'user' => 'bg-primary',
+                          'customer' => 'bg-success',
+                          default => 'bg-secondary'
+                        };
+                      ?>
+                      <span class="badge <?= $roleClass ?> rounded-pill px-3"><?= ucfirst(h($row['role'])) ?></span>
+                    </td>
+                    <td class="text-end pe-4">
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                          data-bs-toggle="modal" data-bs-target="#modalCustomer"
+                          onclick="openEdit(<?= $row['id'] ?>, '<?= h(addslashes($row['username'])) ?>', '<?= h(addslashes($row['email'])) ?>', '<?= h(addslashes($row['phone_number'])) ?>', '<?= h(addslashes($row['gender'])) ?>', '<?= h(addslashes($row['role'])) ?>')">
+                          <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <a href="CRM.php?archive=<?= $row['id'] ?>" class="btn btn-sm btn-outline-secondary archive-btn" title="Archive">
+                          <i class="bi bi-archive-fill"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted">No accounts found.</td>
+                </tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
         </div>
-
-
-        <div class="mt-3 text-muted small">
-          Showing up to 500 records. For large datasets consider server-side pagination.
+        
+        <div class="card-footer bg-light py-2">
+            <small class="text-muted">Total Records: <?= $result->num_rows ?></small>
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Modal (Add/Edit Account) -->
   <div class="modal fade" id="modalCustomer" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" id="modalForm" method="post" action="CRM.php">
         <div class="modal-header">
-          <h5 class="modal-title" id="modalTitle">Add Account</h5>
+          <h5 class="modal-title fw-bold" id="modalTitle">Add Account</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <input type="hidden" name="action" id="frmAction" value="add">
           <input type="hidden" name="id" id="frmId" value="">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Username</label>
-              <input name="username" id="frmUsername" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Email</label>
-              <input name="email" id="frmEmail" class="form-control" type="email" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Phone Number</label>
-              <input name="phone_number" id="frmPhone" class="form-control">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Gender</label>
-              <select name="gender" id="frmGender" class="form-select" required>
-                <option value="">Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Role</label>
-              <select name="role" id="frmRole" class="form-select" required>
+          
+          <div class="mb-3">
+             <label class="form-label">Username</label>
+             <input name="username" id="frmUsername" class="form-control" required>
+          </div>
+          <div class="mb-3">
+             <label class="form-label">Email</label>
+             <input name="email" id="frmEmail" class="form-control" type="email" required>
+          </div>
+          <div class="row g-2 mb-3">
+             <div class="col-6">
+                 <label class="form-label">Phone</label>
+                 <input name="phone_number" id="frmPhone" class="form-control">
+             </div>
+             <div class="col-6">
+                 <label class="form-label">Gender</label>
+                 <select name="gender" id="frmGender" class="form-select" required>
+                   <option value="">Select</option>
+                   <option value="Male">Male</option>
+                   <option value="Female">Female</option>
+                 </select>
+             </div>
+          </div>
+          <div class="mb-3">
+             <label class="form-label">Role</label>
+             <select name="role" id="frmRole" class="form-select" required>
+                <option value="customer">Customer</option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
-                <option value="customer">Customer</option>
-              </select>
-            </div>
+             </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -937,106 +689,59 @@ $result = $stmt->get_result();
     </div>
   </div>
 
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     initDarkMode("adminThemeToggle", "adminDarkMode");
 
-    // Hamburger toggle for sidebar (mobile)
     document.getElementById('hamburger').addEventListener('click', () => {
       document.getElementById('sidebar').classList.toggle('collapsed');
       document.getElementById('mainContent').classList.toggle('expanded');
     });
 
-    // Sidebar accordion behavior
+    // Sidebar Accordion Logic (Original)
     const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-
     dropdownToggles.forEach(toggle => {
       toggle.addEventListener('click', (e) => {
         e.preventDefault();
         const currentMenu = toggle.nextElementSibling;
-
-        // Close all others
         document.querySelectorAll('.dropdown-content').forEach(menu => {
           if (menu !== currentMenu) menu.classList.remove('show');
         });
-
-        // Toggle current
         currentMenu.classList.toggle('show');
       });
     });
 
-    // Keep dropdown open if current page is CRM or Feedback
+    // Keep dropdown open based on URL
     const path = window.location.pathname.split("/").pop();
-
     if (path === "CRM.php" || path === "customer_feedback.php") {
-      const crmMenu = document.querySelector('.dropdown-content');
-      const crmToggle = document.querySelector('.dropdown-toggle');
-      crmMenu.classList.add('show');
-      crmToggle.classList.add('active');
-
-      // Highlight active sublink
-      document.querySelectorAll('.dropdown-content a').forEach(link => {
-        if (link.getAttribute('href') === path) {
-          link.classList.add('active');
-        }
-      });
-    } else {
-      // Highlight main nav links (non-dropdown)
-      document.querySelectorAll('.sidebar > div nav > a').forEach(link => {
-        if (link.getAttribute('href') === path) {
-          link.classList.add('active');
-        }
-      });
+      const crmMenu = document.querySelector('#crmSubmenu');
+      if(crmMenu) crmMenu.classList.add('show');
     }
 
-    // Table filter (client-side)
+    // Filter Table Logic
     const searchBox = document.getElementById('searchBox');
     const statusFilter = document.getElementById('statusFilter');
     let tableRows = Array.from(document.querySelectorAll('#customersTable tbody tr'));
 
     function filterTable() {
       const search = searchBox.value.toLowerCase();
-      const status = statusFilter.value;
+      const role = statusFilter.value.toLowerCase();
       tableRows.forEach(row => {
-        const cells = Array.from(row.querySelectorAll('td')).map(td => td.textContent.toLowerCase()).join(' ');
-        const rowStatus = row.querySelector('td:nth-child(6)').textContent.trim();
-        const show = cells.includes(search) && (!status || rowStatus === status);
-        row.style.display = show ? '' : 'none';
+        const text = row.textContent.toLowerCase();
+        // Role badge text check
+        const roleCell = row.querySelector('.badge').textContent.toLowerCase();
+        
+        const matchesSearch = text.includes(search);
+        const matchesRole = !role || roleCell.includes(role);
+        row.style.display = (matchesSearch && matchesRole) ? '' : 'none';
       });
     }
 
     searchBox.addEventListener('input', filterTable);
     statusFilter.addEventListener('change', filterTable);
 
-    function resetFilters() {
-      searchBox.value = '';
-      statusFilter.value = '';
-      filterTable();
-    }
-
-    // Inline add form submit (creates a temporary form to POST)
-    async function submitAddForm() {
-      const form = document.getElementById('inlineAddForm');
-      if (!form) return;
-      const data = new FormData(form);
-      const temp = document.createElement('form');
-      temp.method = 'POST';
-      temp.action = 'CRM.php';
-      temp.style.display = 'none';
-      const entries = Array.from(data.entries());
-      entries.forEach(([k, v]) => {
-        const inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = k;
-        inp.value = v;
-        temp.appendChild(inp);
-      });
-      document.body.appendChild(temp);
-      temp.submit();
-    }
-
-    // Modal helpers
+    // Modal Helpers
     function openAdd() {
       document.getElementById('modalTitle').textContent = "Add Account";
       document.getElementById('frmAction').value = "add";
@@ -1059,131 +764,62 @@ $result = $stmt->get_result();
       document.getElementById('frmRole').value = role;
     }
 
-    // this is the archive function
-
-    function confirmArchive(id) {
-      if (confirm('Archive this customer?')) {
-        window.location = 'CRM.php?archive_id=' + encodeURIComponent(id);
-      }
-    }
-
-
-
-    function confirmArchive(id) {
-      if (confirm('Archive this customer? This will move the record to archive.')) {
-        window.location = 'Archive_CRM.php?id=' + encodeURIComponent(id);
-      }
-    }
-
-
-    // Refresh row cache when DOM ready
-    function refreshRows() {
-      tableRows = Array.from(document.querySelectorAll('#customersTable tbody tr'));
-    }
-    window.addEventListener('DOMContentLoaded', refreshRows);
-
-    // Initialize Bootstrap tooltips for icons
-    document.addEventListener('DOMContentLoaded', function() {
-      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-      tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
-    });
-
-    // Archive confirmation using SweetAlert2
-    document.querySelectorAll(".archive").forEach(btn => {
+    // Archive Confirmation
+    document.querySelectorAll(".archive-btn").forEach(btn => {
       btn.addEventListener("click", function(e) {
         e.preventDefault();
         const url = this.href;
         Swal.fire({
-          title: 'Archive Customer?',
-          text: "This will move the customer to the archive section.",
+          title: 'Archive Account?',
+          text: "Move this user to archive?",
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#ffc107',
           cancelButtonColor: '#6c757d',
-          confirmButtonText: 'Yes, archive it!'
+          confirmButtonText: 'Yes, archive'
         }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = url;
-          }
+          if (result.isConfirmed) window.location.href = url;
         });
       });
     });
   </script>
+
   <script>
-    document.querySelectorAll('.archive').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        if (!confirm('Are you sure you want to archive this customer?')) {
-          e.preventDefault();
-        }
-      });
-    });
-  </script>
-<script>
-    // --- GLOBAL NOTIFICATION SCRIPT ---
     function fetchNotifications() {
-        // Siguraduhing tama ang path ng API mo relative sa file location
-        // Kung nasa root folder ka (gaya ng user.php), gamitin ang 'api/get_notifications.php'
         fetch('api/get_notifications.php')
         .then(response => response.json())
         .then(data => {
             const badge = document.getElementById('notifBadge');
             const list = document.getElementById('notifList');
-
-            // 1. Update Badge Count
             if (data.count > 0) {
                 badge.innerText = data.count;
                 badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';
             }
-
-            // 2. Update Dropdown List
             let html = '';
-            if (data.data.length > 0) {
+            if (data.data && data.data.length > 0) {
                 data.data.forEach(notif => {
                     let bgClass = notif.is_read == 0 ? 'bg-light' : '';
-                    let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-circle text-muted';
-                    
-                    // Adjust link if needed based on user role
+                    let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-all text-muted';
                     let link = notif.link ? notif.link : '#';
-
-                    html += `
-                    <li>
-                        <a class="dropdown-item ${bgClass} p-2 border-bottom" href="${link}">
-                            <div class="d-flex align-items-start">
-                                <i class="bi ${icon} me-2 mt-1" style="font-size: 10px;"></i>
-                                <div>
-                                    <small class="fw-bold d-block">${notif.title}</small>
-                                    <small class="text-muted text-wrap">${notif.message}</small>
-                                    <br>
-                                    <small class="text-secondary" style="font-size: 0.7rem;">${new Date(notif.created_at).toLocaleString()}</small>
-                                </div>
-                            </div>
-                        </a>
-                    </li>`;
+                    html += `<li><a class="dropdown-item ${bgClass} p-2 border-bottom d-flex gap-2" href="${link}">
+                            <i class="bi ${icon} mt-1" style="font-size: 8px;"></i>
+                            <div><span class="fw-bold d-block small">${notif.title}</span><small class="text-muted">${notif.message}</small></div>
+                        </a></li>`;
                 });
             } else {
-                html = '<li class="text-center p-3 text-muted small">No new notifications</li>';
+                html = '<li class="text-center p-3 small text-muted">No notifications</li>';
             }
             list.innerHTML = html;
-        })
-        .catch(err => console.error("Notif Error:", err));
+        }).catch(err => {});
     }
-
     function markRead() {
-        fetch('api/get_notifications.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'action=read_all'
-        }).then(() => {
-            document.getElementById('notifBadge').style.display = 'none';
-        });
+        fetch('api/get_notifications.php', { method: 'POST', body: 'action=read_all', headers: {'Content-Type': 'application/x-www-form-urlencoded'} })
+        .then(() => { document.getElementById('notifBadge').style.display = 'none'; });
     }
-
-    // Run immediately and every 5 seconds
     fetchNotifications();
     setInterval(fetchNotifications, 5000);
-</script>
+  </script>
 </body>
-
 </html>

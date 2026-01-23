@@ -206,7 +206,8 @@ $feedbacks = $conn->query("SELECT s.rating, s.feedback_text, s.created_at, a.use
             <ul class="dropdown-menu dropdown-menu-end shadow p-0 border-0" style="width: 300px;">
                 <li class="p-2 border-bottom fw-bold bg-light rounded-top">Notifications</li>
                 <div id="notifList" style="max-height: 300px; overflow-y: auto;">
-                    <li class="text-center p-3 text-muted small">Checking...</li>
+                    <li class="text-center p-3 text-muted small" >Checking...</li>
+                    
                 </div>
             </ul>
         </div>

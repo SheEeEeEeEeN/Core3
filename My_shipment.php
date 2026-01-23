@@ -517,7 +517,7 @@ $result = mysqli_query($conn, $query);
             formData.append('action', 'update_status');
             if(reason) formData.append('reason', reason);
 
-            const res = await fetch('update_shipments_api.php', { 
+            const res = await fetch('update_shipment_api.php', { 
                 method: 'POST', body: formData 
             });
             const data = await res.json();

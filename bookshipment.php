@@ -449,6 +449,11 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
               <input type="hidden" name="origin_island" id="hiddenOriginIsland">
               <input type="hidden" name="destination_island" id="hiddenDestIsland">
 
+              <input type="hidden" name="origin_lat" id="origin_lat">
+              <input type="hidden" name="origin_lng" id="origin_lng">
+              <input type="hidden" name="dest_lat" id="dest_lat">
+              <input type="hidden" name="dest_lng" id="dest_lng">
+
               <div class="mb-3 p-3 bg-white border rounded shadow-sm">
                 <div class="d-flex justify-content-between align-items-center">
                   <label class="form-label small fw-bold text-primary mb-0">Active Contract</label>
@@ -936,6 +941,16 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
         if (wp[0].name) document.getElementById('originField').value = wp[0].name;
         if (wp[1].name) document.getElementById('destinationField').value = wp[1].name;
 
+        // SAVE COORDINATES
+        if (wp[0].latLng) {
+            document.getElementById('origin_lat').value = wp[0].latLng.lat;
+            document.getElementById('origin_lng').value = wp[0].latLng.lng;
+        }
+        if (wp[1].latLng) {
+            document.getElementById('dest_lat').value = wp[1].latLng.lat;
+            document.getElementById('dest_lng').value = wp[1].latLng.lng;
+        }
+
         // Trigger Calc & AI
         calculateTotal(); 
         getAiPrediction(document.getElementById('originField').value, document.getElementById('destinationField').value, km);
@@ -1218,35 +1233,65 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
       new bootstrap.Modal(document.getElementById("inputPreviewModal")).show();
     }
 
-    document.getElementById("finalConfirmBtn").addEventListener("click", async function() {
-      const payload = Object.fromEntries(new FormData(document.getElementById('shipmentForm')).entries());
-      payload.origin_island = document.getElementById('hiddenOriginIsland').value;
-      payload.destination_island = document.getElementById('hiddenDestIsland').value;
-      payload.payment_method = document.getElementById('selectedPaymentMethod').value;
-      payload.bank_name = document.getElementById('selectedBankName').value;
-      payload.sla_rules = ["Standard Terms"];
-      payload.ai_estimated_time = document.getElementById('aiPredictionTime').textContent;
+    document.getElementById("finalConfirmBtn").addEventListener("click", async function(e) { // <--- Lagyan mo ng 'e'
+    e.preventDefault(); // <--- Idagdag mo ito para hindi mag-refresh ang page!
+    
+    console.log("📢 PININDOT MO AKO! (Start of Process)"); // <--- Sound Check
 
-      bootstrap.Modal.getInstance(document.getElementById("inputPreviewModal")).hide();
+    const btn = document.getElementById("finalConfirmBtn");
+    // ... rest of your code ...
+    btn.disabled = true;
+    btn.innerText = "Booking...";
 
-      try { // Send to booking API
+    const payload = Object.fromEntries(new FormData(document.getElementById('shipmentForm')).entries());
+    // ... (Yung mga append logic mo para sa hidden fields, retain mo lang) ...
+    payload.origin_island = document.getElementById('hiddenOriginIsland').value;
+    payload.destination_island = document.getElementById('hiddenDestIsland').value;
+    payload.payment_method = document.getElementById('selectedPaymentMethod').value;
+    payload.bank_name = document.getElementById('selectedBankName').value;
+    payload.ai_estimated_time = document.getElementById('aiPredictionTime').textContent;
+
+    bootstrap.Modal.getInstance(document.getElementById("inputPreviewModal")).hide();
+
+    try {
+        // Direct call sa API
         const res = await fetch("api/bookshipment_api.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
         const result = await res.json();
         const msg = document.getElementById("responseMessage");
-        msg.classList.remove('d-none');
+
         if (result.success) {
-          msg.className = "alert alert-success mt-3";
-          msg.innerHTML = "✅ " + result.message + "<br>Shipment ID: " + result.shipment_id;
+            // AUTOMATIC NA MAY INVOICE FILE NA GALING API
+            const fileLink = "invoices_img/" + result.invoice_file;
+
+            msg.classList.remove('d-none');
+            msg.className = "alert alert-success mt-3";
+            msg.innerHTML = `
+                <h5 class="alert-heading">✅ Success!</h5>
+                <p>Shipment booked & Invoice Generated.</p>
+                <div class="d-flex gap-2 mt-3">
+                    <a href="${fileLink}" target="_blank" class="btn btn-primary">
+                        <i class="bi bi-eye"></i> View Invoice (PDF)
+                    </a>
+                    <a href="${fileLink}" download class="btn btn-success">
+                        <i class="bi bi-download"></i> Download
+                    </a>
+                </div>
+            `;
         } else {
-          msg.className = "alert alert-danger mt-3";
-          msg.innerHTML = "❌ Error: " + (result.error || 'Unknown');
+            msg.classList.remove('d-none');
+            msg.className = "alert alert-danger mt-3";
+            msg.innerHTML = "❌ Error: " + result.error;
+            btn.disabled = false;
         }
-      } catch (e) { console.error(e); }
-    });
+    } catch (e) {
+        console.error(e);
+        btn.disabled = false;
+    }
+});
 
     document.getElementById("acceptContract").addEventListener("click", () => {
       bootstrap.Modal.getInstance(document.getElementById("contractModal")).hide();

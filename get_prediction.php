@@ -1,9 +1,10 @@
 <?php
 // filename: get_prediction.php
+// FIXED: Valid Models + Placeholder for NEW KEY
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); 
 
-// Set timezone
 date_default_timezone_set('Asia/Manila');
 $currentDate = date("l, F j, Y"); 
 $currentTime = date("g:i A");     
@@ -14,10 +15,10 @@ $origin = $input['origin'] ?? 'Unknown';
 $destination = $input['destination'] ?? 'Unknown';
 $distance = $input['distance_km'] ?? 0;
 
-// ---------------------------------------------------------
-// 🚨 ILAGAY MO DITO YUNG API KEY MO 🚨
-// ---------------------------------------------------------
-$apiKey = "AIzaSyArsHtI21_Lk59Xt4kUvYQWAIO67zUxmRo1"; // <--- DOUBLE CHECK MO KUNG TAMA TO -> 
+// =========================================================
+// 🚨 PALITAN MO ITO NG BAGO MONG KEY GALING GOOGLE AI STUDIO 🚨
+// =========================================================
+$apiKey = "AIzaSyDESoXVyLm0X2ZtEXfUnpHmwMzttOhyr0Q"; 
 
 // 2. Prepare Prompt
 $prompt = "
@@ -42,11 +43,11 @@ $requestData = [
     "contents" => [ [ "parts" => [ ["text" => $prompt] ] ] ]
 ];
 
-// 3. THE "TANK MODE" LOADER (UPDATED WITH YOUR MODELS)
+// 3. UPDATED MODEL LIST (Gamitin natin ang mga SURE na gumagana ngayon)
 $modelsToTry = [
-    "gemini-2.5-flash",      // Priority 1: Pinaka-bago mo
-    "gemini-2.0-flash",      // Priority 2: Stable v2
-    "gemini-exp-1206"        // Priority 3: Experimental
+    "gemini-1.5-flash",      // Pinakamabilis at mura (Stable)
+    "gemini-2.0-flash-exp",  // Experimental fast model
+    "gemini-1.5-pro"         // Mas matalino pero mas mabagal
 ];
 
 $finalResponse = null;
@@ -62,7 +63,7 @@ foreach ($modelsToTry as $model) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     
-    // SSL FIX (Para sa XAMPP/Localhost)
+    // SSL FIX
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     
@@ -74,10 +75,11 @@ foreach ($modelsToTry as $model) {
     if ($httpCode == 200) {
         $finalResponse = $response;
         $usedModel = $model;
-        break; // Success! Stop loop.
+        break; // Success!
     } else {
         $jsonErr = json_decode($response, true);
         $apiMsg = $jsonErr['error']['message'] ?? "HTTP $httpCode";
+        // Log lang natin pero try pa sa susunod na model
         $lastError = "Model $model failed: " . ($curlErr ? $curlErr : $apiMsg);
     }
 }
@@ -96,12 +98,14 @@ if ($finalResponse) {
     }
 }
 
-// 5. FALLBACK
-$fallbackTime = round($distance / 40, 1) . " hrs"; 
+// 5. FALLBACK (Pag ayaw talaga gumana ng API Key)
+$hours = floor($distance / 40); // Avg speed 40km/h
+$mins = round(($distance / 40 - $hours) * 60);
+$fallbackTime = "{$hours} hrs {$mins} mins";
 
 echo json_encode([
     'prediction' => "Est. $fallbackTime",
     'confidence' => '50',
-    'reasoning' => "Offline. Error: $lastError" 
+    'reasoning' => "Offline Mode. API Error: $lastError. (Check your API Key!)" 
 ]);
 ?>

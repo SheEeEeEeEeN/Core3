@@ -78,7 +78,7 @@ $track_no = $data['contract_number'] ? $data['contract_number'] : 'TRK-' . $data
 <div class="receipt-container">
     <div class="header">
         <h2>LOGISTICS CORE</h2>
-        <p>Official E-Receipt</p>
+        <p>Invoice</p>
     </div>
 
     <div class="body">

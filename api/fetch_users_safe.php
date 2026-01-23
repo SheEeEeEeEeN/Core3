@@ -1,6 +1,7 @@
 <?php
 // api/fetch_users_safe.php
 // PURPOSE: Fetch ONLY 'user' role accounts without sensitive data.
+// for financial
 
 // 1. HEADERS (Para payagan ang ibang system kumonekta)
 header("Access-Control-Allow-Origin: *");
@@ -56,17 +57,12 @@ if (isset($_GET['secret_key'])) {
 // 4. THE QUERY
 // Kukunin lang natin ang mga column na SAFE. Walang 'password' o 'otp'.
 $sql = "SELECT 
-            id, 
-            username, 
-            email, 
-            phone_number, 
-            gender, 
-            profile_image, 
-            role, 
-            created_at 
-        FROM accounts 
+            *
+        FROM accounts a
+        JOIN payments p ON a.id = p.user_id 
+        join feedback f on a.id = f.account_id
         WHERE role = 'user'  -- <--- ITO ANG FILTER (Users lang)
-        ORDER BY created_at DESC";
+        ORDER BY a.created_at DESC";
 
 $result = $conn->query($sql);
 
