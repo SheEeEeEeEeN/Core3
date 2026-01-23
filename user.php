@@ -194,26 +194,190 @@ $countsArr = array_values($counts); $revenuesArr = array_values($revenues);
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
+    <!-- GOOGLE FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        :root { --sidebar-width: 250px; --primary-color: #4e73df; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fc; overflow-x: hidden; }
-        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; left: 0; top: 0; background: #2c3e50; color: white; z-index: 1040; transition: all 0.3s ease; }
-        .content { margin-left: var(--sidebar-width); padding: 20px; transition: all 0.3s ease; min-height: 100vh; }
-        .sidebar.collapsed { left: -250px; }
-        .content.expanded { margin-left: 0; }
-        .clickable-row { cursor: pointer; }
-        .clickable-row:hover { background-color: rgba(78, 115, 223, 0.05) !important; }
-        #modalMap { height: 300px; width: 100%; border-radius: 8px; margin-bottom: 15px; z-index: 1; }
-        .leaflet-routing-container { display: none !important; }
+        :root {
+            --sidebar-width: 260px;
+            --primary-color: #4361ee;
+            --secondary-color: #f3f4f6;
+            --text-main: #2b2d42;
+            --text-secondary: #8d99ae;
+            
+            /* Dark Mode Variables */
+            --dark-bg: #0f172a;
+            --dark-card: #1e293b;
+            --dark-border: #334155;
+            --dark-text-main: #f8fafc;
+            --dark-text-sec: #94a3b8;
+            
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 5px 15px rgba(0,0,0,0.08);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* SIDEBAR - KEEP COLOR UNCHANGED */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: #2c3e50;
+            color: white;
+            z-index: 1040;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+        }
         
-        /* Dark Mode */
-        body.dark-mode { background-color: #1a1a2e; color: #f8f9fa; }
-        body.dark-mode .sidebar { box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
-        body.dark-mode .card, body.dark-mode .modal-content, body.dark-mode .list-group-item { background-color: #16213e !important; color: #f8f9fa !important; border-color: #2a3a5a !important; }
-        body.dark-mode table { color: white !important; }
-        body.dark-mode .table-hover tbody tr:hover td { color: white; background-color: #2a3a5a; }
-        body.dark-mode .bg-light { background-color: #243355 !important; color: #f8f9fa !important; border-color: #3a4b6e !important; }
+        .content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+        }
+
+        .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
+        .content.expanded { margin-left: 0; }
+        
+        /* Navigation Links */
+        .nav-link {
+            font-weight: 500;
+            color: rgba(255,255,255,0.7) !important;
+            transition: all 0.2s;
+            margin-bottom: 5px;
+            border-radius: 8px;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #fff !important;
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        /* Cards & UI */
+        .card {
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s;
+            background: white;
+        }
+        
+        .card-body { padding: 1.5rem; }
+
+        .clickable-row { cursor: pointer; transition: background 0.2s; }
+        .clickable-row:hover { background-color: #f8faff !important; }
+        
+        #modalMap { height: 350px; width: 100%; border-radius: var(--radius-md); margin-bottom: 20px; z-index: 1; border: 1px solid #e2e8f0; }
+        .leaflet-routing-container { display: none !important; }
+
+        /* Dark Mode Overrides */
+        body.dark-mode { 
+            background-color: var(--dark-bg); 
+            color: var(--dark-text-main);
+            
+            /* Bootstrap Variable Overrides */
+            --bs-body-bg: var(--dark-bg);
+            --bs-body-color: var(--dark-text-main);
+            --bs-border-color: var(--dark-border);
+            --bs-card-bg: var(--dark-card);
+        }
+        
+        body.dark-mode .card, 
+        body.dark-mode .modal-content, 
+        body.dark-mode .list-group-item,
+        body.dark-mode .dropdown-menu { 
+            background-color: var(--dark-card) !important; 
+            color: var(--dark-text-main) !important; 
+            border-color: var(--dark-border) !important; 
+        }
+        
+        body.dark-mode .dropdown-item {
+            color: var(--dark-text-main);
+        }
+        body.dark-mode .dropdown-item:hover, 
+        body.dark-mode .dropdown-item:focus {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* Text Colors */
+        body.dark-mode .text-dark { color: #f8fafc !important; }
+        body.dark-mode .text-muted { color: var(--dark-text-sec) !important; }
+        body.dark-mode .text-secondary { color: var(--dark-text-sec) !important; }
+        body.dark-mode .text-primary { color: #60a5fa !important; } /* Lighter Blue for Dark Mode */
+        
+        /* Backgrounds */
+        body.dark-mode .bg-white { background-color: var(--dark-card) !important; }
+        body.dark-mode .bg-light { background-color: #0f172a !important; color: #fff !important; border-color: var(--dark-border) !important; }
+        body.dark-mode .bg-light-subtle { background-color: #334155 !important; }
+        body.dark-mode .shadow-sm { box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; }
+        
+        /* Tables */
+        /* Tables */
+        body.dark-mode .table {
+            --bs-table-bg: var(--dark-card);
+            --bs-table-color: var(--dark-text-main);
+            --bs-table-border-color: var(--dark-border);
+            color: var(--dark-text-main) !important;
+        }
+        
+        body.dark-mode .table th,
+        body.dark-mode .table td {
+            background-color: var(--dark-card) !important;
+            color: var(--dark-text-main) !important;
+            border-color: var(--dark-border) !important;
+        }
+        
+        body.dark-mode .table-light th {
+            background-color: #334155 !important;
+            color: #fff !important;
+        }
+        
+        body.dark-mode .table-hover tbody tr:hover td {
+            background-color: rgba(255,255,255,0.05) !important;
+            color: #fff !important;
+        }
+        
+        /* Forms */
+        body.dark-mode .form-control, 
+        body.dark-mode .input-group-text, 
+        body.dark-mode textarea, 
+        body.dark-mode select {
+            background-color: #0f172a !important;
+            border-color: var(--dark-border) !important;
+            color: white !important;
+        }
+        body.dark-mode .form-control:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.3);
+        }
+        
         body.dark-mode .btn-close { filter: invert(1); }
+        
+        /* Map Dark Mode */
+        body.dark-mode .leaflet-layer,
+        body.dark-mode .leaflet-control-zoom-in,
+        body.dark-mode .leaflet-control-zoom-out,
+        body.dark-mode .leaflet-control-attribution {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+        
+        /* Fix Table Hover */
+        body.dark-mode .clickable-row:hover {
+            background-color: rgba(255,255,255,0.05) !important;
+        }
     </style>
 </head>
 <body>
@@ -233,32 +397,45 @@ $countsArr = array_values($counts); $revenuesArr = array_values($revenues);
     </div>
 
     <div class="content" id="mainContent">
-        <header class="d-flex align-items-center justify-content-between px-3 py-3 mb-4 bg-white shadow-sm rounded-4 sticky-top">
+        <header class="d-flex align-items-center justify-content-between px-4 py-3 mb-4 bg-white shadow-sm rounded-4 sticky-top">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-light border-0 p-2" id="hamburger"><i class="bi bi-list fs-4"></i></button>
-                <div><h5 class="fw-semibold mb-0">Dashboard</h5><small class="text-muted">Welcome, <?php echo htmlspecialchars($user['username']); ?></small></div>
+                <button class="btn btn-light border-0 p-2 d-lg-none" id="hamburger"><i class="bi bi-list fs-4"></i></button>
+                <div><h5 class="fw-bold mb-0">Dashboard</h5><small class="text-muted">Welcome, <?php echo htmlspecialchars($user['username']); ?></small></div>
             </div>
             <div class="d-flex align-items-center gap-3">
+                <div class="form-check form-switch mb-0">
+                     <label class="form-check-label" for="userThemeToggle">🌙</label>
+                     <input class="form-check-input" type="checkbox" role="switch" id="userThemeToggle">
+                </div>
                 
                 <div class="dropdown me-2">
                     <a href="#" class="text-dark position-relative" id="notifDropdown" data-bs-toggle="dropdown" onclick="markRead()">
-                        <i class="bi bi-bell fs-4"></i>
+                        <div class="bg-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                            <i class="bi bi-bell"></i>
+                        </div>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display: none;">0</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 300px; max-height: 400px; overflow-y: auto;">
-                        <li class="p-2 border-bottom fw-bold bg-light">Notifications</li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 320px; max-height: 480px; overflow-y: auto;">
+                        <li class="p-3 border-bottom fw-bold bg-light d-flex justify-content-between align-items-center">
+                            <span>Notifications</span>
+                            <small class="text-primary cursor-pointer" onclick="location.href='feedback.php'">View All</small>
+                        </li>
                         <div id="notifList">
-                            <li class="text-center p-3 text-muted small">No new notifications</li>
+                            <li class="text-center p-4 text-muted small">No new notifications</li>
                         </div>
-                        <li><a class="dropdown-item text-center small text-primary p-2 border-top" href="feedback.php">View All</a></li>
                     </ul>
                 </div>
 
-                <div class="form-check form-switch mb-0 ms-2">
-                    <label class="form-check-label" for="userThemeToggle">🌙</label>
-                    <input class="form-check-input" type="checkbox" role="switch" id="userThemeToggle">
+                <div class="dropdown">
+                    <a href="#" data-bs-toggle="dropdown" class="d-block link-dark text-decoration-none dropdown-toggle">
+                        <img src="<?php echo $profileImage; ?>" alt="mdo" width="40" height="40" class="rounded-circle object-fit-cover border">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+                        <li><a class="dropdown-item" href="user-profile.php">Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="logout.php">Sign out</a></li>
+                    </ul>
                 </div>
-                <img src="<?php echo $profileImage; ?>" alt="Profile" class="rounded-circle" width="40" height="40" style="object-fit:cover;">
             </div>
         </header>
 

@@ -76,7 +76,7 @@ if ($is_unlocked) {
         ];
     }
 
-    // 2. WAYBILLS
+    // 2. print_invoiceS
     $sql_ship = "SELECT id, sender_name, created_at FROM shipments";
     if($search != ''){ $sql_ship .= " WHERE id LIKE '%$search%' OR sender_name LIKE '%$search%'"; }
     $sql_ship .= " ORDER BY created_at DESC LIMIT 100";
@@ -85,8 +85,8 @@ if ($is_unlocked) {
         $trk = "TRK-" . str_pad($row['id'], 6, "0", STR_PAD_LEFT);
         $all_docs[] = [
             'category' => 'System', 'ref_id' => $trk, 'name' => $row['sender_name'],
-            'doc_type' => 'Waybill', 'file_name' => $trk . '_Waybill.pdf', 'file_ext' => 'pdf',
-            'uploader' => 'System', 'date' => $row['created_at'], 'link' => 'waybill.php?id=' . $row['id'], 'is_virtual'=> true
+            'doc_type' => 'print_invoice', 'file_name' => $trk . '_print_invoice.pdf', 'file_ext' => 'pdf',
+            'uploader' => 'System', 'date' => $row['created_at'], 'link' => 'print_invoice.php?id=' . $row['id'], 'is_virtual'=> true
         ];
     }
 
@@ -325,7 +325,7 @@ if ($is_unlocked) {
                             <td>
                                 <?php 
                                     $badge = 'secondary';
-                                    if($doc['doc_type'] == 'Waybill') $badge = 'info text-dark';
+                                    if($doc['doc_type'] == 'print_invoice') $badge = 'info text-dark';
                                     if($doc['doc_type'] == 'Contract') $badge = 'warning text-dark';
                                 ?>
                                 <span class="badge bg-<?php echo $badge; ?>"><?php echo $doc['doc_type']; ?></span>
@@ -403,7 +403,7 @@ if ($is_unlocked) {
                             <select name="doc_type" class="form-select" required>
                                 <option value="">Select Type</option>
                                 <option value="Proof of Delivery">Proof of Delivery (POD)</option>
-                                <option value="Waybill">Waybill / BOL</option>
+                                <option value="print_invoice">print_invoice / BOL</option>
                                 <option value="Commercial Invoice">Commercial Invoice</option>
                                 <option value="Packing List">Packing List</option>
                                 <option value="Permit">Permit / Certificate</option>

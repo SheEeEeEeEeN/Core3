@@ -1,7 +1,137 @@
 <?php
-include("darkmode.php");
+// START SESSION & CONNECTIONS
 include("connection.php");
 include('session.php');
+
+// --------------------------------------------------------------------------
+//  HANDLE AJAX REQUEST (SAVES TO LOCAL 'SHIPMENTS' DB DIRECTLY)
+// --------------------------------------------------------------------------
+$jsonData = file_get_contents('php://input');
+$input = json_decode($jsonData, true);
+
+if ($input && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    ob_clean(); 
+    header('Content-Type: application/json');
+
+    try {
+        if (!isset($_SESSION['email'])) { throw new Exception("Unauthorized: Please login."); }
+        
+        // 1. GET USER ID
+        $email = $_SESSION['email'];
+        $uQuery = mysqli_query($conn, "SELECT id FROM accounts WHERE email='$email'");
+        $uData = mysqli_fetch_assoc($uQuery);
+        $userId = $uData['id'] ?? 1;
+
+        // 2. SANITIZE & GENERATE ID IF MISSING
+        $contractRaw = $input['contract_number'] ?? '';
+        
+        // KUNG WALANG CONTRACT NUMBER NA PASA, MAG GENERATE BAGO I-SAVE
+        if(empty($contractRaw) || $contractRaw == 'STANDARD-RATE') {
+            $contractRaw = "CN-" . date("Y") . "-" . strtoupper(substr(md5(uniqid(rand(), true)), 0, 5));
+        }
+        
+        $contract    = mysqli_real_escape_string($conn, $contractRaw);
+        $sender      = mysqli_real_escape_string($conn, $input['sender_name']);
+        $s_contact   = mysqli_real_escape_string($conn, $input['sender_contact']);
+        $receiver    = mysqli_real_escape_string($conn, $input['receiver_name']);
+        $r_contact   = mysqli_real_escape_string($conn, $input['receiver_contact']);
+        $origin      = mysqli_real_escape_string($conn, $input['origin_address']);
+        $dest        = mysqli_real_escape_string($conn, $input['destination_address']);
+        $origin_island = mysqli_real_escape_string($conn, $input['origin_island'] ?? 'Luzon');
+        $dest_island   = mysqli_real_escape_string($conn, $input['destination_island'] ?? 'Luzon');
+        $address     = mysqli_real_escape_string($conn, $input['address']);
+        $weight      = floatval($input['weight']);
+        $type        = mysqli_real_escape_string($conn, $input['package_type']);
+        $desc        = mysqli_real_escape_string($conn, $input['package']);
+        $method      = mysqli_real_escape_string($conn, $input['payment_method']);
+        $bank        = mysqli_real_escape_string($conn, $input['bank_name']);
+        $km          = floatval($input['distance_km']);
+        $price       = floatval($input['price_php']);
+        $ai_time     = mysqli_real_escape_string($conn, $input['ai_estimated_time'] ?? 'Calculating...');
+        $target_date = !empty($input['target_date']) ? $input['target_date'] : date('Y-m-d', strtotime('+3 days'));
+
+        // Coordinates
+        $origin_lat = !empty($input['origin_lat']) ? mysqli_real_escape_string($conn, $input['origin_lat']) : null;
+        $origin_lng = !empty($input['origin_lng']) ? mysqli_real_escape_string($conn, $input['origin_lng']) : null;
+        $dest_lat   = !empty($input['dest_lat']) ? mysqli_real_escape_string($conn, $input['dest_lat']) : null;
+        $dest_lng   = !empty($input['dest_lng']) ? mysqli_real_escape_string($conn, $input['dest_lng']) : null;
+
+        // 3. INSERT INTO LOCAL DATABASE (SHIPMENTS)
+        $sql_shipment = "INSERT INTO shipments (
+            user_id, contract_number, sender_name, sender_contact, receiver_name, receiver_contact, 
+            origin_address, origin_island, destination_address, destination_island, specific_address, 
+            weight, package_type, package_description, distance_km, price, payment_method, bank_name, 
+            status, sla_status, ai_estimated_time, target_delivery_date, 
+            origin_lat, origin_lng, dest_lat, dest_lng, 
+            created_at
+        ) VALUES (
+            '$userId', '$contract', '$sender', '$s_contact', '$receiver', '$r_contact', 
+            '$origin', '$origin_island', '$dest', '$dest_island', '$address', 
+            '$weight', '$type', '$desc', '$km', '$price', '$method', '$bank', 
+            'Pending', 'Pending', '$ai_time', '$target_date', 
+            '$origin_lat', '$origin_lng', '$dest_lat', '$dest_lng', 
+            NOW()
+        )";
+
+        if (!mysqli_query($conn, $sql_shipment)) {
+            throw new Exception("Database Error: " . mysqli_error($conn));
+        }
+
+        $shipmentId = mysqli_insert_id($conn);
+        $trackingCode = "PO-C3-" . str_pad($shipmentId, 5, "0", STR_PAD_LEFT);
+
+        // 4. GENERATE INVOICE (PDF)
+        $pdfFilename = "Invoice_Placeholder.pdf";
+        if (file_exists('generate_invoice_fpdf.php')) {
+            require_once('generate_invoice_fpdf.php');
+            if (function_exists('generateInvoicePDF')) {
+                $invoiceData = [
+                    'invoice_number' => $trackingCode, 'sender_name' => $sender, 'sender_contact' => $s_contact,
+                    'origin_address' => $origin, 'receiver_name' => $receiver, 'receiver_contact' => $r_contact,
+                    'destination_address' => $dest, 'package_type' => $type, 'weight' => $weight,
+                    'distance_km' => $km, 'price' => $price, 'method' => $method,
+                    'status' => ($method == 'online') ? 'PAID' : 'PENDING'
+                ];
+                $pdfFilename = generateInvoicePDF($invoiceData, $shipmentId);
+            }
+        }
+
+        // 5. INSERT INTO LOCAL DATABASE (PAYMENTS)
+        $payStatus = ($method == 'online') ? 'Paid' : 'Pending';
+        mysqli_query($conn, "INSERT INTO payments (user_id, shipment_id, invoice_number, amount, payment_date, status, method, reference_no, invoice_image) 
+                             VALUES ('$userId', '$shipmentId', '$trackingCode', '$price', NOW(), '$payStatus', '$method', '$bank', '$pdfFilename')");
+
+        // 6. SYNC TO CORE 1
+        $CORE1_URL = "http://192.168.1.6/finalcopy2/api/api_receive_booking.php";
+        $syncData = $input;
+        $syncData['tracking_code'] = $trackingCode; 
+        
+        // IMPORTANT: Ensure the unique contract number is sent to Core 1
+        $syncData['contract_number'] = $contract; 
+        
+        $ch = curl_init($CORE1_URL);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($syncData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_exec($ch); 
+        curl_close($ch);
+
+        // 7. RETURN SUCCESS
+        echo json_encode(['success' => true, 'message' => 'Booked Successfully', 'invoice_file' => $pdfFilename]);
+        exit; // Stop HTML rendering
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit; // Stop HTML rendering
+    }
+}
+// --------------------------------------------------------------------------
+//  END AJAX HANDLING (HTML RENDERS BELOW)
+// --------------------------------------------------------------------------
+
+include("darkmode.php");
 include('loading.html');
 requireRole('user');
 
@@ -25,256 +155,259 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  
+  <!-- GOOGLE FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --sidebar-width: 250px;
-      --primary-color: #4e73df;
-      --secondary-color: #f8f9fc;
-      --dark-bg: #1a1a2e;
-      --dark-card: #16213e;
-      --text-light: #f8f9fa;
-      --text-dark: #212529;
-      --shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+      --sidebar-width: 260px;
+      --primary-color: #4361ee; /* Vibrant Blue */
+      --secondary-color: #f3f4f6;
+      --accent-color: #3f37c9;
+      --text-main: #2b2d42;
+      --text-secondary: #8d99ae;
+      
+      /* Dark Mode Variables */
+      --dark-bg: #0f172a;       /* Slate 900 */
+      --dark-card: #1e293b;     /* Slate 800 */
+      --dark-border: #334155;   /* Slate 700 */
+      --dark-text-main: #f8fafc;
+      --dark-text-sec: #94a3b8;
+      
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-md: 0 5px 15px rgba(0,0,0,0.08);
+      --radius-md: 12px;
+      --radius-lg: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    /* --- GLOBAL RESETS --- */
+    * { box-sizing: border-box; }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      overflow-x: hidden;
+      font-family: 'Poppins', sans-serif;
       background-color: var(--secondary-color);
-      color: var(--text-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
     }
 
-    /* --- SIDEBAR & MOBILE MENU --- */
+    /* --- SIDEBAR (UNCHANGED COLOR as requested) --- */
     .sidebar {
       width: var(--sidebar-width);
       height: 100vh;
       position: fixed;
       left: 0;
       top: 0;
-      background: #2c3e50;
+      background: #2c3e50; /* PRESERVED COLOR */
       color: white;
       z-index: 1040;
-      transition: all .3s ease;
+      transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar-header {
+      padding: 2rem 1.5rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
     .content {
       margin-left: var(--sidebar-width);
-      padding: 20px;
-      transition: margin-left .3s ease;
+      padding: 30px;
+      transition: margin-left .3s cubic-bezier(0.4, 0, 0.2, 1);
       min-height: 100vh;
     }
 
-    .sidebar.collapsed {
-      margin-left: calc(var(--sidebar-width) * -1);
+    /* --- NAVIGATION --- */
+    .nav-link {
+        font-weight: 500;
+        color: rgba(255,255,255,0.7) !important;
+        transition: all 0.2s;
+        margin-bottom: 5px;
+        border-radius: 8px;
     }
-
-    .content.expanded {
-      margin-left: 0;
+    .nav-link:hover, .nav-link.active {
+        color: #fff !important;
+        background: rgba(255,255,255,0.1);
+        transform: translateX(5px);
     }
+    .nav-link i { margin-right: 10px; }
 
-    @media (max-width: 992px) {
-      .sidebar {
-        left: -250px;
-      }
-
-      .sidebar.mobile-open {
-        left: 0;
-      }
-
-      .content {
-        margin-left: 0 !important;
-        padding: 15px;
-      }
-
-      #map {
-        height: 350px !important;
-      }
-    }
-
-    .sidebar-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1030;
-      display: none;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .sidebar-overlay.show {
-      display: block;
-      opacity: 1;
-    }
-
-    .sidebar a {
-      color: rgba(255, 255, 255, 0.8);
-      text-decoration: none;
-      padding: .75rem 1.5rem;
-      display: block;
-      border-left: 3px solid transparent;
-    }
-
-    .sidebar a:hover,
-    .sidebar a.active {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: white;
-      border-left: 3px solid white;
-    }
-
-    /* --- COMPONENTS --- */
-    .panel {
+    /* --- CARDS & PANELS --- */
+    .panel, .card {
       background: white;
-      border-radius: .5rem;
-      padding: 1.5rem;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-      margin-bottom: 20px;
+      border-radius: var(--radius-lg);
+      border: none;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.2s;
+    }
+    .panel { padding: 2rem; margin-bottom: 24px; }
+    
+    .header {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 1rem 1.5rem;
+        margin-bottom: 30px;
+        border: 1px solid rgba(0,0,0,0.02);
     }
 
-    /* --- MAP CSS FIX --- */
+    /* --- MAP --- */
     #map {
       height: 500px !important;
       width: 100%;
-      border-radius: .5rem;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius-md);
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
       z-index: 1;
-      display: block;
     }
 
-    .location-selectors {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-bottom: 15px;
+    /* --- FORMS --- */
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s;
     }
-
-    @media (max-width: 768px) {
-      .location-selectors {
-        grid-template-columns: 1fr;
-            }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
     }
+    .input-group-text { border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; }
 
-    .location-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .location-group label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #555;
-    }
-
-    #priceDisplay,
-    #priceDisplaySmall {
-      font-weight: 700;
-      color: var(--primary-color);
-    }
-
-    #priceDisplay {
-      font-size: 1.5rem;
-    }
-
-    /* --- PAYMENT STYLES --- */
+    /* --- PAYMENT OPTIONS --- */
     .payment-option-card {
-      border: 2px solid #e3e6f0;
-      border-radius: 10px;
-      padding: 10px;
+      border: 2px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 15px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
+      gap: 15px;
+      background: white;
+      margin-bottom: 12px;
     }
-
     .payment-option-card:hover {
       border-color: var(--primary-color);
-      background-color: #f8f9fc;
+      background-color: #f8faff;
+      transform: translateY(-2px);
     }
-
     .payment-option-card.selected {
       border-color: var(--primary-color);
-      background-color: rgba(78, 115, 223, 0.1);
+      background-color: #eff3ff;
       position: relative;
     }
 
-    .payment-option-card.selected::after {
-      content: '✔';
-      position: absolute;
-      right: 15px;
-      color: var(--primary-color);
-      font-weight: bold;
+    /* --- LOCATION SELECTORS --- */
+    .location-selectors {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .location-group {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      transition: all 0.3s;
     }
 
-    /* --- DARK MODE --- */
+    /* --- RESPONSIVE --- */
+    @media (max-width: 992px) {
+      .sidebar { left: calc(var(--sidebar-width) * -1); }
+      .sidebar.mobile-open { left: 0; }
+      .content { margin-left: 0 !important; padding: 15px; }
+      .location-selectors { grid-template-columns: 1fr; }
+    }
+    
+    .sidebar-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5); z-index: 1030;
+      display: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.show { display: block; opacity: 1; }
+
+    /* =========================================
+       DARK MODE OVERRIDES (COMPREHENSIVE) 
+       ========================================= */
     body.dark-mode {
       background-color: var(--dark-bg);
-      color: var(--text-light);
+      color: var(--dark-text-main);
     }
 
-    body.dark-mode .sidebar {
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
-    }
-
-    body.dark-mode .header {
-      background-color: var(--dark-card) !important;
-      color: var(--text-light) !important;
-      border: 1px solid #2a3a5a;
-    }
-
+    /* Components */
     body.dark-mode .panel,
     body.dark-mode .card,
-    body.dark-mode .payment-option-card {
+    body.dark-mode .header,
+    body.dark-mode .modal-content,
+    body.dark-mode .dropdown-menu {
       background-color: var(--dark-card) !important;
-      color: var(--text-light);
-      border: 1px solid #2a3a5a;
+      color: var(--dark-text-main);
+      border-color: var(--dark-border);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
-    body.dark-mode input.form-control,
-    body.dark-mode select.form-select,
+    /* Fix Bootstrap Utilities in Dark Mode */
+    body.dark-mode .bg-white { background-color: var(--dark-card) !important; }
+    body.dark-mode .bg-light { background-color: #1e293b !important; } /* Darker slate for bg-light */
+    body.dark-mode .bg-light-subtle { background-color: #334155 !important; } /* Slate 700 */
+    body.dark-mode .text-muted { color: var(--dark-text-sec) !important; }
+    body.dark-mode .text-dark { color: #fff !important; }
+
+    /* Forms */
+    body.dark-mode .form-control,
+    body.dark-mode .form-select,
+    body.dark-mode .input-group-text,
     body.dark-mode textarea {
-      background-color: #243355 !important;
-      border-color: #3a4b6e !important;
+      background-color: #0f172a !important; /* Extremely dark bg for inputs */
+      border-color: var(--dark-border) !important;
       color: #fff !important;
     }
-
-    body.dark-mode .modal-content {
-      background-color: var(--dark-card);
-      color: var(--text-light);
-      border: 1px solid #2a3a5a;
+    body.dark-mode .form-control:focus {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.3);
     }
-
-    body.dark-mode .modal-header {
-      border-bottom-color: #2a3a5a;
+    
+    /* Specific Elements */
+    body.dark-mode .location-group {
+        background-color: var(--dark-card) !important;
+        border-color: var(--dark-border);
     }
-
-    body.dark-mode .list-group-item {
-      background-color: #243355;
-      color: white;
-      border-color: #3a4b6e;
-    }
-
-    body.dark-mode .btn-close {
-      filter: invert(1);
-    }
-
     body.dark-mode .location-group label {
-      color: #ddd;
+        color: var(--dark-text-sec);
     }
-
+    
+    body.dark-mode .payment-option-card {
+        background-color: var(--dark-card);
+        border-color: var(--dark-border);
+    }
     body.dark-mode .payment-option-card:hover {
-      background-color: #2a3a5a;
+        background-color: #27354f;
+    }
+    body.dark-mode .payment-option-card.selected {
+        background-color: rgba(67, 97, 238, 0.15);
+        border-color: var(--primary-color);
+    }
+    
+    body.dark-mode .list-group-item {
+        background-color: var(--dark-card);
+        border-color: var(--dark-border);
+        color: var(--dark-text-main);
+    }
+    
+    /* Buttons */
+    body.dark-mode .btn-close { filter: invert(1); }
+    body.dark-mode .btn-outline-secondary { color: #cbd5e1; border-color: #cbd5e1; }
+    body.dark-mode .btn-outline-secondary:hover { color: #000; background-color: #cbd5e1; }
+    
+    /* Contract Modal Specifics */
+    body.dark-mode .border.p-4.rounded.bg-light.shadow-sm {
+        background-color: #0f172a !important;
+        color: #ddd !important;
+        border: 1px solid var(--dark-border) !important;
     }
   </style>
 </head>
@@ -542,9 +675,6 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                     📦 Small Box (Shoe Box Size)
                   </option>
 
-                  <!-- <option value="m_box" data-l="50" data-w="40" data-h="40" data-k="10" data-type="box">
-                    📦 Medium Box (Microwave Size)
-                  </option> -->
                   <option value="l_box" data-l="60" data-w="60" data-h="60" data-k="20" data-type="box">
                     📦 Large Box (Standard Balikbayan)
                   </option>
@@ -1059,8 +1189,8 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                 if(slaText) {
                     slaText.innerHTML = 
                     `<i class="bi bi-truck text-primary"></i> Fulfilled by: <strong>${data.provider}</strong> (${data.vehicle}) <br> 
-                     <span class="badge bg-light text-dark border">Base: ₱${basePrice}</span> 
-                     <span class="badge bg-light text-dark border">Rate: ₱${kmRate}/km</span>`;
+                      <span class="badge bg-light text-dark border">Base: ₱${basePrice}</span> 
+                      <span class="badge bg-light text-dark border">Rate: ₱${kmRate}/km</span>`;
                 }
 
                 const rateDisplay = document.getElementById('ratePerKmDisplay');
@@ -1255,7 +1385,7 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
 
     try {
         // Direct call sa API
-        const res = await fetch("api/bookshipment_api.php", {
+        const res = await fetch("bookshipment.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)

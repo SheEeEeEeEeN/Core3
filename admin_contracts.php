@@ -24,6 +24,7 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
@@ -353,104 +354,116 @@ $contractsQ = mysqli_query($conn, "SELECT c.*, a.email, a.username, a.profile_im
             if(!form.checkValidity()) { form.reportValidity(); return; }
 
             const fd = new FormData(form);
-            fetch('admin_contracts_api.php', { method: 'POST', body: fd })
-            .then(r => r.json())
-            .then(d => {
-                if(d.success) { alert("✅ Rule Added!"); location.reload(); }
-                else { alert("❌ Error: " + d.error); }
+            
+            fetch('api/admin_contracts_api.php', { method: 'POST', body: fd })
+            .then(r => {
+                if (!r.ok) { throw new Error("HTTP error " + r.status); }
+                return r.json();
             })
-            .catch(e => alert("Network Error"));
+            .then(d => {
+                if(d.success) { 
+                    // BETTER SUCCESS ALERT
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Rule Added!',
+                        text: 'The configuration has been saved successfully.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
+                else { 
+                    // BETTER ERROR ALERT
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: d.error
+                    });
+                }
+            })
+            .catch(e => {
+                console.error(e);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Check console for details.'
+                });
+            });
         }
 
         function syncUsers() {
-            if(confirm("Generate contracts for ALL new users based on Master Rules?")) {
-                const fd = new FormData();
-                fd.append('action', 'sync_all_users');
-                fetch('api/admin_contracts_api.php', { method: 'POST', body: fd })
-                .then(r => r.json())
-                .then(d => {
-                    alert(d.message);
-                    location.reload();
-                });
-            }
+            // BETTER CONFIRMATION
+            Swal.fire({
+                title: 'Sync Users?',
+                text: "Generate contracts for ALL new users based on Master Rules?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4e73df', // Your primary color
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, sync now!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const fd = new FormData();
+                    fd.append('action', 'sync_all_users');
+                    
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Syncing...',
+                        text: 'Please wait while contracts are generated.',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    fetch('api/admin_contracts_api.php', { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(d => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sync Complete',
+                            text: d.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    });
+                }
+            });
         }
 
         function deleteRule(id) {
-            if(confirm("Delete this rule?")) {
-                const fd = new FormData();
-                fd.append('action', 'delete_rule');
-                fd.append('rule_id', id);
-                fetch('api/admin_contracts_api.php', { method: 'POST', body: fd })
-                .then(r => r.json())
-                .then(d => { if(d.success) location.reload(); });
-            }
+            // BETTER DELETE CONFIRMATION
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const fd = new FormData();
+                    fd.append('action', 'delete_rule');
+                    fd.append('rule_id', id);
+                    
+                    fetch('api/admin_contracts_api.php', { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(d => { 
+                        if(d.success) {
+                            Swal.fire(
+                                'Deleted!',
+                                'The rule has been removed.',
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        }
+                    });
+                }
+            });
         }
     </script>
-    <script>
-    // --- GLOBAL NOTIFICATION SCRIPT ---
-    function fetchNotifications() {
-        // Siguraduhing tama ang path ng API mo relative sa file location
-        // Kung nasa root folder ka (gaya ng user.php), gamitin ang 'api/get_notifications.php'
-        fetch('api/get_notifications.php')
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.getElementById('notifBadge');
-            const list = document.getElementById('notifList');
-
-            // 1. Update Badge Count
-            if (data.count > 0) {
-                badge.innerText = data.count;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
-            }
-
-            // 2. Update Dropdown List
-            let html = '';
-            if (data.data.length > 0) {
-                data.data.forEach(notif => {
-                    let bgClass = notif.is_read == 0 ? 'bg-light' : '';
-                    let icon = notif.is_read == 0 ? 'bi-circle-fill text-primary' : 'bi-check-circle text-muted';
-                    
-                    // Adjust link if needed based on user role
-                    let link = notif.link ? notif.link : '#';
-
-                    html += `
-                    <li>
-                        <a class="dropdown-item ${bgClass} p-2 border-bottom" href="${link}">
-                            <div class="d-flex align-items-start">
-                                <i class="bi ${icon} me-2 mt-1" style="font-size: 10px;"></i>
-                                <div>
-                                    <small class="fw-bold d-block">${notif.title}</small>
-                                    <small class="text-muted text-wrap">${notif.message}</small>
-                                    <br>
-                                    <small class="text-secondary" style="font-size: 0.7rem;">${new Date(notif.created_at).toLocaleString()}</small>
-                                </div>
-                            </div>
-                        </a>
-                    </li>`;
-                });
-            } else {
-                html = '<li class="text-center p-3 text-muted small">No new notifications</li>';
-            }
-            list.innerHTML = html;
-        })
-        .catch(err => console.error("Notif Error:", err));
-    }
-
-    function markRead() {
-        fetch('api/get_notifications.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'action=read_all'
-        }).then(() => {
-            document.getElementById('notifBadge').style.display = 'none';
-        });
-    }
-
-    // Run immediately and every 5 seconds
-    fetchNotifications();
-    setInterval(fetchNotifications, 5000);
-</script>
 </body>
 </html>

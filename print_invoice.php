@@ -52,91 +52,166 @@ function formatAddr($addr) { return ucwords(strtolower($addr)); }
     <meta charset="UTF-8">
     <title>Invoice #<?php echo $orNumber; ?></title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #555; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; padding: 30px; }
-        .receipt-container { width: 850px; background: white; padding: 40px; box-shadow: 0 0 15px rgba(0,0,0,0.5); position: relative; border: 1px solid #ccc; }
-        .header { text-align: center; border-bottom: 3px double #333; padding-bottom: 20px; margin-bottom: 30px; }
-        .company-name { font-family: 'Arial', sans-serif; font-size: 28px; font-weight: bold; color: #2c3e50; }
-        .company-info { font-family: 'Arial', sans-serif; font-size: 12px; color: #555; margin-top: 5px; line-height: 1.4; }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
         
-        /* 👇 ETO YUNG BINAGO MO BES, SURE NA LALABAS NA TO */
-        .doc-title { font-family: 'Arial', sans-serif; font-size: 22px; font-weight: bold; margin-top: 20px; text-decoration: underline; letter-spacing: 2px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #e0e0e0; font-family: 'Roboto', sans-serif; display: flex; justify-content: center; padding: 40px; -webkit-print-color-adjust: exact; }
+        
+        .invoice-box {
+            width: 850px;
+            background: #fff;
+            padding: 40px 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border: 1px solid #dcdcdc;
+            position: relative;
+        }
+        
+        /* Header Section */
+        .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #2c3e50; padding-bottom: 20px; }
+        .company-details h1 { font-size: 28px; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .company-details p { font-size: 12px; color: #555; line-height: 1.5; }
+        .invoice-title { text-align: right; }
+        .invoice-title h2 { font-size: 32px; color: #c0392b; margin-bottom: 5px; }
+        .invoice-title .status { font-size: 14px; font-weight: bold; color: <?php echo $statusColor; ?>; border: 2px solid <?php echo $statusColor; ?>; padding: 5px 10px; display: inline-block; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; }
 
-        .info-section { display: flex; justify-content: space-between; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
-        .info-left { width: 60%; }
-        .info-right { width: 35%; text-align: right; }
-        .row { margin-bottom: 8px; font-size: 14px; }
-        .label { font-weight: bold; color: #555; display: inline-block; width: 110px; }
-        .data { border-bottom: 1px solid #ccc; display: inline-block; min-width: 250px; padding: 0 5px; color: #000; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
-        .or-text { font-size: 18px; font-weight: bold; color: <?php echo $orColor; ?>; }
-        table { width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 30px; }
-        th { background: #eee; border: 1px solid #000; padding: 12px; font-family: 'Arial', sans-serif; font-size: 12px; text-align: left; }
-        td { border: 1px solid #000; padding: 15px; font-size: 14px; vertical-align: top; }
-        .amount-col { text-align: right; width: 25%; }
-        .desc-col { width: 75%; }
-        .total-row td { background: #f9f9f9; font-weight: bold; font-family: 'Arial', sans-serif; }
-        .footer-section { display: flex; justify-content: space-between; align-items: flex-start; }
-        .breakdown-box { width: 300px; border: 1px solid #ccc; padding: 15px; font-size: 12px; font-family: 'Arial', sans-serif; }
-        .break-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .break-total { border-top: 2px solid #333; margin-top: 5px; padding-top: 5px; font-weight: bold; font-size: 14px; }
-        .signature-box { width: 350px; text-align: center; margin-top: 40px; font-family: 'Arial', sans-serif; }
-        .sign-line { border-top: 1px solid #000; margin-top: 40px; width: 80%; margin-left: auto; margin-right: auto; }
-        .stamp { position: absolute; top: 180px; right: 50px; border: 5px solid <?php echo $statusColor; ?>; color: <?php echo $statusColor; ?>; font-size: 50px; font-weight: bold; padding: 10px 30px; text-transform: uppercase; transform: rotate(-15deg); opacity: 0.3; font-family: 'Arial Black', sans-serif; border-radius: 10px; pointer-events: none; }
+        /* Info Grid */
+        .info-grid { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 13px; }
+        .info-col { width: 48%; }
+        .info-row { display: flex; margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
+        .label { font-weight: bold; width: 100px; color: #555; }
+        .value { flex: 1; color: #000; font-weight: 500; }
+        .highlight { color: #c0392b; font-weight: 700; font-size: 14px; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th { background: #2c3e50; color: white; padding: 12px 15px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { border: 1px solid #eee; padding: 15px; font-size: 13px; vertical-align: top; color: #333; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .amount-col { text-align: right; width: 25%; font-family: 'Courier New', monospace; font-weight: bold; }
+        
+        .total-row td { background: #fdf2f0 !important; font-weight: bold; font-size: 16px; border-top: 2px solid #2c3e50; color: #c0392b; }
+
+        /* Footer & Signatures */
+        .footer-grid { display: flex; justify-content: space-between; margin-top: 40px; }
+        .breakdown { width: 35%; background: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #eee; }
+        .breakdown-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: #555; }
+        .breakdown .final-total { border-top: 1px solid #ccc; margin-top: 8px; padding-top: 8px; font-weight: bold; font-size: 14px; color: #000; }
+
+        .signatures { width: 60%; display: flex; justify-content: space-between; align-items: flex-end; }
+        .sign-box { width: 45%; text-align: center; }
+        .sign-line { border-bottom: 1px solid #000; height: 30px; margin-bottom: 5px; position: relative; }
+        .sign-line::after { content: "✍️"; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); opacity: 0.1; font-size: 40px; }
+        .sign-label { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #555; }
+        .sign-sub { font-size: 10px; color: #888; }
+
+        /* Watermark & Print */
+        .watermark { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 100px; font-weight: 900; color: <?php echo $statusColor; ?>; opacity: 0.05; pointer-events: none; border: 10px solid <?php echo $statusColor; ?>; padding: 20px 50px; border-radius: 20px; z-index: 0; }
         .no-print { position: fixed; top: 20px; right: 20px; z-index: 100; }
-        .btn { background: #2c3e50; color: white; padding: 10px 20px; border: none; cursor: pointer; font-family: sans-serif; font-weight: bold; box-shadow: 0 4px 5px rgba(0,0,0,0.3); border-radius: 5px; text-decoration: none; display: inline-block;}
-        .btn:hover { background: #1a252f; }
-        @media print { body { background: white; padding: 0; } .receipt-container { border: none; box-shadow: none; width: 100%; height: 100%; margin: 0; } .no-print { display: none; } }
+        .btn-print { background: #2c3e50; color: white; padding: 12px 25px; border: none; cursor: pointer; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-print:hover { background: #34495e; transform: translateY(-2px); }
+
+        @media print {
+            body { background: none; padding: 0; }
+            .invoice-box { box-shadow: none; border: none; width: 100%; height: 100vh; padding: 20px; }
+            .no-print { display: none; }
+            .watermark { opacity: 0.03; }
+        }
     </style>
 </head>
 <body>
-    <div class="no-print"><button onclick="window.print()" class="btn">🖨️ PRINT INVOICE</button></div>
-    <div class="receipt-container">
-        <div class="stamp"><?php echo $statusStamp; ?></div>
-        <div class="header">
-            <div class="company-name">SLATE LOGISTICS CORP.</div>
-            <div class="company-info">Block 1 Lot 2, Logistics Ave., Metro Manila, Philippines<br>VAT REG TIN: 000-123-456-789 | Tel: (02) 8-7000-123<br>Email: finance@slatelogistics.com | Web: www.slatelogistics.com</div>
-            
-            <div class="doc-title">INVOICE</div> 
-        </div>
 
-        <div class="info-section">
-            <div class="info-left">
-                <div class="row"><span class="label">Received From:</span><span class="data"><?php echo strtoupper($row['sender_name']); ?></span></div>
-                <div class="row"><span class="label">Address:</span><span class="data" style="font-size: 12px;"><?php echo formatAddr($row['origin_address']); ?></span></div>
-                <div class="row"><span class="label">TIN / Style:</span><span class="data">N/A</span></div>
+    <div class="no-print">
+        <button onclick="window.print()" class="btn-print">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg> 
+            PRINT INVOICE
+        </button>
+    </div>
+
+    <div class="invoice-box">
+        <div class="watermark"><?php echo $statusStamp; ?></div>
+        
+        <header class="invoice-header">
+            <div class="company-details">
+                <h1>Slate Logistics</h1>
+                <p>
+                    Block 1 Lot 2, Logistics Avenue, Taguig City, Philippines<br>
+                    TIN: 000-123-456-789 | VAT Registered<br>
+                    finance@slatelogistics.com | (02) 8888-1234
+                </p>
             </div>
-            <div class="info-right">
-                <div class="row"><span class="label">Invoice No:</span><span class="data or-text"><?php echo $orNumber; ?></span></div>
-                <div class="row"><span class="label">Date:</span><span class="data"><?php echo $date; ?></span></div>
-                <div class="row"><span class="label">Terms:</span><span class="data"><?php echo $paymentMethod; ?></span></div>
+            <div class="invoice-title">
+                <h2>INVOICE</h2>
+                <div class="status"><?php echo $statusStamp; ?></div>
             </div>
-        </div>
+        </header>
+
+        <section class="info-grid">
+            <div class="info-col">
+                <div style="margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px; font-weight: bold;">BILLED TO:</div>
+                <div class="info-row"><span class="label">Name:</span><span class="value"><?php echo strtoupper($row['sender_name']); ?></span></div>
+                <div class="info-row"><span class="label">Address:</span><span class="value"><?php echo formatAddr($row['origin_address']); ?></span></div>
+                <div class="info-row"><span class="label">Pay Method:</span><span class="value"><?php echo $paymentMethod; ?></span></div>
+            </div>
+            <div class="info-col">
+                <div style="margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px; font-weight: bold;">INVOICE DETAILS:</div>
+                <div class="info-row"><span class="label">Invoice No:</span><span class="value highlight"><?php echo $orNumber; ?></span></div>
+                <div class="info-row"><span class="label">Date:</span><span class="value"><?php echo $date; ?></span></div>
+                <div class="info-row"><span class="label">Tracking #:</span><span class="value" style="font-family:'Courier New';"><?php echo $trackingNo; ?></span></div>
+            </div>
+        </section>
 
         <table>
-            <thead><tr><th class="desc-col">PARTICULARS / DESCRIPTION</th><th class="amount-col">AMOUNT (PHP)</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width: 70%;">DESCRIPTION</th>
+                    <th style="text-align:right;">AMOUNT</th>
+                </tr>
+            </thead>
             <tbody>
                 <tr>
-                    <td><strong>Freight Service Charge</strong><br><br><small>Tracking No: <?php echo $trackingNo; ?></small><br><small>Route: <?php echo $row['origin_address']; ?> <br>to <?php echo $row['destination_address']; ?></small><br><br><small>Details: <?php echo $row['weight']; ?>kg | <?php echo $row['distance_km']; ?>km | <?php echo ucfirst($row['package_type']); ?></small></td>
-                    <td style="text-align: right;"><?php echo number_format($totalAmount, 2); ?></td>
+                    <td>
+                        <strong>Logistics Service Fee</strong><br>
+                        <span style="color:#555; font-size:12px;">Route: <?php echo formatAddr($row['origin_address']); ?> &rarr; <?php echo formatAddr($row['destination_address']); ?></span><br>
+                        <span style="color:#777; font-size:11px;">Details: <?php echo ucfirst($row['package_type']); ?> | <?php echo $row['weight']; ?>kg | <?php echo $row['distance_km']; ?>km distance</span>
+                    </td>
+                    <td class="amount-col">₱ <?php echo number_format($totalAmount, 2); ?></td>
                 </tr>
-                <tr style="height: 50px;"><td colspan="2" style="border:none; border-left:1px solid #000; border-right:1px solid #000;"></td></tr>
-                <tr class="total-row"><td style="text-align: right;">TOTAL AMOUNT DUE</td><td style="text-align: right;">₱ <?php echo number_format($totalAmount, 2); ?></td></tr>
+                <!-- Spacer -->
+                <tr style="height: 100px;"><td colspan="2" style="border:none;"></td></tr>
+                
+                <tr class="total-row">
+                    <td style="text-align:right; text-transform:uppercase;">Total Amount Due</td>
+                    <td class="amount-col">₱ <?php echo number_format($totalAmount, 2); ?></td>
+                </tr>
             </tbody>
         </table>
 
-        <div class="footer-section">
-            <div class="breakdown-box">
-                <div class="break-row"><span>Vatable Sales:</span><span><?php echo number_format($vatableSales, 2); ?></span></div>
-                <div class="break-row"><span>VAT (12%):</span><span><?php echo number_format($vatAmount, 2); ?></span></div>
-                <div class="break-row"><span>VAT Exempt:</span><span>0.00</span></div>
-                <div class="break-row"><span>Zero Rated:</span><span>0.00</span></div>
-                <div class="break-row break-total"><span>TOTAL AMOUNT:</span><span>₱ <?php echo number_format($totalAmount, 2); ?></span></div>
+        <div class="footer-grid">
+            <div class="breakdown">
+                <div class="breakdown-row"><span>Vatable Sales:</span><span><?php echo number_format($vatableSales, 2); ?></span></div>
+                <div class="breakdown-row"><span>VAT (12%):</span><span><?php echo number_format($vatAmount, 2); ?></span></div>
+                <div class="breakdown-row"><span>VAT Exempt:</span><span>0.00</span></div>
+                <div class="breakdown-row final-total"><span>Total:</span><span>₱ <?php echo number_format($totalAmount, 2); ?></span></div>
             </div>
-            <div class="signature-box">
-                <div style="font-weight: bold; font-size: 14px;">Authorized Representative</div><div class="sign-line"></div><div style="font-size: 12px; color: #555;">Cashier / Finance Department</div>
+
+            <div class="signatures">
+                <div class="sign-box">
+                    <div class="sign-line"></div>
+                    <div class="sign-label">Received By</div>
+                    <div class="sign-sub">Customer / Representative</div>
+                </div>
+                <div class="sign-box">
+                    <div class="sign-line"></div>
+                    <div class="sign-label">Authorized Signature</div>
+                    <div class="sign-sub">Finance Dept.</div>
+                </div>
             </div>
         </div>
-        <div style="text-align: center; margin-top: 40px; font-size: 10px; color: #888; font-family: 'Arial', sans-serif;">"THIS DOCUMENT IS SYSTEM GENERATED AND VALID FOR CLAIMING EXPENSES."<br>Logistics Core System v2.0 - Developed by Slate</div>
+
+        <div style="margin-top: 50px; text-align: center; color: #999; font-size: 10px;">
+            This document is system-generated by Core Transaction 3 System. Valid for claiming official receipts.
+            <br>&copy; <?php echo date('Y'); ?> Slate Logistics Corp. All rights reserved.
+        </div>
     </div>
 </body>
 </html>
