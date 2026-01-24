@@ -91,15 +91,17 @@ if ($is_unlocked) {
     }
 
     // 3. CONTRACTS
-    $sql_cont = "SELECT id, contract_number, sender_name, created_at FROM shipments WHERE contract_number IS NOT NULL AND contract_number != ''";
-    if($search != ''){ $sql_cont .= " AND (contract_number LIKE '%$search%' OR sender_name LIKE '%$search%')"; }
-    $sql_cont .= " ORDER BY created_at DESC LIMIT 100";
+    $sql_cont = "SELECT c.id as contract_id, c.contract_number, c.client_name, c.created_at 
+                 FROM contracts c 
+                 WHERE c.contract_number IS NOT NULL AND c.contract_number != ''";
+    if($search != ''){ $sql_cont .= " AND (c.contract_number LIKE '%$search%' OR c.client_name LIKE '%$search%')"; }
+    $sql_cont .= " ORDER BY c.created_at DESC LIMIT 100";
     $res_cont = $conn->query($sql_cont);
     while($row = $res_cont->fetch_assoc()){
         $all_docs[] = [
-            'category' => 'System', 'ref_id' => $row['contract_number'], 'name' => $row['sender_name'],
+            'category' => 'System', 'ref_id' => $row['contract_number'], 'name' => $row['client_name'],
             'doc_type' => 'Contract', 'file_name' => $row['contract_number'] . '_Contract.pdf', 'file_ext' => 'pdf',
-            'uploader' => 'System', 'date' => $row['created_at'], 'link' => 'view_contract.php?ref=' . $row['contract_number'], 'is_virtual'=> true
+            'uploader' => 'System', 'date' => $row['created_at'], 'link' => 'contract_print.php?id=' . $row['contract_id'], 'is_virtual'=> true
         ];
     }
 

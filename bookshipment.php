@@ -117,10 +117,15 @@ if ($input && $_SERVER['REQUEST_METHOD'] === 'POST') {
         curl_exec($ch); 
         curl_close($ch);
 
-        // 7. RETURN SUCCESS
-        echo json_encode(['success' => true, 'message' => 'Booked Successfully', 'invoice_file' => $pdfFilename]);
-        exit; // Stop HTML rendering
-
+      // 7. RETURN SUCCESS
+// Dagdagan natin ng 'shipment_id' para magamit sa link
+echo json_encode([
+    'success' => true, 
+    'message' => 'Booked Successfully', 
+    'invoice_file' => $pdfFilename,
+    'shipment_id' => $shipmentId // <--- IMPORTANTE ITO
+]);
+exit;
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -1394,8 +1399,11 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
         const msg = document.getElementById("responseMessage");
 
         if (result.success) {
-            // AUTOMATIC NA MAY INVOICE FILE NA GALING API
-            const fileLink = "invoices_img/" + result.invoice_file;
+            // BAGONG LOGIC: Ituro sa print_invoice.php gamit ang ID
+            const invoiceLink = "print_invoice.php?id=" + result.shipment_id;
+            
+            // Optional: Kung gusto mo pa rin yung PDF file link
+            const pdfLink = "invoices_img/" + result.invoice_file;
 
             msg.classList.remove('d-none');
             msg.className = "alert alert-success mt-3";
@@ -1403,15 +1411,16 @@ $userContact = isset($user['contact_number']) ? $user['contact_number'] : '';
                 <h5 class="alert-heading">✅ Success!</h5>
                 <p>Shipment booked & Invoice Generated.</p>
                 <div class="d-flex gap-2 mt-3">
-                    <a href="${fileLink}" target="_blank" class="btn btn-primary">
-                        <i class="bi bi-eye"></i> View Invoice (PDF)
+                    <a href="${invoiceLink}" target="_blank" class="btn btn-primary">
+                        <i class="bi bi-eye"></i> View Official Invoice
                     </a>
-                    <a href="${fileLink}" download class="btn btn-success">
-                        <i class="bi bi-download"></i> Download
+                    
+                    <a href="${pdfLink}" download class="btn btn-outline-success">
+                        <i class="bi bi-download"></i> Download PDF
                     </a>
                 </div>
             `;
-        } else {
+        }else {
             msg.classList.remove('d-none');
             msg.className = "alert alert-danger mt-3";
             msg.innerHTML = "❌ Error: " + result.error;

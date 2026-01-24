@@ -27,7 +27,7 @@ try {
             $localContractNumber = trim($_POST['tracking_code']); 
             
             // CORE 1 API URL
-            $core1_url = "http://192.168.1.6/finalcopy2/api/shipments_api.php";
+            $core1_url = "http://192.168.100.2/core1/api/shipments_api.php";
 
             // A. Fetch Data
             $ctx = stream_context_create(array('http' => array('timeout' => 5))); 

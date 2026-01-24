@@ -1,253 +1,270 @@
 <?php
+// contract_print.php - Enhanced Version for Realistic Contract UI
 include("connection.php");
+include('session.php'); 
 
-// Validate Request
-if(!isset($_GET['ref'])) die("Error: Contract Reference Missing");
-$ref = mysqli_real_escape_string($conn, $_GET['ref']);
+if (!isset($_GET['id'])) { die("Contract ID missing."); }
 
-// Fetch Shipment Details
-$q = $conn->query("SELECT * FROM shipments WHERE contract_number='$ref'");
-if($q->num_rows == 0) die("Error: Contract Not Found");
-$data = $q->fetch_assoc();
+$contract_id = intval($_GET['id']);
 
-// Format Data
-$clientName = $data['sender_name'];
-$dateCreated = date('F d, Y', strtotime($data['created_at']));
-$price = number_format($data['price'], 2);
+// 1. GET CONTRACT & CLIENT DETAILS
+$contractQ = mysqli_query($conn, "
+    SELECT c.*, a.email, a.username 
+    FROM contracts c 
+    LEFT JOIN accounts a ON c.user_id = a.id 
+    WHERE c.id = '$contract_id'
+");
+
+if (!$contractQ || mysqli_num_rows($contractQ) == 0) {
+    die("Contract not found or database error.");
+}
+
+$contract = mysqli_fetch_assoc($contractQ);
+
+// 2. GET SLA RULES
+$rulesQ = mysqli_query($conn, "SELECT * FROM sla_policies WHERE contract_id = '$contract_id'");
+if (mysqli_num_rows($rulesQ) == 0) {
+    $rulesQ = mysqli_query($conn, "SELECT * FROM sla_policies WHERE contract_id = 0");
+}
+
+// 3. DEFINE DISPLAY VARIABLES
+$clientName = !empty($contract['client_name']) ? $contract['client_name'] : $contract['username'];
+$clientAddress = isset($contract['address']) && !empty($contract['address']) ? $contract['address'] : "Address on File";
+$contractDate = date('F d, Y', strtotime($contract['created_at'] ?? $contract['start_date']));
+$startDate = date('F d, Y', strtotime($contract['start_date']));
+$endDate = date('F d, Y', strtotime($contract['end_date']));
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contract <?php echo $ref; ?> - Slate Freight</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <title>Service Agreement - <?php echo $contract['contract_number']; ?></title>
+    <!-- Google Fonts for Professional Look -->
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
     <style>
         :root {
-            --paper-bg: #ffffff;
-            --ink-color: #2c3e50;
-            --line-color: #bdc3c7;
+            --primary-color: #2c3e50;
+            --accent-color: #34495e;
+            --text-color: #222;
         }
-
         body {
-            background-color: #f0f2f5;
-            padding: 40px 0;
-            font-family: 'Inter', sans-serif;
-            color: var(--ink-color);
+            background: #525659;
+            font-family: 'Merriweather', 'Times New Roman', serif;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
             -webkit-print-color-adjust: exact;
         }
-
-        /* The Paper Sheet */
-        .contract-paper {
-            background: var(--paper-bg);
-            width: 100%;
-            max-width: 850px; /* A4 width approx */
-            margin: 0 auto;
-            padding: 60px 70px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
-            border: 1px solid #e1e4e8;
+        .page-container {
+            background: white;
+            width: 210mm; /* A4 width */
+            min-height: 297mm; /* A4 height */
+            display: block;
+            margin: 30px auto;
+            padding: 25mm; /* Standard margins */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             position: relative;
+            box-sizing: border-box;
+        }
+        
+        /* Print Optimization */
+        @media print {
+            body { background: white; margin: 0; }
+            .page-container { 
+                margin: 0; 
+                box-shadow: none; 
+                width: 100%; 
+                height: auto; 
+                padding: 20mm; 
+                page-break-after: always;
+            }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
         }
 
         /* Typography */
-        h1, h2, h3, h4 { font-family: 'Merriweather', serif; }
+        h1, h2, h3, h4 { margin: 0; color: var(--primary-color); text-transform: uppercase; }
+        h1 { font-size: 20pt; text-align: center; margin-bottom: 20px; font-weight: 700; letter-spacing: 1px; border-bottom: 3px double #333; padding-bottom: 15px; }
+        h2 { font-size: 14pt; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px; }
+        p, li, td { font-size: 11pt; line-height: 1.6; text-align: justify; }
         
-        .header-title {
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 700;
-            border-bottom: 2px solid var(--ink-color);
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 40px; border-bottom: 1px solid #ddd; padding-bottom: 20px; }
+        .logo { width: 140px; height: auto; }
+        .company-info { text-align: right; font-size: 9pt; color: #555; }
+        .company-info strong { font-size: 11pt; color: #000; }
 
-        .contract-meta {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 40px;
-        }
+        /* Sections */
+        .contract-meta { background: #f9f9f9; padding: 15px; border: 1px solid #eee; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .meta-group { display: flex; flex-direction: column; }
+        .meta-label { font-size: 8pt; text-transform: uppercase; color: #666; font-weight: bold; }
+        .meta-value { font-size: 11pt; font-weight: bold; color: #000; }
 
-        .legal-text {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            text-align: justify;
-            margin-bottom: 20px;
-        }
-
-        /* Data Tables */
-        .details-table {
-            width: 100%;
-            margin-bottom: 30px;
-            border-collapse: collapse;
-        }
-        .details-table th, .details-table td {
-            padding: 12px 15px;
-            border: 1px solid #dee2e6;
-        }
-        .details-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            width: 30%;
-        }
-
-        /* Signature Section */
-        .signature-area {
-            margin-top: 60px;
-            page-break-inside: avoid;
-        }
-        .sign-box {
-            position: relative;
-            padding-top: 20px;
-        }
-        .sign-line {
-            border-bottom: 1px solid #000;
-            margin-bottom: 10px;
-            position: relative;
-            height: 40px; /* Space for image */
-        }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 10.5pt; }
+        table th, table td { border: 1px solid #ccc; padding: 8px 12px; }
+        table th { background-color: #f4f4f4; text-align: left; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
         
-        /* The Realistic Signature Image Styling */
-        .digital-signature {
+        /* Signature Area */
+        .signature-section { margin-top: 60px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .signature-block { width: 45%; }
+        .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 10px; text-align: center; font-weight: bold; }
+        .signature-role { text-align: center; font-size: 10pt; color: #555; font-style: italic; }
+
+        /* Watermark */
+        .watermark {
             position: absolute;
-            bottom: 5px; /* Sit slightly on the line */
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%) rotate(-3deg); /* Slight rotation for realism */
-            width: 160px; /* Adjust based on image resolution */
-            height: auto;
-            mix-blend-mode: multiply; /* Makes white background transparent if not PNG */
-            opacity: 0.9;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80pt;
+            color: rgba(0,0,0,0.03);
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 0;
+            pointer-events: none;
         }
 
-        /* Terms Box */
-        .terms-box {
-            background: #fdfdfd;
-            border: 1px solid #eee;
-            padding: 15px;
-            font-size: 0.75rem;
-            color: #7f8c8d;
-            margin-top: 30px;
-            margin-bottom: 40px;
-        }
+        /* Buttons */
+        .action-bar { position: fixed; top: 20px; right: 20px; z-index: 1000; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 9pt; margin-left: 5px; }
+        .btn-print { background: #2c3e50; color: white; }
+        .btn-close { background: #e74c3c; color: white; }
+        .btn:hover { opacity: 0.9; }
 
-        /* Print Settings */
-        @media print {
-            body { background: none; padding: 0; }
-            .contract-paper { 
-                box-shadow: none; 
-                border: none; 
-                margin: 0; 
-                padding: 40px; 
-                width: 100%;
-                max-width: 100%;
-            }
-            .no-print { display: none !important; }
-            .btn { display: none; }
-        }
+        /* Paragraph Numbering */
+        .clause { margin-bottom: 15px; }
+        .clause-title { font-weight: bold; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="contract-paper">
-        <div class="row align-items-center mb-4">
-            <div class="col-6">
-                <img src="Remorig.png" alt="Company Logo" style="height: 60px; object-fit:contain;">
-            </div>
-            <div class="col-6 text-end">
-                <h4 class="mb-0 fw-bold">SLATE FREIGHT</h4>
-                <small class="text-muted">Logistics & Supply Chain Solutions</small>
-            </div>
-        </div>
+    <div class="action-bar no-print">
+        <button onclick="window.print()" class="btn btn-print">🖨️ Print Agreement</button>
+        <button onclick="window.close()" class="btn btn-close">Close</button>
+    </div>
 
-        <div class="text-center">
-            <h2 class="header-title">Logistics Service Agreement</h2>
-        </div>
+    <div class="page-container">
+        
+        <div class="watermark">OFFICIAL COPY</div>
 
-        <div class="row contract-meta">
-            <div class="col-6">
-                <strong>Ref No:</strong> <span class="font-monospace text-dark"><?php echo $ref; ?></span>
-            </div>
-            <div class="col-6 text-end">
-                <strong>Date Issued:</strong> <?php echo $dateCreated; ?>
+        <!-- Header -->
+        <div class="header">
+            <img src="Remorig.png" alt="Logo" class="logo">
+            <div class="company-info">
+                <strong>SLATE LOGISTICS INC.</strong><br>
+                123 Cargo Avenue, Port Area, Manila<br>
+                Philippines, 1018<br>
+                Tel: +63 2 8123 4567 | Email: legal@slatelogistics.com<br>
+                Tax ID: 000-123-456-789
             </div>
         </div>
 
-        <p class="legal-text">
-            This Service Agreement ("Agreement") is entered into on <strong><?php echo $dateCreated; ?></strong>, by and between <strong>Slate Freight Logistics</strong> ("Service Provider") and <strong><?php echo $clientName; ?></strong> ("Client").
-        </p>
+        <h1>Logistics Service Agreement</h1>
+        
+        <div class="contract-meta">
+            <div class="meta-group">
+                <span class="meta-label">Contract Reference No.</span>
+                <span class="meta-value"><?php echo $contract['contract_number']; ?></span>
+            </div>
+            <div class="meta-group">
+                <span class="meta-label">Date of Execution</span>
+                <span class="meta-value"><?php echo $contractDate; ?></span>
+            </div>
+            <div class="meta-group">
+                <span class="meta-label">Status</span>
+                <span class="meta-value"><?php echo ucfirst($contract['status']); ?></span>
+            </div>
+        </div>
 
-        <h5 class="mt-4 mb-3 fw-bold" style="font-family: 'Merriweather'">1. Shipment Particulars</h5>
-        <table class="details-table">
-            <tr>
-                <th>Tracking Reference</th>
-                <td class="font-monospace fw-bold"><?php echo $ref; ?></td>
-            </tr>
-            <tr>
-                <th>Point of Origin</th>
-                <td><?php echo $data['origin_address']; ?></td>
-            </tr>
-            <tr>
-                <th>Destination</th>
-                <td><?php echo $data['destination_address']; ?></td>
-            </tr>
-            <tr>
-                <th>Package Content</th>
-                <td><?php echo $data['package_description']; ?></td>
-            </tr>
-            <tr>
-                <th>Weight / Dims</th>
-                <td><?php echo $data['weight']; ?> kg</td>
-            </tr>
-            <tr>
-                <th>Declared Value</th>
-                <td>₱<?php echo $price; ?></td>
-            </tr>
+        <p>This <strong>SERVICE AGREEMENT</strong> (the "Agreement") is made and entered into on <strong><?php echo $contractDate; ?></strong> (the "Effective Date"), by and between:</p>
+
+        <div style="margin-left: 20px; border-left: 3px solid #ddd; padding-left: 15px; margin-bottom: 20px;">
+            <p><strong>SLATE LOGISTICS INC.</strong>, a corporation duly organized and existing under the laws of the Republic of the Philippines, with principal office address at 123 Cargo Avenue, Port Area, Manila, represented herein by its Authorized Representative (hereinafter referred to as the "<strong>PROVIDER</strong>");</p>
+            <p style="text-align: center; font-style: italic; font-weight: bold;">- AND -</p>
+            <p><strong><?php echo strtoupper($clientName); ?></strong>, with principal address at <?php echo $clientAddress; ?> (hereinafter referred to as the "<strong>CLIENT</strong>").</p>
+        </div>
+
+        <p>The PROVIDER and the CLIENT may be referred to individually as a "Party" and collectively as the "Parties".</p>
+
+        <p><strong>WHEREAS</strong>, the PROVIDER is engaged in the business of logistics, freight forwarding, and supply chain solutions;</p>
+        <p><strong>WHEREAS</strong>, the CLIENT desires to engage the services of the PROVIDER for the transportation and management of its goods;</p>
+        <p><strong>NOW, THEREFORE</strong>, for and in consideration of the mutual covenants and agreements set forth herein, the Parties agree as follows:</p>
+
+        <h2>1. Scope of Services</h2>
+        <p>The PROVIDER agrees to provide logistics and freight services to the CLIENT as detailed in the attached Service Level Agreement (SLA) and Pricing Schedule. Services may include, but are not limited to, pickup, transportation, warehousing, and delivery of goods to designated locations.</p>
+
+        <h2>2. Term of Agreement</h2>
+        <p>This Agreement shall commence on <strong><?php echo $startDate; ?></strong> and shall remain in full force and effect until <strong><?php echo $endDate; ?></strong> (the "Term"), unless earlier terminated as provided herein. Renewal of this Agreement shall be subject to mutual written consent of both Parties.</p>
+
+        <h2>3. Service Level Agreement (SLA)</h2>
+        <p>The PROVIDER commits to adhere to the following delivery lead times (Lead Time) based on the origin and destination of shipments:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th width="30%">Origin</th>
+                    <th width="30%">Destination</th>
+                    <th width="40%">Committed Lead Time (SLA)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(mysqli_num_rows($rulesQ) > 0): ?>
+                    <?php while($rule = mysqli_fetch_assoc($rulesQ)): ?>
+                    <tr>
+                        <td style="text-align:center;"><?php echo $rule['origin_group']; ?></td>
+                        <td style="text-align:center;"><?php echo $rule['destination_group']; ?></td>
+                        <td style="text-align:center; font-weight:bold;"><?php echo $rule['max_days']; ?> Days</td>
+                    </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="3" style="text-align: center; font-style: italic;">Standard Slate Logistics shipment terms apply.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
         </table>
+        
+        <p><em>Note: Lead times are estimated in working days and exclude Sundays and Public Holidays.</em></p>
 
-        <h5 class="mt-4 mb-2 fw-bold" style="font-family: 'Merriweather'">2. Standard Terms of Carriage</h5>
-        <div class="terms-box">
-            <p class="mb-2"><strong>2.1 Liability:</strong> Slate Freight Logistics shall be liable for loss or damage to the shipment only while in its actual custody and control. Liability is limited to the declared value indicated above.</p>
-            <p class="mb-2"><strong>2.2 Delivery Timelines:</strong> While every effort is made to deliver within estimated schedules, the Service Provider is not liable for delays caused by Force Majeure, customs clearance, or incomplete address details provided by the Client.</p>
-            <p class="mb-0"><strong>2.3 Prohibited Items:</strong> The Client warrants that the package contains no illegal, hazardous, or prohibited items as defined by local laws.</p>
-        </div>
+        <h2>4. Compensation and Billing</h2>
+        <p>4.1. The CLIENT agrees to pay the PROVIDER the rates specified in the agreed Pricing Schedule or as quoted per shipment.</p>
+        <p>4.2. In the event of a delay in delivery exceeding the SLA caused solely by the PROVIDER (excluding Force Majeure), the PROVIDER agrees to a penalty credit of <strong>10% of the freight cost</strong> for the affected shipment.</p>
+        <p>4.3. Payment Service Provider terms generally require settlement within thirty (30) days from invoice date.</p>
 
-        <div class="row signature-area">
-            <div class="col-6 text-center">
-                <div class="sign-box mx-4">
-                    <div class="sign-line">
-                        <img src="admin_signature.png" alt="Signed" class="digital-signature">
-                    </div>
-                    <p class="mb-0 fw-bold">Slate Freight Authorized Rep.</p>
-                    <small class="text-muted">Service Provider</small>
+        <div class="page-break"></div> <!-- Force new page for standard terms if needed, mainly for printing -->
 
+        <h2>5. Responsibilities and Liability</h2>
+        <p>5.1. <strong>Client's Responsibility:</strong> The CLIENT warrants that all goods tendered for shipment are properly packed, labeled, and do not contain illegal or prohibited items.</p>
+        <p>5.2. <strong>Provider's Liability:</strong> The PROVIDER'S liability for loss or damage to goods shall be limited to the declared value of the goods or the standard carrier liability limit, whichever is lower, unless additional insurance is purchased by the CLIENT.</p>
+        <p>5.3. <strong>Force Majeure:</strong> Neither Party shall be liable for any failure to perform its obligations where such failure is a result of Acts of God, war, strikes, or other causes beyond reasonable control.</p>
+
+        <h2>6. Confidentiality</h2>
+        <p>Both Parties agree to keep confidential all proprietary information, trade secrets, and pricing details exchanged during the term of this Agreement and for a period of two (2) years thereafter.</p>
+
+        <h2>7. Governing Law</h2>
+        <p>This Agreement shall be governed by and construed in accordance with the laws of the Republic of the Philippines. Any disputes arising from this Agreement shall be settled amicably; failing which, the courts of Manila shall have exclusive jurisdiction.</p>
                     
-                </div>
+        <div class="signature-section">
+            <div class="signature-block">
+                <p><strong>SIGNED for and on behalf of:<br>SLATE LOGISTICS INC.</strong></p>
+                <div class="signature-line">SLATE CORE3</div>
+                <div class="signature-role">Operations Director</div>
             </div>
-
-            <div class="col-6 text-center">
-                <div class="sign-box mx-4">
-                    <div class="sign-line">
-                        </div>
-                    <p class="mb-0 fw-bold"><?php echo $clientName; ?></p>
-                    <small class="text-muted">Client / Consignor</small>
-                </div>
+            <div class="signature-block">
+                <p><strong>SIGNED for and on behalf of:<br><?php echo strtoupper($clientName); ?></strong></p>
+                <div class="signature-line">Authorized Signatory</div>
+                <div class="signature-role">Name & Designation</div>
             </div>
         </div>
 
-        <div class="text-center mt-5 pt-4 border-top">
-            <small class="text-muted">Slate Freight Logistics Inc. | www.slatefreight.com | Generated via Core Admin</small>
-        </div>
-
-        <div class="position-fixed bottom-0 end-0 p-4 no-print">
-            <button onclick="window.print()" class="btn btn-dark shadow-lg rounded-pill px-4 py-2">
-                <span class="me-2">🖨️</span> Print / Save as PDF
-            </button>
+        <div style="margin-top: 50px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 8pt; color: #999; text-align: center;">
+            <p style="margin:0;">Slate Logistics Inc. | Logistics Service Agreement | Page 1 of 1</p>
+            <p style="margin:0;">System Ref: <?php echo md5($contract_id . 'salt'); ?></p>
         </div>
 
     </div>
+
 </body>
 </html>
