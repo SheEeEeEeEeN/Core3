@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<style>
+  /* Fullscreen loader overlay */
+  #loader-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: lch(6.14% 9.57 244.99);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+    transition: opacity 0.6s ease;
+  }
+
+  /* Logo styling */
+  .logos {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    animation: fadeIn 1.2s ease-in-out, pulse 2s infinite ease-in-out;
+  }
+
+  /* Loading text */
+  .loading-text {
+    margin-top: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: 2px;
+    opacity: 0.8;
+    font-weight: 600;
+    animation: fadeIn 1.5s ease-in-out, textPulse 1.8s infinite;
+  }
+
+  /* Fade-in effect for logo */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Pulse animation for logo */
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.85; }
+  }
+
+  /* Pulse animation for loading text */
+  @keyframes textPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loader-overlay">
+  <!-- Replace 'logo.png' with your actual logo filename -->
+  <img src="Remorig.png" alt="Company Logo" class="logos">
+  <div class="loading-text">Loading...</div>
+</div>
+
+<script>
+  const loader = document.getElementById("loader-overlay");
+
+  // Fade out loader smoothly after page finishes loading
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      loader.style.opacity = "0";
+      setTimeout(() => loader.style.display = "none", 600);
+    }, 1000);
+  });
+</script>
+
+</body>
+</html>
