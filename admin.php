@@ -6,7 +6,7 @@ include('session.php');
 requireRole('admin');
 include('loading.html');
 
-// HELPER FUNCTION: Time Elapsed (e.g., "2 hours ago")
+// HELPER FUNCTION: Time Elapsed (e.g., "2 hours ago")  MAY PROBLEMA SA GIT
 function time_elapsed_string($datetime, $full = false) {
     $now = new DateTime;
     $ago = new DateTime($datetime);
